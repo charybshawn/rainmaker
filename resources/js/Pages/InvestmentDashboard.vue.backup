@@ -1,0 +1,1983 @@
+<template>
+  <!-- Debug boxes removed - modal is now fixed -->
+  
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors relative">
+    
+    <!-- Canvas Shooting Stars Background -->
+    <canvas
+      ref="starsCanvas"
+      class="fixed inset-0 w-full h-full pointer-events-none"
+      style="z-index: 1;"
+    ></canvas>
+    <!-- Header Section -->
+    <div class="bg-gray-100 dark:bg-gray-950 shadow-sm">
+      <div class="w-[80%] mx-auto px-6 py-8">
+        <!-- Navigation Bar -->
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center gap-4">
+            <!-- Rainmaker Logo Image -->
+            <img 
+              src="/images/rainmaker-logo.png" 
+              alt="Rainmaker Logo" 
+              class="drop-shadow-sm"
+              style="height: 120px; width: auto; opacity: 1 !important; filter: brightness(1.2) contrast(1.2) saturate(1.2);"
+            />
+          </div>
+          <div class="flex items-center gap-4">
+            <!-- Dark Mode Toggle -->
+            <button 
+              @click="toggleDarkMode"
+              class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
+            >
+              <svg v-if="isDarkMode" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+              </svg>
+              <svg v-else class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+              </svg>
+            </button>
+            <span v-if="$page.props.auth.user" class="text-sm text-gray-600 dark:text-gray-300">
+              Welcome, {{ $page.props.auth.user.name }}
+            </span>
+            <div v-if="$page.props.auth.user" class="relative">
+              <Dropdown align="right" width="48">
+                <template #trigger>
+                  <button class="flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white focus:outline-none transition ease-in-out duration-150">
+                    {{ $page.props.auth.user.name }}
+                    <svg class="ml-2 -mr-0.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                  </button>
+                </template>
+                <template #content>
+                  <DropdownLink :href="route('profile.edit')">Profile</DropdownLink>
+                  <DropdownLink :href="route('logout')" method="post" as="button">Log Out</DropdownLink>
+                </template>
+              </Dropdown>
+            </div>
+            <div v-else class="flex items-center gap-3">
+              <Link :href="route('login')" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors">
+                Login
+              </Link>
+              <Link :href="route('register')" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                Register
+              </Link>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Title and Action Button -->
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-4xl font-semibold text-gray-900 dark:text-white mb-2">Investment Research</h2>
+            <p class="text-xl text-gray-600 dark:text-gray-300">Search and discover companies in your portfolio</p>
+          </div>
+          <button 
+            v-if="$page.props.auth.user"
+            @click="openCreateModal"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105"
+          >
+            + Add Company
+          </button>
+          <Link 
+            v-else
+            :href="route('login')"
+            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105"
+          >
+            Login to Add Companies
+          </Link>
+        </div>
+        
+        <!-- Search Input -->
+        <div class="w-full max-w-2xl">
+          <input 
+            v-model="searchQuery"
+            type="text" 
+            placeholder="Search companies, tickers, or sectors..."
+            class="w-full text-xl py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-200"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Glass Container for Lower Content -->
+    <div class="w-[80%] mx-auto px-6 py-8">
+      <div class="backdrop-blur-xl bg-white/10 dark:bg-white/5 rounded-2xl shadow-2xl p-6 pl-8">
+    
+    <!-- View Controls -->
+    <div>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          
+          <!-- Bulk Actions (only in list mode) -->
+          <div v-if="viewMode === 'list' && selectedCompanies.length > 0" class="flex items-center space-x-3">
+            <span class="text-sm text-gray-600 dark:text-gray-300">
+              {{ selectedCompanies.length }} selected
+            </span>
+            <button 
+              @click="bulkDeleteCompanies"
+              :disabled="bulkDeleting"
+              class="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+              <span>{{ bulkDeleting ? 'Deleting...' : 'Delete Selected' }}</span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- View Toggle -->
+        <div class="flex items-center rounded-md p-1">
+          <button 
+            @click="viewMode = 'cards'"
+            :class="[
+              'flex items-center space-x-2 px-3 py-2 transition-all duration-200',
+              viewMode === 'cards' 
+                ? 'text-blue-600 dark:text-blue-400' 
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+            ]"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+            </svg>
+            <span>Cards</span>
+          </button>
+          <button 
+            @click="viewMode = 'list'"
+            :class="[
+              'flex items-center space-x-2 px-3 py-2 transition-all duration-200',
+              viewMode === 'list' 
+                ? 'text-blue-600 dark:text-blue-400' 
+                : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+            ]"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+            </svg>
+            <span>List</span>
+          </button>
+        </div>
+      </div>
+    </div> <!-- End View Controls -->
+
+    <!-- Results -->
+    <div>
+      <div v-if="loading" class="text-center py-20">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400 mx-auto"></div>
+        <p class="text-gray-600 dark:text-gray-300 mt-4">Loading companies...</p>
+      </div>
+      
+      <!-- Cards View -->
+      <div v-else-if="filteredCompanies.length > 0 && viewMode === 'cards'" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 3xl:grid-cols-5 gap-8">
+        <div 
+          v-for="company in filteredCompanies" 
+          :key="company.id"
+          class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-md hover:shadow-lg border border-gray-200 dark:border-gray-600 transition-all duration-200"
+        >
+          <!-- Company Header -->
+          <div class="flex items-center mb-6">
+            <div class="w-12 h-12 bg-blue-500 dark:bg-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-lg">
+              {{ company.ticker.charAt(0) }}
+            </div>
+            <div class="ml-4 flex-1">
+              <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-1">{{ company.name }}</h3>
+              <p class="text-lg text-blue-600 dark:text-blue-400 font-medium">{{ company.ticker }}</p>
+            </div>
+          </div>
+          
+          <!-- Company Details -->
+          <div class="space-y-3 mb-6">
+            <div v-if="company.sector" class="flex justify-between items-center py-2 border-b border-gray-100 dark:border-gray-700">
+              <span class="text-gray-500 dark:text-gray-400 font-medium">Sector</span>
+              <span class="text-gray-900 dark:text-white font-medium">{{ company.sector }}</span>
+            </div>
+            <div v-if="company.marketCap" class="flex justify-between items-center py-2">
+              <span class="text-gray-500 dark:text-gray-400 font-medium">Market Cap</span>
+              <span class="text-gray-900 dark:text-white font-medium text-lg">{{ formatMarketCap(company.marketCap) }}</span>
+            </div>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="flex gap-3">
+            <button 
+              @click.stop="() => { console.log('CARDS VIEW: Clicking view details for company:', company); viewCompanyDetails(company); }"
+              class="flex-1 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200"
+            >
+              View Details
+            </button>
+            <button 
+              v-if="$page.props.auth.user"
+              @click="editCompany(company)"
+              class="bg-gray-500 hover:bg-gray-600 dark:bg-gray-600 dark:hover:bg-gray-700 text-white font-medium py-2 px-3 rounded-md transition-colors duration-200"
+              title="Edit Company"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- List View -->
+      <div v-else-if="filteredCompanies.length > 0 && viewMode === 'list'" class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+        <!-- Table Header -->
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+          <div class="flex items-center">
+            <div class="flex items-center mr-4">
+              <input 
+                type="checkbox" 
+                :checked="isSelectAll" 
+                @change="toggleSelectAll"
+                class="w-5 h-5 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2"
+              />
+              <label class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">Select All</label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Table Body -->
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+          <div 
+            v-for="company in filteredCompanies" 
+            :key="company.id"
+            class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+          >
+            <div class="flex items-center">
+              <!-- Checkbox -->
+              <div class="flex items-center mr-4">
+                <input 
+                  type="checkbox" 
+                  :checked="selectedCompanies.includes(company.id)" 
+                  @change="toggleCompanySelection(company.id)"
+                  class="w-5 h-5 text-blue-600 bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 dark:focus:ring-blue-600 focus:ring-2"
+                />
+              </div>
+              
+              <!-- Company Logo -->
+              <div class="w-10 h-10 bg-blue-500 dark:bg-blue-600 rounded-md flex items-center justify-center text-white font-semibold text-sm mr-3">
+                {{ company.ticker.charAt(0) }}
+              </div>
+              
+              <!-- Company Info -->
+              <div class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
+                <div class="lg:col-span-2">
+                  <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ company.name }}</h3>
+                  <p class="text-blue-600 dark:text-blue-400 font-medium">{{ company.ticker }}</p>
+                </div>
+                
+                <div class="text-center lg:text-left">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Sector</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ company.sector || 'N/A' }}</p>
+                </div>
+                
+                <div class="text-center lg:text-left">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Market Cap</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ formatMarketCap(company.marketCap) }}</p>
+                </div>
+                
+                <div class="text-center lg:text-right">
+                  <p class="text-sm text-gray-500 dark:text-gray-400">Research Items</p>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ company.researchItemsCount || 0 }}</p>
+                </div>
+              </div>
+              
+              <!-- Actions -->
+              <div class="ml-6 flex items-center space-x-2">
+                <!-- View Button -->
+                <button 
+                  @click.stop="viewCompanyDetails(company)"
+                  class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 flex items-center justify-center transition-colors"
+                  title="View Company Details"
+                >
+                  <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                </button>
+                
+                <!-- Edit Button -->
+                <button 
+                  v-if="$page.props.auth.user"
+                  @click.stop="editCompany(company)"
+                  class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
+                  title="Edit Company"
+                >
+                  <svg class="w-4 h-4 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                  </svg>
+                </button>
+                
+                <!-- Delete Button -->
+                <button 
+                  v-if="$page.props.auth.user"
+                  @click.stop="deleteCompany(company)"
+                  :disabled="deleting"
+                  class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-700 hover:bg-red-200 dark:hover:bg-red-600 disabled:bg-red-300 dark:disabled:bg-red-800 flex items-center justify-center transition-colors"
+                  title="Delete Company"
+                >
+                  <svg class="w-4 h-4 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Empty State -->
+      <div v-else class="text-center py-20">
+        <div class="max-w-md mx-auto">
+          <div class="w-24 h-24 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg class="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">No companies found</h3>
+          <p class="text-lg text-gray-600 dark:text-gray-300">Try adjusting your search terms or add a new company</p>
+        </div>
+      </div>
+    </div>
+    
+      </div> <!-- End Glass Container -->
+    </div> <!-- End Lower Content Container -->
+
+    <!-- Create Company Modal -->
+    <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="closeCreateModal">
+      <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl max-h-[90vh] overflow-y-auto shadow-sm transition-all duration-200">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 rounded-t-2xl">
+          <div class="flex items-center justify-between">
+          <h2 class="text-3xl font-semibold text-gray-900 dark:text-white">Add New Company</h2>
+          <div class="flex items-center space-x-2">
+            <!-- Save Button -->
+            <button 
+              @click="createCompany"
+              :disabled="creating"
+              class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-800 flex items-center justify-center transition-colors"
+              title="Save Company"
+            >
+              <svg v-if="!creating" class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <svg v-else class="animate-spin w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </button>
+            <!-- Close Button -->
+            <button 
+              @click="closeCreateModal"
+              class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
+              title="Close"
+            >
+              <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="px-8 py-6">
+        
+        <form class="space-y-6">
+          <!-- General Error Message -->
+          <div v-if="errors.general" class="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
+            {{ errors.general }}
+          </div>
+          
+          <!-- Two Column Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Left Column -->
+            <div class="space-y-6">
+              <!-- Company Name -->
+              <div>
+                <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name</label>
+                <input 
+                  id="name"
+                  v-model="companyForm.name"
+                  type="text" 
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  placeholder="e.g., Apple Inc."
+                />
+                <div v-if="errors.name" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.name }}</div>
+              </div>
+
+              <!-- Ticker Symbol -->
+              <div>
+                <label for="ticker_symbol" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ticker Symbol</label>
+                <input 
+                  id="ticker_symbol"
+                  v-model="companyForm.ticker_symbol"
+                  type="text" 
+                  required
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors uppercase"
+                  placeholder="e.g., AAPL"
+                  maxlength="10"
+                  @input="companyForm.ticker_symbol = $event.target.value.toUpperCase()"
+                />
+                <div v-if="errors.ticker_symbol" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.ticker_symbol }}</div>
+              </div>
+
+              <!-- Sector -->
+              <div>
+                <label for="sector" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sector</label>
+                <select 
+                  id="sector"
+                  v-model="companyForm.sector"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                >
+                  <option value="">Select a sector</option>
+                  <option value="Technology">Technology</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="Financials">Financials</option>
+                  <option value="Consumer Discretionary">Consumer Discretionary</option>
+                  <option value="Communication Services">Communication Services</option>
+                  <option value="Industrials">Industrials</option>
+                  <option value="Consumer Staples">Consumer Staples</option>
+                  <option value="Energy">Energy</option>
+                  <option value="Utilities">Utilities</option>
+                  <option value="Real Estate">Real Estate</option>
+                  <option value="Materials">Materials</option>
+                </select>
+                <div v-if="errors.sector" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.sector }}</div>
+              </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+              <!-- Industry -->
+              <div>
+                <label for="industry" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industry</label>
+                <input 
+                  id="industry"
+                  v-model="companyForm.industry"
+                  type="text" 
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                  placeholder="e.g., Consumer Electronics"
+                />
+                <div v-if="errors.industry" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.industry }}</div>
+              </div>
+
+              <!-- Market Cap -->
+              <div>
+                <label for="market_cap" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Market Cap (USD)</label>
+                <div class="relative">
+                  <input 
+                    id="market_cap"
+                    v-model="marketCapInput"
+                    type="text" 
+                    :class="[
+                      'w-full px-4 py-3 pr-10 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 transition-colors',
+                      marketCapValidation.state === 'valid' 
+                        ? 'border-green-300 dark:border-green-500 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400' 
+                        : marketCapValidation.state === 'invalid' 
+                        ? 'border-red-300 dark:border-red-500 focus:ring-red-500 dark:focus:ring-red-400 focus:border-red-500 dark:focus:border-red-400'
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400'
+                    ]"
+                    placeholder="e.g., 1.2M, 500B, 2.5T or 1500000"
+                    @input="handleMarketCapInput"
+                  />
+                  
+                  <!-- Validation Icons -->
+                  <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <!-- Loading/Validating -->
+                    <svg v-if="marketCapValidation.state === 'validating'" class="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <!-- Valid -->
+                    <svg v-else-if="marketCapValidation.state === 'valid'" class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    <!-- Invalid -->
+                    <svg v-else-if="marketCapValidation.state === 'invalid'" class="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                  </div>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter numbers with decimals, or use shorthand: K (thousands), M (millions), B (billions), T (trillions)</p>
+                <div v-if="errors.market_cap" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.market_cap }}</div>
+                <!-- Validation Success Message -->
+                <div v-if="marketCapValidation.state === 'valid' && companyForm.market_cap" class="text-green-600 dark:text-green-400 text-sm mt-1">
+                  ✓ Valid: {{ formatMarketCap(companyForm.market_cap) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description (Full Width) -->
+          <div>
+            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+            <textarea 
+              id="description"
+              v-model="companyForm.description"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors resize-none"
+              placeholder="Brief description of the company and its business..."
+            ></textarea>
+            <div v-if="errors.description" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.description }}</div>
+          </div>
+
+        </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Company Details Modal - FIXED -->
+    <div v-show="showDetailsModal && selectedCompany" data-modal="company-details" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="showDetailsModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <!-- Modal Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 rounded-t-lg">
+          <div class="flex items-center justify-between">
+            <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">{{ selectedCompany?.name || 'Company Details' }}</h2>
+            <button 
+              @click="showDetailsModal = false"
+              class="w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
+            >
+              <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Modal Content -->
+        <div class="p-6">
+          <div class="space-y-4">
+            <p><strong>Ticker:</strong> {{ selectedCompany?.ticker || 'N/A' }}</p>
+            <p v-if="selectedCompany?.sector"><strong>Sector:</strong> {{ selectedCompany.sector }}</p>
+            <p v-if="selectedCompany?.industry"><strong>Industry:</strong> {{ selectedCompany.industry }}</p>
+            <p v-if="selectedCompany?.marketCapFormatted"><strong>Market Cap:</strong> {{ selectedCompany.marketCapFormatted }}</p>
+            <p v-if="selectedCompany?.description"><strong>Description:</strong> {{ selectedCompany.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- END: Company Details Modal -->
+              <div v-if="!isEditingCompany" class="space-y-4">
+                <div v-if="selectedCompany.sector" class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span class="text-gray-600 dark:text-gray-300 font-medium">Sector</span>
+                  <span class="text-gray-900 dark:text-white font-medium">{{ selectedCompany.sector }}</span>
+                </div>
+                
+                <div v-if="selectedCompany.industry" class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span class="text-gray-600 dark:text-gray-300 font-medium">Industry</span>
+                  <span class="text-gray-900 dark:text-white font-medium">{{ selectedCompany.industry }}</span>
+                </div>
+                
+                <div v-if="selectedCompany.marketCap" class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span class="text-gray-600 dark:text-gray-300 font-medium">Market Cap</span>
+                  <span class="text-gray-900 dark:text-white font-medium text-lg">{{ selectedCompany.marketCapFormatted }}</span>
+                </div>
+                
+                <div v-if="selectedCompany.headquarters" class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span class="text-gray-600 dark:text-gray-300 font-medium">Headquarters</span>
+                  <span class="text-gray-900 dark:text-white font-medium">{{ selectedCompany.headquarters }}</span>
+                </div>
+                
+                <div v-if="selectedCompany.employees" class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span class="text-gray-600 dark:text-gray-300 font-medium">Employees</span>
+                  <span class="text-gray-900 dark:text-white font-medium">{{ selectedCompany.employees?.toLocaleString() || 'N/A' }}</span>
+                </div>
+                
+                <div v-if="selectedCompany.foundedDate" class="flex justify-between items-center py-3 border-b border-gray-100 dark:border-gray-700">
+                  <span class="text-gray-600 dark:text-gray-300 font-medium">Founded</span>
+                  <span class="text-gray-900 dark:text-white font-medium">{{ selectedCompany.foundedDate ? new Date(selectedCompany.foundedDate).toLocaleDateString() : 'N/A' }}</span>
+                </div>
+              </div>
+              
+              <!-- Edit Mode -->
+              <div v-if="isEditingCompany" class="space-y-4">
+                <!-- General Error Message -->
+                <div v-if="errors.general" class="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
+                  {{ errors.general }}
+                </div>
+                
+                <!-- Company Name -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name</label>
+                  <input 
+                    v-model="companyForm.name"
+                    type="text" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    placeholder="e.g., Apple Inc."
+                  />
+                  <div v-if="errors.name" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.name }}</div>
+                </div>
+
+                <!-- Ticker Symbol -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ticker Symbol</label>
+                  <input 
+                    v-model="companyForm.ticker_symbol"
+                    type="text" 
+                    required
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors uppercase"
+                    placeholder="e.g., AAPL"
+                    maxlength="10"
+                    @input="companyForm.ticker_symbol = $event.target.value.toUpperCase()"
+                  />
+                  <div v-if="errors.ticker_symbol" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.ticker_symbol }}</div>
+                </div>
+
+                <!-- Sector -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sector</label>
+                  <input 
+                    v-model="companyForm.sector"
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    placeholder="e.g., Technology"
+                  />
+                  <div v-if="errors.sector" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.sector }}</div>
+                </div>
+
+                <!-- Industry -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industry</label>
+                  <input 
+                    v-model="companyForm.industry"
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    placeholder="e.g., Consumer Electronics"
+                  />
+                  <div v-if="errors.industry" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.industry }}</div>
+                </div>
+
+                <!-- Market Cap -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Market Cap</label>
+                  <input 
+                    v-model="companyForm.market_cap"
+                    type="text"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    placeholder="e.g., 2.5T, 1.2B, 500M, or 1,000,000,000"
+                    @input="validateMarketCap"
+                  />
+                  <div v-if="errors.market_cap" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.market_cap }}</div>
+                </div>
+
+                <!-- Description -->
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
+                  <textarea 
+                    v-model="companyForm.description"
+                    rows="3"
+                    class="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors resize-none"
+                    placeholder="Brief description of the company..."
+                  ></textarea>
+                  <div v-if="errors.description" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.description }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Research Activity -->
+            <div class="space-y-6">
+              <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Research Activity</h3>
+              
+              <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-6">
+                <div class="text-center">
+                  <div class="text-4xl font-semibold text-blue-600 dark:text-blue-400 mb-2">
+                    {{ selectedCompany.researchItemsCount || 0 }}
+                  </div>
+                  <p class="text-gray-600 dark:text-gray-300 font-medium">Research Items</p>
+                </div>
+              </div>
+              
+              <div v-if="$page.props.auth.user" class="space-y-3">
+                <button 
+                  @click="openNoteModal(selectedCompany)"
+                  class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-sm hover:shadow-sm"
+                >
+                  📝 Add Note
+                </button>
+                <button 
+                  @click="openUploadModal(selectedCompany)"
+                  class="w-full bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-sm hover:shadow-sm"
+                >
+                  📎 Upload Document
+                </button>
+              </div>
+              
+              <div v-else class="text-center py-6">
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Login to add research items</p>
+                <Link :href="route('login')" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-all duration-200">
+                  Login
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <!-- Company Description -->
+          <div v-if="selectedCompany.description" class="mb-8">
+            <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">About</h3>
+            <div class="bg-gray-50 dark:bg-gray-700 rounded-md p-6">
+              <p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">{{ selectedCompany.description }}</p>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="mb-8">
+            <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-4">Recent Research Items</h3>
+            <div v-if="selectedCompany?.researchItems && selectedCompany.researchItems.length > 0" class="space-y-4">
+              <div v-for="item in selectedCompany.researchItems.slice(0, 3)" :key="item.id" 
+                   class="bg-gray-50 dark:bg-gray-700 rounded-md p-6 border border-gray-200 dark:border-gray-600">
+                <div class="flex justify-between items-start mb-3">
+                  <h4 class="text-lg font-medium text-gray-900 dark:text-white">{{ item.title }}</h4>
+                  <span class="text-xs px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                    {{ item.visibility }}
+                  </span>
+                </div>
+                <p class="text-gray-600 dark:text-gray-300 text-sm mb-3 line-clamp-2">{{ item.content.substring(0, 150) }}...</p>
+                <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+                  <span>{{ formatDate(item.created_at) }}</span>
+                  <span v-if="item.attachments && item.attachments.length > 0" class="flex items-center">
+                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ item.attachments.length }} attachment{{ item.attachments.length > 1 ? 's' : '' }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="selectedCompany.researchItems.length > 3" class="text-center">
+                <button class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium">
+                  View all {{ selectedCompany.researchItems.length }} research items
+                </button>
+              </div>
+            </div>
+            <div v-else class="bg-gray-50 dark:bg-gray-700 rounded-md p-6 text-center">
+              <p class="text-gray-600 dark:text-gray-400">No research items yet</p>
+              <p class="text-sm text-gray-500 dark:text-gray-500 mt-2">Research items will appear here once added</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Note Creation Modal -->
+    <div v-if="showNoteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="showNoteModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-sm transition-all duration-200">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 rounded-t-2xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-3xl font-semibold text-gray-900 dark:text-white">📝 Add Note</h2>
+              <p class="text-lg text-gray-600 dark:text-gray-300 mt-1" v-if="selectedCompany">
+                for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
+              </p>
+            </div>
+            <button 
+              @click="showNoteModal = false"
+              class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
+            >
+              <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content -->
+        <form @submit.prevent="createNote" class="p-8 space-y-6">
+          <!-- General Error Message -->
+          <div v-if="errors.general" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
+            {{ errors.general }}
+          </div>
+
+          <!-- Title -->
+          <div>
+            <label for="note_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Note Title</label>
+            <input 
+              id="note_title"
+              v-model="noteForm.title"
+              type="text" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+              placeholder="e.g., Q3 2024 Earnings Analysis"
+            />
+            <div v-if="errors.title" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.title }}</div>
+          </div>
+
+          <!-- Content -->
+          <div>
+            <label for="note_content" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Note Content</label>
+            <textarea 
+              id="note_content"
+              v-model="noteForm.content"
+              rows="12"
+              required
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors resize-none"
+              placeholder="Enter your analysis, thoughts, observations, and research notes..."
+            ></textarea>
+            <div v-if="errors.content" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.content }}</div>
+          </div>
+
+          <!-- Category and Visibility -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="note_category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+              <select 
+                id="note_category"
+                v-model="noteForm.category_id"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+              >
+                <option value="">Select category (optional)</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+              <div v-if="errors.category_id" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.category_id }}</div>
+            </div>
+
+            <div>
+              <label for="note_visibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visibility</label>
+              <select 
+                id="note_visibility"
+                v-model="noteForm.visibility"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+              >
+                <option value="private">Private (Only me)</option>
+                <option value="team">Team</option>
+                <option value="public">Public</option>
+              </select>
+              <div v-if="errors.visibility" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.visibility }}</div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button 
+              type="button"
+              @click="showNoteModal = false"
+              class="flex-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-medium py-2 px-4 rounded-md transition-all duration-200"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              :disabled="creatingNote"
+              class="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-sm"
+            >
+              {{ creatingNote ? 'Saving...' : 'Save Note' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Document Upload Modal -->
+    <div v-if="showUploadModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="showUploadModal = false">
+      <div class="bg-white dark:bg-gray-800 rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-sm transition-all duration-200">
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 rounded-t-2xl">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-3xl font-semibold text-gray-900 dark:text-white">📎 Upload Document</h2>
+              <p class="text-lg text-gray-600 dark:text-gray-300 mt-1" v-if="selectedCompany">
+                for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
+              </p>
+            </div>
+            <button 
+              @click="showUploadModal = false"
+              class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
+            >
+              <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content -->
+        <form @submit.prevent="uploadDocuments" class="p-8 space-y-6">
+          <!-- General Error Message -->
+          <div v-if="errors.general" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
+            {{ errors.general }}
+          </div>
+
+          <!-- Title -->
+          <div>
+            <label for="upload_title" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Document Title</label>
+            <input 
+              id="upload_title"
+              v-model="uploadForm.title"
+              type="text" 
+              required
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors"
+              placeholder="e.g., Q3 2024 Financial Report"
+            />
+            <div v-if="errors.title" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.title }}</div>
+          </div>
+
+          <!-- Description -->
+          <div>
+            <label for="upload_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description (optional)</label>
+            <textarea 
+              id="upload_description"
+              v-model="uploadForm.description"
+              rows="3"
+              class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors resize-none"
+              placeholder="Brief description of the document(s)..."
+            ></textarea>
+            <div v-if="errors.description" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.description }}</div>
+          </div>
+
+          <!-- File Upload Area -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Documents</label>
+            <div class="border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg p-8 text-center hover:border-green-400 dark:hover:border-green-500 transition-colors">
+              <svg class="mx-auto h-16 w-16 text-green-400 dark:text-green-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              <div class="mt-4">
+                <label for="document-upload" class="cursor-pointer">
+                  <span class="mt-2 block text-lg font-medium text-gray-900 dark:text-white">
+                    Click to upload documents or drag and drop
+                  </span>
+                  <span class="mt-1 block text-sm text-gray-500 dark:text-gray-400">
+                    PDF, DOC, XLS, PPT, Images, TXT, CSV (max 10MB each)
+                  </span>
+                </label>
+                <input 
+                  id="document-upload" 
+                  name="document-upload" 
+                  type="file" 
+                  multiple 
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg"
+                  @change="handleDocumentUpload"
+                  class="sr-only" 
+                />
+              </div>
+            </div>
+            
+            <!-- File List -->
+            <div v-if="uploadForm.files.length > 0" class="mt-6 space-y-3">
+              <div v-for="(file, index) in uploadForm.files" :key="index" class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <div class="flex items-center">
+                  <svg class="w-8 h-8 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                  <div>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white">{{ file.name }}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ formatFileSize(file.size) }}</span>
+                  </div>
+                </div>
+                <button 
+                  type="button" 
+                  @click="removeUploadFile(index)"
+                  class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors p-1"
+                >
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div v-if="errors.files" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.files }}</div>
+          </div>
+
+          <!-- Category and Visibility -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label for="upload_category" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+              <select 
+                id="upload_category"
+                v-model="uploadForm.category_id"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors"
+              >
+                <option value="">Select category (optional)</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+              <div v-if="errors.category_id" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.category_id }}</div>
+            </div>
+
+            <div>
+              <label for="upload_visibility" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visibility</label>
+              <select 
+                id="upload_visibility"
+                v-model="uploadForm.visibility"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors"
+              >
+                <option value="private">Private (Only me)</option>
+                <option value="team">Team</option>
+                <option value="public">Public</option>
+              </select>
+              <div v-if="errors.visibility" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.visibility }}</div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button 
+              type="button"
+              @click="showUploadModal = false"
+              class="flex-1 bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-800 dark:text-white font-medium py-2 px-4 rounded-md transition-all duration-200"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              :disabled="uploading || uploadForm.files.length === 0"
+              class="flex-1 bg-green-600 hover:bg-green-700 dark:bg-green-500 dark:hover:bg-green-600 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-md transition-all duration-200 shadow-sm"
+            >
+              {{ uploading ? 'Uploading...' : 'Upload Documents' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { Head, Link } from '@inertiajs/vue3'
+import Dropdown from '@/Components/Dropdown.vue'
+import DropdownLink from '@/Components/DropdownLink.vue'
+import axios from 'axios'
+
+const companies = ref([])
+const searchQuery = ref('')
+const showCreateModal = ref(false)
+const showDetailsModal = ref(false)
+const debugModalVisible = ref(false)
+const showNoteModal = ref(false)
+const showUploadModal = ref(false)
+const selectedCompany = ref(null)
+const loading = ref(false)
+const creating = ref(false)
+const deleting = ref(false)
+const creatingNote = ref(false)
+const uploading = ref(false)
+const errors = ref({})
+const isDarkMode = ref(false)
+const categories = ref([])
+const tags = ref([])
+const viewMode = ref('cards') // 'cards' or 'list'
+const selectedCompanies = ref([])
+const isSelectAll = ref(false)
+const bulkDeleting = ref(false)
+const isEditingCompany = ref(false)
+const editingCompany = ref(false)
+
+const companyForm = ref({
+  name: '',
+  ticker_symbol: '',
+  sector: '',
+  industry: '',
+  market_cap: '',
+  description: ''
+})
+
+const noteForm = ref({
+  title: '',
+  content: '',
+  company_id: '',
+  category_id: '',
+  visibility: 'private'
+})
+
+const uploadForm = ref({
+  title: '',
+  description: '',
+  company_id: '',
+  category_id: '',
+  visibility: 'private',
+  files: []
+})
+
+const marketCapInput = ref('')
+const marketCapValidation = ref({ state: '', timer: null })
+
+const filteredCompanies = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return companies.value
+  }
+  
+  const query = searchQuery.value.toLowerCase().trim()
+  return companies.value.filter(company => 
+    company.name.toLowerCase().includes(query) ||
+    company.ticker.toLowerCase().includes(query) ||
+    (company.sector && company.sector.toLowerCase().includes(query)) ||
+    (company.industry && company.industry.toLowerCase().includes(query))
+  )
+})
+
+const fetchCompanies = async (search = '') => {
+  try {
+    loading.value = true
+    const params = search ? { search } : {}
+    const response = await axios.get('/api/companies', { params })
+    companies.value = response.data
+  } catch (error) {
+    console.error('Error fetching companies:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// Debounced search
+let searchTimeout = null
+watch(searchQuery, (newValue) => {
+  clearTimeout(searchTimeout)
+  searchTimeout = setTimeout(() => {
+    fetchCompanies(newValue)
+  }, 300)
+})
+
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value
+  
+  if (isDarkMode.value) {
+    document.documentElement.classList.add('dark')
+    localStorage.setItem('theme', 'dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+    localStorage.setItem('theme', 'light')
+  }
+}
+
+const formatMarketCap = (value) => {
+  if (!value) return 'N/A'
+  
+  if (value >= 1000000000000) {
+    return `$${(value / 1000000000000).toFixed(1)}T`
+  } else if (value >= 1000000000) {
+    return `$${(value / 1000000000).toFixed(1)}B`
+  } else {
+    return `$${(value / 1000000).toFixed(1)}M`
+  }
+}
+
+const formatMarketCapAsUserTypes = (value) => {
+  if (!value) return ''
+  
+  // Remove all non-numeric characters except decimal points
+  const numericValue = parseFloat(value.toString().replace(/[^\d.]/g, ''))
+  if (isNaN(numericValue)) return ''
+  
+  if (numericValue >= 1000000000000) {
+    return `${(numericValue / 1000000000000).toFixed(1)} Trillion`
+  } else if (numericValue >= 1000000000) {
+    return `${(numericValue / 1000000000).toFixed(1)} Billion`
+  } else if (numericValue >= 1000000) {
+    return `${(numericValue / 1000000).toFixed(1)} Million`
+  } else if (numericValue >= 1000) {
+    // Format with commas for thousands
+    return numericValue.toLocaleString()
+  } else {
+    return numericValue.toString()
+  }
+}
+
+const parseMarketCapForStorage = (displayValue) => {
+  if (!displayValue) return ''
+  
+  // Extract the numeric value and multiplier
+  const cleanValue = displayValue.toString().replace(/[,$]/g, '')
+  
+  if (cleanValue.includes('Trillion')) {
+    const num = parseFloat(cleanValue.replace(/[^\d.]/g, ''))
+    return num * 1000000000000
+  } else if (cleanValue.includes('Billion')) {
+    const num = parseFloat(cleanValue.replace(/[^\d.]/g, ''))
+    return num * 1000000000
+  } else if (cleanValue.includes('Million')) {
+    const num = parseFloat(cleanValue.replace(/[^\d.]/g, ''))
+    return num * 1000000
+  } else {
+    // Remove commas and parse as regular number
+    return parseFloat(cleanValue.replace(/,/g, '')) || ''
+  }
+}
+
+const parseMarketCap = (input) => {
+  if (!input) return 0
+  
+  const value = input.toString().trim().toUpperCase()
+  
+  // Handle comma-separated numbers and shorthand notation
+  const match = value.match(/^([\d,]+\.?\d*)([KMBT])?$/)
+  
+  if (!match) return 0
+  
+  // Remove commas and parse number
+  const number = parseFloat(match[1].replace(/,/g, ''))
+  if (isNaN(number)) return 0
+  
+  const multiplier = match[2]
+  switch (multiplier) {
+    case 'K': return number * 1000
+    case 'M': return number * 1000000
+    case 'B': return number * 1000000000
+    case 'T': return number * 1000000000000
+    default: return number
+  }
+}
+
+const formatMarketCapInput = (value) => {
+  if (!value) return ''
+  
+  if (value >= 1000000000000) {
+    return `${(value / 1000000000000).toFixed(1)}T`
+  } else if (value >= 1000000000) {
+    return `${(value / 1000000000).toFixed(1)}B`
+  } else if (value >= 1000000) {
+    return `${(value / 1000000).toFixed(1)}M`
+  } else if (value >= 1000) {
+    return `${(value / 1000).toFixed(1)}K`
+  } else {
+    return value.toString()
+  }
+}
+
+const handleMarketCapInput = (event) => {
+  const input = event.target.value
+  marketCapInput.value = input
+  
+  // Clear existing timer
+  if (marketCapValidation.value.timer) {
+    clearTimeout(marketCapValidation.value.timer)
+  }
+  
+  if (!input) {
+    companyForm.value.market_cap = ''
+    marketCapValidation.value.state = ''
+    return
+  }
+  
+  // Parse and store numeric value
+  const numericValue = parseMarketCap(input)
+  companyForm.value.market_cap = numericValue
+  
+  // Set validation state with debounce
+  marketCapValidation.value.state = 'validating'
+  marketCapValidation.value.timer = setTimeout(() => {
+    if (numericValue > 0) {
+      marketCapValidation.value.state = 'valid'
+    } else {
+      marketCapValidation.value.state = 'invalid'
+    }
+  }, 500)
+}
+
+const openCreateModal = () => {
+  // First close any open modals and clear state
+  showDetailsModal.value = false
+  selectedCompany.value = null
+  isEditingCompany.value = false
+  
+  // Then open create modal
+  showCreateModal.value = true
+}
+
+const closeCreateModal = () => {
+  companyForm.value = {
+    name: '',
+    ticker_symbol: '',
+    sector: '',
+    industry: '',
+    market_cap: '',
+    description: ''
+  }
+  marketCapInput.value = ''
+  if (marketCapValidation.value.timer) {
+    clearTimeout(marketCapValidation.value.timer)
+  }
+  marketCapValidation.value.state = ''
+  errors.value = {}
+  showCreateModal.value = false
+}
+
+const createCompany = async () => {
+  try {
+    creating.value = true
+    errors.value = {}
+    
+    // Convert market_cap to number if provided
+    const formData = { ...companyForm.value }
+    if (formData.market_cap) {
+      formData.market_cap = parseFloat(formData.market_cap)
+    }
+    
+    const response = await axios.post('/api/companies', formData)
+    companies.value.unshift(response.data)
+    
+    // Reset form and close modal
+    companyForm.value = {
+      name: '',
+      ticker_symbol: '',
+      sector: '',
+      industry: '',
+      market_cap: '',
+      description: ''
+    }
+    marketCapInput.value = ''
+    if (marketCapValidation.value.timer) {
+      clearTimeout(marketCapValidation.value.timer)
+    }
+    marketCapValidation.value.state = ''
+    showCreateModal.value = false
+    
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      errors.value = error.response.data.errors || {}
+    } else {
+      console.error('Error creating company:', error)
+      errors.value = { general: 'An error occurred while creating the company. Please try again.' }
+    }
+  } finally {
+    creating.value = false
+  }
+}
+
+const viewCompanyDetails = async (company) => {
+  console.log('viewCompanyDetails called with:', company)
+  try {
+    // Close create modal if open
+    showCreateModal.value = false
+    
+    // Fetch detailed company information from API
+    console.log('Fetching company details for ID:', company.id)
+    const response = await axios.get(`/api/companies/${company.id}`)
+    
+    // Set both values in sequence
+    selectedCompany.value = { ...response.data }
+    showDetailsModal.value = true
+    
+    console.log('selectedCompany set to:', selectedCompany.value)
+    console.log('showDetailsModal set to:', showDetailsModal.value)
+    console.log('Both values:', !!selectedCompany.value, showDetailsModal.value)
+    
+    // Force Vue to detect changes
+    await nextTick()
+    console.log('After nextTick - values:', !!selectedCompany.value, showDetailsModal.value)
+  } catch (error) {
+    console.error('Error fetching company details:', error)
+    // Fallback to basic company data if API call fails
+    selectedCompany.value = { ...company }
+    showDetailsModal.value = true
+  }
+}
+
+const deleteCompany = async (company) => {
+  if (!confirm(`Are you sure you want to delete ${company.name}? This action cannot be undone.`)) {
+    return
+  }
+  
+  try {
+    deleting.value = true
+    await axios.delete(`/api/companies/${company.id}`)
+    
+    // Remove company from the list
+    const index = companies.value.findIndex(c => c.id === company.id)
+    if (index !== -1) {
+      companies.value.splice(index, 1)
+    }
+    
+    // Close modal
+    showDetailsModal.value = false
+    selectedCompany.value = null
+    
+  } catch (error) {
+    console.error('Error deleting company:', error)
+    alert('Failed to delete company. Please try again.')
+  } finally {
+    deleting.value = false
+  }
+}
+
+const fetchCategoriesAndTags = async () => {
+  try {
+    const [categoriesResponse, tagsResponse] = await Promise.all([
+      axios.get('/api/categories'),
+      axios.get('/api/tags')
+    ])
+    categories.value = categoriesResponse.data
+    tags.value = tagsResponse.data
+  } catch (error) {
+    console.error('Error fetching categories and tags:', error)
+  }
+}
+
+const openResearchModal = (company) => {
+  selectedCompany.value = company
+  researchForm.value.company_id = company.id
+  showResearchModal.value = true
+}
+
+const openNoteModal = (company) => {
+  selectedCompany.value = company
+  noteForm.value.company_id = company.id
+  noteForm.value.title = ''
+  noteForm.value.content = ''
+  noteForm.value.category_id = ''
+  noteForm.value.visibility = 'private'
+  errors.value = {}
+  showNoteModal.value = true
+}
+
+const openUploadModal = (company) => {
+  selectedCompany.value = company
+  uploadForm.value.company_id = company.id
+  uploadForm.value.title = ''
+  uploadForm.value.description = ''
+  uploadForm.value.category_id = ''
+  uploadForm.value.visibility = 'private'
+  uploadForm.value.files = []
+  errors.value = {}
+  showUploadModal.value = true
+}
+
+const createNote = async () => {
+  try {
+    creatingNote.value = true
+    errors.value = {}
+    
+    const response = await axios.post('/api/research-items', {
+      title: noteForm.value.title,
+      content: noteForm.value.content,
+      company_id: noteForm.value.company_id,
+      category_id: noteForm.value.category_id,
+      visibility: noteForm.value.visibility
+    })
+    
+    // Reset form and close modal
+    noteForm.value = {
+      title: '',
+      content: '',
+      company_id: '',
+      category_id: '',
+      visibility: 'private'
+    }
+    showNoteModal.value = false
+    
+    // Refresh company details if modal is open
+    if (showDetailsModal.value && selectedCompany.value) {
+      viewCompanyDetails(selectedCompany.value)
+    }
+    
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      errors.value = error.response.data.errors || {}
+    } else {
+      console.error('Error creating note:', error)
+      errors.value = { general: 'An error occurred while creating the note. Please try again.' }
+    }
+  } finally {
+    creatingNote.value = false
+  }
+}
+
+const uploadDocuments = async () => {
+  try {
+    uploading.value = true
+    errors.value = {}
+    
+    const formData = new FormData()
+    formData.append('title', uploadForm.value.title)
+    formData.append('content', uploadForm.value.description)
+    formData.append('company_id', uploadForm.value.company_id)
+    formData.append('visibility', uploadForm.value.visibility)
+    
+    if (uploadForm.value.category_id) {
+      formData.append('category_id', uploadForm.value.category_id)
+    }
+    
+    // Append files
+    uploadForm.value.files.forEach((file, index) => {
+      formData.append(`attachments[${index}]`, file)
+    })
+    
+    const response = await axios.post('/api/research-items', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    
+    // Reset form and close modal
+    uploadForm.value = {
+      title: '',
+      description: '',
+      company_id: '',
+      category_id: '',
+      visibility: 'private',
+      files: []
+    }
+    showUploadModal.value = false
+    
+    // Refresh company details if modal is open
+    if (showDetailsModal.value && selectedCompany.value) {
+      viewCompanyDetails(selectedCompany.value)
+    }
+    
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      errors.value = error.response.data.errors || {}
+    } else {
+      console.error('Error uploading documents:', error)
+      errors.value = { general: 'An error occurred while uploading documents. Please try again.' }
+    }
+  } finally {
+    uploading.value = false
+  }
+}
+
+const handleDocumentUpload = (event) => {
+  const files = Array.from(event.target.files)
+  uploadForm.value.files = [...uploadForm.value.files, ...files]
+}
+
+const removeUploadFile = (index) => {
+  uploadForm.value.files.splice(index, 1)
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
+
+const toggleViewMode = () => {
+  viewMode.value = viewMode.value === 'cards' ? 'list' : 'cards'
+  selectedCompanies.value = []
+  isSelectAll.value = false
+}
+
+const toggleSelectAll = () => {
+  if (isSelectAll.value) {
+    selectedCompanies.value = []
+    isSelectAll.value = false
+  } else {
+    selectedCompanies.value = filteredCompanies.value.map(c => c.id)
+    isSelectAll.value = true
+  }
+}
+
+const toggleCompanySelection = (companyId) => {
+  const index = selectedCompanies.value.indexOf(companyId)
+  if (index > -1) {
+    selectedCompanies.value.splice(index, 1)
+  } else {
+    selectedCompanies.value.push(companyId)
+  }
+  
+  // Update select all checkbox state
+  isSelectAll.value = selectedCompanies.value.length === filteredCompanies.value.length
+}
+
+const bulkDeleteCompanies = async () => {
+  if (selectedCompanies.value.length === 0) return
+  
+  if (!confirm(`Are you sure you want to delete ${selectedCompanies.value.length} selected companies? This action cannot be undone.`)) {
+    return
+  }
+  
+  try {
+    bulkDeleting.value = true
+    
+    // Delete companies one by one
+    const deletePromises = selectedCompanies.value.map(companyId => 
+      axios.delete(`/api/companies/${companyId}`)
+    )
+    
+    await Promise.all(deletePromises)
+    
+    // Remove deleted companies from local state
+    companies.value = companies.value.filter(company => 
+      !selectedCompanies.value.includes(company.id)
+    )
+    
+    selectedCompanies.value = []
+    isSelectAll.value = false
+    
+  } catch (error) {
+    console.error('Error deleting companies:', error)
+    alert('An error occurred while deleting companies. Please try again.')
+  } finally {
+    bulkDeleting.value = false
+  }
+}
+
+// Canvas stars animation
+const starsCanvas = ref(null)
+
+// Company Edit Functions
+const editCompany = (company) => {
+  // Open details modal and start editing
+  viewCompanyDetails(company)
+  nextTick(() => {
+    startEditingCompany()
+  })
+}
+
+const startEditingCompany = () => {
+  if (!selectedCompany.value) return
+  
+  // Populate form with current company data
+  companyForm.value = {
+    name: selectedCompany.value.name || '',
+    ticker_symbol: selectedCompany.value.ticker || '',
+    sector: selectedCompany.value.sector || '',
+    industry: selectedCompany.value.industry || '',
+    market_cap: selectedCompany.value.marketCap || '',
+    description: selectedCompany.value.description || ''
+  }
+  
+  isEditingCompany.value = true
+}
+
+const saveCompanyEdits = async () => {
+  if (!selectedCompany.value) return
+  
+  try {
+    editingCompany.value = true
+    errors.value = {}
+    
+    const response = await axios.put(`/api/companies/${selectedCompany.value.id}`, {
+      name: companyForm.value.name,
+      ticker_symbol: companyForm.value.ticker_symbol,
+      sector: companyForm.value.sector,
+      industry: companyForm.value.industry,
+      market_cap: parseMarketCap(companyForm.value.market_cap),
+      description: companyForm.value.description
+    })
+    
+    // Update the company in the list
+    const index = companies.value.findIndex(c => c.id === selectedCompany.value.id)
+    if (index !== -1) {
+      companies.value[index] = { ...companies.value[index], ...response.data }
+    }
+    
+    // Update selectedCompany
+    selectedCompany.value = { ...selectedCompany.value, ...response.data }
+    
+    // Reset form and exit edit mode
+    companyForm.value = {
+      name: '',
+      ticker_symbol: '',
+      sector: '',
+      industry: '',
+      market_cap: '',
+      description: ''
+    }
+    isEditingCompany.value = false
+    
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      errors.value = error.response.data.errors || {}
+    } else {
+      console.error('Error updating company:', error)
+      errors.value = { general: 'An error occurred while updating the company. Please try again.' }
+    }
+  } finally {
+    editingCompany.value = false
+  }
+}
+
+const closeDetailsModal = () => {
+  showDetailsModal.value = false
+  isEditingCompany.value = false
+  selectedCompany.value = null
+  errors.value = {}
+}
+
+onMounted(() => {
+  fetchCompanies()
+  fetchCategoriesAndTags()
+  
+  // Initialize dark mode from localStorage or system preference
+  const savedTheme = localStorage.getItem('theme')
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  
+  if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+    isDarkMode.value = true
+    document.documentElement.classList.add('dark')
+  } else {
+    isDarkMode.value = false
+    document.documentElement.classList.remove('dark')
+  }
+  
+  // Initialize shooting stars animation  
+  initStarsAnimation()
+})
+
+// Canvas stars animation
+
+const initStarsAnimation = () => {
+  setTimeout(() => {
+    const canvas = starsCanvas.value
+    if (!canvas) return
+    
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    // Set canvas size
+    canvas.width = window.innerWidth
+    canvas.height = window.innerHeight
+    
+    // Shooting stars array
+    const shootingStars = []
+    const staticStars = []
+    const satellites = []
+    
+    // Create static twinkling stars with depth
+    for (let i = 0; i < 50; i++) {
+      const size = Math.random() * 2 + 0.5
+      const y = Math.random() * canvas.height
+      
+      // Calculate distance factor (smaller stars higher up appear more distant)
+      const distanceFactor = (size / 2.5) * ((canvas.height - y) / canvas.height)
+      const baseOpacity = 0.05 + (distanceFactor * 0.35) // 0.05 to 0.4 range
+      
+      staticStars.push({
+        x: Math.random() * canvas.width,
+        y: y,
+        size: size,
+        baseOpacity: baseOpacity,
+        opacity: baseOpacity,
+        twinkleSpeed: Math.random() * 0.02 + 0.01,
+        twinkleDirection: Math.random() < 0.5 ? 1 : -1,
+        distanceFactor: distanceFactor
+      })
+    }
+    
+    // Create shooting star with depth
+    const createShootingStar = () => {
+      const size = Math.random() * 3 + 2
+      const y = Math.random() * canvas.height * 0.6
+      
+      // Calculate distance factor for shooting stars
+      const distanceFactor = (size / 5) * ((canvas.height - y) / canvas.height)
+      const baseOpacity = 0.1 + (distanceFactor * 0.3) // 0.1 to 0.4 range
+      
+      return {
+        x: canvas.width + 100,
+        y: y,
+        size: size,
+        speed: Math.random() * 5 + 3,
+        opacity: baseOpacity,
+        baseOpacity: baseOpacity,
+        tail: [],
+        tailLength: Math.floor(15 + (distanceFactor * 10)), // 15-25 tail length based on distance
+        distanceFactor: distanceFactor
+      }
+    }
+    
+    // Add initial shooting stars
+    for (let i = 0; i < 3; i++) {
+      shootingStars.push(createShootingStar())
+    }
+    
+    // Create satellite function
+    const createSatellite = () => {
+      const size = Math.random() * 1.5 + 1
+      const speed = Math.random() * 1.5 + 0.8
+      
+      // Start from left side, travel to random point on right side
+      const startX = -50
+      const startY = Math.random() * canvas.height * 0.8 + canvas.height * 0.1 // Avoid extreme edges
+      const endX = canvas.width + 50
+      const endY = Math.random() * canvas.height * 0.8 + canvas.height * 0.1
+      
+      // Calculate direction vector
+      const dx = endX - startX
+      const dy = endY - startY
+      const distance = Math.sqrt(dx * dx + dy * dy)
+      const vx = (dx / distance) * speed
+      const vy = (dy / distance) * speed
+      
+      return {
+        x: startX,
+        y: startY,
+        vx: vx,
+        vy: vy,
+        size: size,
+        opacity: 0.3 + Math.random() * 0.3, // 0.3 to 0.6 opacity
+        blinkTimer: 0,
+        blinkInterval: Math.random() * 90 + 60, // More frequent blinking
+        isBlinking: false
+      }
+    }
+    
+    // Satellite spawn timer
+    let satelliteSpawnTimer = 0
+    const satelliteSpawnInterval = Math.random() * 600 + 300 // Every 5-15 seconds (at 60fps)
+    
+    // Create Milky Way background gradient
+    const createMilkyWayBackground = () => {
+      // Create diagonal Milky Way band
+      const gradient = ctx.createLinearGradient(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7)
+      gradient.addColorStop(0, 'rgba(40, 30, 60, 0.05)')
+      gradient.addColorStop(0.2, 'rgba(80, 60, 120, 0.15)')
+      gradient.addColorStop(0.4, 'rgba(120, 90, 160, 0.25)')
+      gradient.addColorStop(0.6, 'rgba(100, 80, 140, 0.2)')
+      gradient.addColorStop(0.8, 'rgba(60, 50, 100, 0.12)')
+      gradient.addColorStop(1, 'rgba(30, 25, 50, 0.05)')
+      
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      
+      
+      // Reset alpha for other elements
+      ctx.globalAlpha = 1
+    }
+    
+    // Animation loop
+    const animate = () => {
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      
+      // Draw Milky Way background
+      createMilkyWayBackground()
+      
+      // Draw static stars with depth-based opacity
+      staticStars.forEach(star => {
+        // Use distance factor for opacity calculation
+        const finalOpacity = star.opacity * star.distanceFactor
+        ctx.globalAlpha = finalOpacity
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2)
+        ctx.fill()
+        
+        // Twinkle effect with distance-aware limits
+        const minOpacity = star.baseOpacity * 0.3
+        const maxOpacity = star.baseOpacity * 1.2
+        
+        star.opacity += star.twinkleSpeed * star.twinkleDirection
+        if (star.opacity <= minOpacity || star.opacity >= maxOpacity) {
+          star.twinkleDirection *= -1
+        }
+      })
+      
+      // Draw shooting stars
+      shootingStars.forEach((star, index) => {
+        // Update position
+        star.x -= star.speed
+        star.y += star.speed * 0.5
+        
+        // Add to tail
+        star.tail.unshift({ x: star.x, y: star.y })
+        if (star.tail.length > star.tailLength) {
+          star.tail.pop()
+        }
+        
+        // Draw tail with distance-based opacity
+        star.tail.forEach((point, i) => {
+          const tailOpacity = (1 - i / star.tailLength) * star.opacity * star.distanceFactor * 0.5
+          ctx.globalAlpha = tailOpacity
+          ctx.fillStyle = '#ffffff'
+          const tailSize = star.size * (1 - i / star.tailLength)
+          ctx.beginPath()
+          ctx.arc(point.x, point.y, tailSize, 0, Math.PI * 2)
+          ctx.fill()
+        })
+        
+        // Draw main star with distance-based opacity
+        ctx.globalAlpha = star.opacity * star.distanceFactor
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2)
+        ctx.fill()
+        
+        // Add glow effect with distance-based intensity
+        const glowIntensity = star.distanceFactor > 0.7 ? 0.15 : 0.05 // Brighter glow for closer stars
+        ctx.globalAlpha = star.opacity * glowIntensity
+        ctx.fillStyle = '#ffffff'
+        ctx.beginPath()
+        ctx.arc(star.x, star.y, star.size * (2 + star.distanceFactor), 0, Math.PI * 2)
+        ctx.fill()
+        
+        // Remove if off screen
+        if (star.x < -100) {
+          shootingStars.splice(index, 1)
+          shootingStars.push(createShootingStar())
+        }
+      })
+      
+      // Handle satellite spawning
+      satelliteSpawnTimer++
+      if (satelliteSpawnTimer >= satelliteSpawnInterval) {
+        satellites.push(createSatellite())
+        satelliteSpawnTimer = 0
+      }
+      
+      // Draw satellites
+      satellites.forEach((satellite, index) => {
+        // Update position with linear movement
+        satellite.x += satellite.vx
+        satellite.y += satellite.vy
+        
+        // Handle blinking
+        satellite.blinkTimer++
+        if (satellite.blinkTimer >= satellite.blinkInterval) {
+          satellite.isBlinking = !satellite.isBlinking
+          satellite.blinkTimer = 0
+          if (!satellite.isBlinking) {
+            // Set next blink interval
+            satellite.blinkInterval = Math.random() * 60 + 120
+          } else {
+            // Short blink duration
+            satellite.blinkInterval = 3
+          }
+        }
+        
+        // Draw satellite
+        if (!satellite.isBlinking) {
+          ctx.globalAlpha = satellite.opacity
+          ctx.fillStyle = '#ffffff'
+          ctx.beginPath()
+          ctx.arc(satellite.x, satellite.y, satellite.size, 0, Math.PI * 2)
+          ctx.fill()
+          
+          // Add subtle red/green navigation lights occasionally
+          if (Math.random() < 0.2) { // 20% chance for colored light
+            ctx.globalAlpha = satellite.opacity * 0.6
+            ctx.fillStyle = Math.random() < 0.5 ? '#ff4444' : '#44ff44'
+            ctx.beginPath()
+            ctx.arc(satellite.x + satellite.size * 1.5, satellite.y, satellite.size * 0.3, 0, Math.PI * 2)
+            ctx.fill()
+          }
+        }
+        
+        // Remove if off screen (with buffer)
+        if (satellite.x < -100 || satellite.x > canvas.width + 100 || 
+            satellite.y < -100 || satellite.y > canvas.height + 100) {
+          satellites.splice(index, 1)
+        }
+      })
+      
+      ctx.globalAlpha = 1
+      requestAnimationFrame(animate)
+    }
+    
+    animate()
+  }, 200)
+}
+</script>
