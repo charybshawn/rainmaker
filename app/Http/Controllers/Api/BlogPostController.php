@@ -57,4 +57,18 @@ class BlogPostController extends Controller
 
         return response()->json($blogPosts->values());
     }
+
+    /**
+     * Get published quotes for display
+     */
+    public function quotes()
+    {
+        $quotes = BlogPost::where('status', 'published')
+            ->where('category', 'quotes')
+            ->select(['id', 'content', 'author_name', 'published_at'])
+            ->orderBy('published_at', 'desc')
+            ->get();
+
+        return response()->json($quotes);
+    }
 }

@@ -44,6 +44,36 @@
                   <p class="mt-1 text-xs text-gray-500">Supports basic markdown formatting</p>
                 </div>
 
+                <!-- Category -->
+                <div>
+                  <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                  <select
+                    v-model="form.category"
+                    id="category"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  >
+                    <option value="">Select category</option>
+                    <option value="analysis">Market Analysis</option>
+                    <option value="strategy">Investment Strategy</option>
+                    <option value="insights">Company Insights</option>
+                    <option value="quotes">Investment Quotes</option>
+                    <option value="news">Market News</option>
+                  </select>
+                </div>
+
+                <!-- Author Name (for quotes) -->
+                <div v-if="form.category === 'quotes'">
+                  <label for="author_name" class="block text-sm font-medium text-gray-700">Quote Author</label>
+                  <input
+                    v-model="form.author_name"
+                    type="text"
+                    id="author_name"
+                    placeholder="e.g., Warren Buffett, Benjamin Graham"
+                    class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Required for quotes category</p>
+                </div>
+
                 <!-- Quick Company Tags -->
                 <div v-if="preselectedCompany">
                   <label class="block text-sm font-medium text-gray-700 mb-2">Related Company</label>
@@ -118,6 +148,8 @@ const emit = defineEmits(['close', 'posted'])
 const form = ref({
   title: '',
   content: '',
+  category: '',
+  author_name: '',
   status: 'published',
   company_ids: []
 })
@@ -138,6 +170,8 @@ watch(() => props.show, (isShown) => {
     form.value = {
       title: '',
       content: '',
+      category: '',
+      author_name: '',
       status: 'published',
       company_ids: props.preselectedCompany ? [props.preselectedCompany.id] : []
     }

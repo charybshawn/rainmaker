@@ -78,6 +78,7 @@ Route::prefix('api')->group(function () {
 
     // Public search endpoints
     Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
+    Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
 
     Route::middleware('auth')->group(function () {
         Route::post('companies', [CompanyController::class, 'store']);

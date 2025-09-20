@@ -13,6 +13,8 @@ class BlogPost extends Model
         'title',
         'slug',
         'content',
+        'category',
+        'author_name',
         'status',
         'published_at',
         'user_id',

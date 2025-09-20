@@ -73,12 +73,13 @@
           </div>
         </div>
 
-        <!-- Title and Action Button -->
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <h2 class="text-4xl font-semibold text-gray-900 dark:text-white mb-2">Investment Research</h2>
-            <p class="text-xl text-gray-600 dark:text-gray-300">Search and discover companies in your portfolio</p>
-          </div>
+        <!-- Animated Quotes Section - Crown above content -->
+        <div class="mb-0">
+          <AnimatedQuotes />
+        </div>
+
+        <!-- Action Button Row -->
+        <div class="flex justify-end mb-8">
           <Link
             v-if="!$page.props.auth.user"
             :href="route('login')"
@@ -92,8 +93,8 @@
     </div>
 
     <!-- Glass Container for Lower Content -->
-    <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl sm:rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 p-4 sm:p-6 lg:p-8 relative" style="backdrop-filter: blur(20px) saturate(180%);">
+    <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6 sm:py-8 mt-24">
+      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl sm:rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 p-4 sm:p-6 lg:p-8 relative pt-24" style="backdrop-filter: blur(20px) saturate(180%);">
 
         <!-- Navigation Tabs with Search (top position) -->
         <div class="flex items-center justify-between mb-16 pt-4">
@@ -651,71 +652,261 @@
 
           <!-- Insights Tab -->
           <div v-if="!showSearchResults && activeTab === 'insights'" class="space-y-6">
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold text-white flex items-center">
-                <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                Community Insights & Research
-              </h3>
-              <button
-                v-if="$page.props.auth.user"
-                @click="showQuickBlogModal = true"
-                class="px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 text-purple-300 font-medium rounded-lg transition-colors border border-purple-400/30"
-              >
-                <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                New Insight
-              </button>
-            </div>
 
-            <!-- Community Insights Grid -->
-            <div v-if="$page.props.recentBlogPosts && $page.props.recentBlogPosts.length > 0" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              <div
-                v-for="post in $page.props.recentBlogPosts"
-                :key="post.id"
-                class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20 hover:bg-white/30 dark:hover:bg-white/15 transition-all duration-200 group"
-              >
-                <h4 class="text-lg font-semibold text-white mb-3 line-clamp-2 group-hover:text-purple-300 transition-colors">
-                  <Link
-                    :href="route('blog.show', post.slug)"
-                    class="hover:text-purple-400 transition-colors"
-                  >
-                    {{ post.title }}
-                  </Link>
-                </h4>
-                <p class="text-sm text-gray-300 mb-4 line-clamp-3">
-                  {{ getExcerpt(post.content) }}
-                </p>
-                <div class="flex items-center justify-between text-sm">
-                  <Link
-                    :href="route('user.blog', post.user.name)"
-                    class="text-purple-400 hover:text-purple-300 transition-colors font-medium"
-                  >
-                    {{ post.user.name }}
-                  </Link>
-                  <span class="text-gray-400">{{ formatDate(post.published_at) }}</span>
+            <!-- Blog Post Content View -->
+            <div v-if="showBlogPostContent && selectedBlogPost" class="space-y-6">
+              <!-- Breadcrumb -->
+              <div class="flex items-center text-sm text-gray-300 mb-6">
+                <button @click="backToInsights" class="text-purple-400 hover:text-purple-300 transition-colors flex items-center">
+                  <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                  </svg>
+                  Back to Insights
+                </button>
+                <span class="mx-2 text-gray-500">/</span>
+                <span class="text-gray-400">{{ selectedBlogPost.title }}</span>
+              </div>
+
+              <!-- Blog Post Content -->
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/8 via-white/4 to-transparent rounded-2xl shadow-[0_8px_24px_0_rgba(31,38,135,0.15)] border border-white/15 p-8" style="backdrop-filter: blur(20px) saturate(180%);">
+                <h1 class="text-3xl font-bold text-white mb-6">{{ selectedBlogPost.title }}</h1>
+
+                <div class="flex items-center gap-4 mb-8 text-sm text-gray-300">
+                  <span class="text-purple-400 font-medium">{{ selectedBlogPost.user?.name }}</span>
+                  <span>{{ formatDate(selectedBlogPost.published_at) }}</span>
+                </div>
+
+                <div class="prose prose-lg prose-invert max-w-none">
+                  <div class="text-gray-200 leading-relaxed whitespace-pre-line">
+                    {{ selectedBlogPost.content }}
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Empty State for Insights -->
-            <div v-else class="text-center py-16">
-              <div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
+            <!-- Insights List View -->
+            <div v-else>
+              <!-- Header with Title and New Insight Button -->
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                  <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  Community Insights & Research
+                </h3>
+                <button
+                  v-if="$page.props.auth.user"
+                  @click="showQuickBlogModal = true"
+                  class="px-4 py-2 bg-purple-500/30 hover:bg-purple-500/50 text-purple-300 font-medium rounded-lg transition-colors border border-purple-400/30"
+                >
+                  New Insight
+                </button>
               </div>
-              <h4 class="text-lg font-semibold text-white mb-2">No Insights Yet</h4>
-              <p class="text-sm text-gray-300 mb-4">Be the first to share market insights with the community</p>
-              <button
-                v-if="$page.props.auth.user"
-                @click="showQuickBlogModal = true"
-                class="px-6 py-3 bg-purple-500/30 hover:bg-purple-500/50 text-purple-300 font-medium rounded-lg transition-colors border border-purple-400/30"
-              >
-                Share Your First Insight
-              </button>
+
+              <!-- Filters and Controls -->
+              <div class="mb-10">
+                <div class="flex flex-col lg:flex-row gap-8 items-start lg:items-center justify-between">
+                  <!-- Search and Category Filter -->
+                  <div class="flex flex-col sm:flex-row gap-6 flex-1">
+                    <!-- Search Input -->
+                    <div class="relative">
+                      <input
+                        v-model="insightsSearch"
+                        type="text"
+                        placeholder="Search insights..."
+                        class="w-full sm:w-64 backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400/50 transition-all duration-200 hover:bg-white/15"
+                      />
+                      <svg class="absolute right-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                    </div>
+
+                    <!-- Category Filter -->
+                    <select
+                      v-model="insightsFilter"
+                      class="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400/50 transition-all duration-200 hover:bg-white/15"
+                    >
+                      <option
+                        v-for="option in insightsCategoryOptions"
+                        :key="option.value"
+                        :value="option.value"
+                        class="bg-slate-800 text-white"
+                      >
+                        {{ option.label }} ({{ option.count }})
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- View Mode and Items Per Page -->
+                  <div class="flex items-center gap-6">
+                    <!-- Items Per Page -->
+                    <select
+                      v-model="insightsPerPage"
+                      class="backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-400/50 transition-all duration-200 hover:bg-white/15"
+                    >
+                      <option value="6" class="bg-slate-800">6 per page</option>
+                      <option value="9" class="bg-slate-800">9 per page</option>
+                      <option value="12" class="bg-slate-800">12 per page</option>
+                      <option value="18" class="bg-slate-800">18 per page</option>
+                    </select>
+
+                    <!-- View Mode Toggle -->
+                    <div class="flex backdrop-blur-sm bg-white/8 rounded-2xl p-2 border border-white/15 shadow-[0_4px_16px_0_rgba(31,38,135,0.08)]">
+                      <button
+                        @click="insightsViewMode = 'cards'"
+                        :class="[
+                          'p-3 rounded-xl transition-all duration-200 transform-gpu',
+                          insightsViewMode === 'cards'
+                            ? 'bg-gradient-to-br from-purple-500/50 to-purple-600/50 text-white shadow-[0_2px_4px_rgba(147,51,234,0.2)] scale-105'
+                            : 'text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105'
+                        ]"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        @click="insightsViewMode = 'list'"
+                        :class="[
+                          'p-3 rounded-xl transition-all duration-200 transform-gpu',
+                          insightsViewMode === 'list'
+                            ? 'bg-gradient-to-br from-purple-500/50 to-purple-600/50 text-white shadow-[0_2px_4px_rgba(147,51,234,0.2)] scale-105'
+                            : 'text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105'
+                        ]"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Results Summary -->
+                <div class="mt-4 text-sm text-gray-400">
+                  Showing {{ paginatedInsights.length }} of {{ filteredInsights.length }} insights
+                  <span v-if="insightsSearch || insightsFilter !== 'all'">
+                    (filtered from {{ (usePage().props.recentBlogPosts || []).length }} total)
+                  </span>
+                </div>
+              </div>
+
+              <!-- Insights Content -->
+              <div v-if="paginatedInsights.length > 0">
+                <!-- Card View -->
+                <div v-if="insightsViewMode === 'cards'" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                  <div
+                    v-for="post in paginatedInsights"
+                    :key="post.id"
+                    @click="viewBlogPost(post)"
+                    class="group relative p-6 transition-all duration-500 hover:scale-105 cursor-pointer"
+                  >
+                    <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/10 rounded-2xl border border-purple-400/20"></div>
+                    <div class="relative z-10">
+                      <div class="flex items-center justify-between mb-3">
+                        <p class="font-medium text-white group-hover:text-purple-200 line-clamp-2 flex-1 pr-3">{{ post.title }}</p>
+                        <span v-if="post.category" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-400/20 whitespace-nowrap">
+                          {{ post.category }}
+                        </span>
+                      </div>
+                      <p class="text-sm text-gray-400 mt-1 line-clamp-2 group-hover:text-gray-300">{{ getExcerpt(post.content) }}</p>
+                      <div class="flex items-center justify-between mt-3">
+                        <p class="text-sm text-gray-400 group-hover:text-gray-300">by {{ post.user.name }}</p>
+                        <p class="text-xs text-gray-500 group-hover:text-gray-400">{{ formatDate(post.published_at) }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- List View -->
+                <div v-else class="space-y-1 mb-6">
+                  <div
+                    v-for="post in paginatedInsights"
+                    :key="post.id"
+                    class="py-4 px-2 hover:bg-white/5 transition-colors duration-200 group"
+                  >
+                    <div class="flex items-start justify-between">
+                      <div class="flex-1">
+                        <div class="flex items-center gap-4 mb-2">
+                          <h4 class="text-lg font-semibold text-white group-hover:text-purple-300 transition-colors flex-1">
+                            <button
+                              @click="viewBlogPost(post)"
+                              class="hover:text-purple-300 transition-all duration-300 text-left"
+                            >
+                              {{ post.title }}
+                            </button>
+                          </h4>
+                          <span v-if="post.category" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-400/20">
+                            {{ post.category }}
+                          </span>
+                          <span class="text-sm text-purple-400 font-medium whitespace-nowrap">
+                            {{ post.user.name }}
+                          </span>
+                          <span class="text-sm text-gray-400 whitespace-nowrap">{{ formatDate(post.published_at) }}</span>
+                        </div>
+                        <p class="text-gray-300 text-sm line-clamp-1 pr-4">
+                          {{ getExcerpt(post.content) }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="totalInsightsPages > 1" class="flex items-center justify-center space-x-3 mt-8">
+                  <button
+                    @click="insightsCurrentPage = Math.max(1, insightsCurrentPage - 1)"
+                    :disabled="insightsCurrentPage === 1"
+                    class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-purple-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
+                  >
+                    Previous
+                  </button>
+
+                  <button
+                    v-for="page in Math.min(totalInsightsPages, 5)"
+                    :key="page"
+                    @click="insightsCurrentPage = page"
+                    :class="[
+                      'px-4 py-2 rounded-xl backdrop-blur-sm border transition-all duration-200 transform-gpu hover:scale-105',
+                      insightsCurrentPage === page
+                        ? 'bg-gradient-to-br from-purple-500/50 to-purple-600/50 text-white border-purple-400/30 shadow-[0_2px_8px_rgba(147,51,234,0.2)]'
+                        : 'bg-white/10 text-gray-300 border-white/20 hover:bg-white/20 hover:border-purple-400/30'
+                    ]"
+                  >
+                    {{ page }}
+                  </button>
+
+                  <button
+                    @click="insightsCurrentPage = Math.min(totalInsightsPages, insightsCurrentPage + 1)"
+                    :disabled="insightsCurrentPage === totalInsightsPages"
+                    class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-purple-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+
+              <!-- Empty State for Insights -->
+              <div v-else class="text-center py-16">
+                <div class="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-white mb-2">
+                  {{ insightsSearch || insightsFilter !== 'all' ? 'No matching insights found' : 'No Insights Yet' }}
+                </h4>
+                <p class="text-sm text-gray-300 mb-4">
+                  {{ insightsSearch || insightsFilter !== 'all' ? 'Try adjusting your search or filters' : 'Be the first to share market insights with the community' }}
+                </p>
+                <button
+                  v-if="$page.props.auth.user && !insightsSearch && insightsFilter === 'all'"
+                  @click="showQuickBlogModal = true"
+                  class="px-6 py-3 bg-purple-500/30 hover:bg-purple-500/50 text-purple-300 font-medium rounded-lg transition-colors border border-purple-400/30"
+                >
+                  Share Your First Insight
+                </button>
+              </div>
             </div>
           </div>
 
@@ -963,6 +1154,7 @@
       @close="closeQuickBlogModal"
       @posted="handleBlogPosted"
     />
+
   </div>
 </template>
 
@@ -975,6 +1167,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
+import AnimatedQuotes from '@/Components/AnimatedQuotes.vue'
 import CompanyDetailsModal from '@/Components/Modals/CompanyDetailsModal.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
@@ -1011,6 +1204,17 @@ const isEditingCompany = ref(false)
 const editingCompany = ref(false)
 const starsCanvas = ref(null)
 const activeTab = ref('overview') // Tab navigation state
+
+// Blog post viewing state
+const selectedBlogPost = ref(null)
+const showBlogPostContent = ref(false)
+
+// Insights filtering and display state
+const insightsViewMode = ref('cards') // 'cards' or 'list'
+const insightsFilter = ref('all') // 'all', 'analysis', 'strategy', 'insights', 'quotes', 'news'
+const insightsSearch = ref('')
+const insightsCurrentPage = ref(1)
+const insightsPerPage = ref(9)
 
 // Universal Search State
 const searchResults = ref({
@@ -1237,6 +1441,61 @@ const openBlogPost = (post) => {
   window.open(route('blog.show', post.slug), '_blank')
   closeSearch()
 }
+
+const viewBlogPost = (post) => {
+  selectedBlogPost.value = post
+  showBlogPostContent.value = true
+}
+
+const backToInsights = () => {
+  selectedBlogPost.value = null
+  showBlogPostContent.value = false
+}
+
+// Insights computed properties
+const filteredInsights = computed(() => {
+  const posts = usePage().props.recentBlogPosts || []
+
+  // Filter by category
+  let filtered = posts
+  if (insightsFilter.value !== 'all') {
+    filtered = filtered.filter(post => post.category === insightsFilter.value)
+  }
+
+  // Filter by search
+  if (insightsSearch.value) {
+    const search = insightsSearch.value.toLowerCase()
+    filtered = filtered.filter(post =>
+      post.title.toLowerCase().includes(search) ||
+      post.content.toLowerCase().includes(search) ||
+      post.user.name.toLowerCase().includes(search)
+    )
+  }
+
+  return filtered
+})
+
+const paginatedInsights = computed(() => {
+  const start = (insightsCurrentPage.value - 1) * insightsPerPage.value
+  const end = start + insightsPerPage.value
+  return filteredInsights.value.slice(start, end)
+})
+
+const totalInsightsPages = computed(() => {
+  return Math.ceil(filteredInsights.value.length / insightsPerPage.value)
+})
+
+const insightsCategoryOptions = computed(() => {
+  const posts = usePage().props.recentBlogPosts || []
+  return [
+    { value: 'all', label: 'All Categories', count: posts.length },
+    { value: 'analysis', label: 'Market Analysis', count: posts.filter(p => p.category === 'analysis').length },
+    { value: 'strategy', label: 'Investment Strategy', count: posts.filter(p => p.category === 'strategy').length },
+    { value: 'insights', label: 'Company Insights', count: posts.filter(p => p.category === 'insights').length },
+    { value: 'quotes', label: 'Investment Quotes', count: posts.filter(p => p.category === 'quotes').length },
+    { value: 'news', label: 'Market News', count: posts.filter(p => p.category === 'news').length }
+  ]
+})
 
 const openResearchItem = (item) => {
   // Navigate to research item or open modal - implement based on your research item structure
