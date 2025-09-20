@@ -20,7 +20,6 @@ class AdminController extends Controller
         return Inertia::render('Admin/Dashboard', [
             'users_count' => User::count(),
             'roles_count' => Role::count(),
-            'permissions_count' => Permission::count(),
         ]);
     }
 
@@ -31,9 +30,8 @@ class AdminController extends Controller
         }
 
         return Inertia::render('Admin/Users', [
-            'users' => User::with('roles', 'permissions')->get(),
+            'users' => User::with('roles')->get(),
             'roles' => Role::all(),
-            'permissions' => Permission::all(),
         ]);
     }
 
@@ -77,21 +75,6 @@ class AdminController extends Controller
         return redirect()->back()->with('success', 'User roles updated successfully.');
     }
 
-    public function updateUserPermissions(Request $request, User $user)
-    {
-        if (!auth()->user()->hasRole('admin') && !auth()->user()->can('manage users')) {
-            abort(403, 'Unauthorized access.');
-        }
-
-        $request->validate([
-            'permissions' => 'array',
-            'permissions.*' => 'string|exists:permissions,name',
-        ]);
-
-        $user->syncPermissions($request->permissions ?? []);
-
-        return redirect()->back()->with('success', 'User permissions updated successfully.');
-    }
 
     // Role management
     public function storeRole(Request $request)

@@ -54,7 +54,7 @@
       </div>
       
       <!-- Tab Content -->
-      <div class="flex-1 overflow-y-auto">
+      <div class="flex-1 overflow-y-auto bg-white dark:bg-gray-800">
         <!-- Overview Tab -->
         <div v-show="activeTab === 'overview'" class="p-6">
           <!-- Company Overview Grid -->
@@ -626,12 +626,11 @@
                   <MdEditor
                     :modelValue="noteForm.content"
                     @update:modelValue="handleMarkdownChange"
-                    theme="dark"
                     language="en-US"
                     :preview="true"
                     :toolbars="markdownToolbars"
                     :footers="[]"
-                    style="height: 400px; --md-theme: dark; --md-bk-color: #374151; --md-color: #f9fafb; --md-border-color: #4b5563; --md-toolbar-bg: #111827; --md-editor-bg: #374151; --md-preview-bg: #1f2937;"
+                    style="height: 400px;"
                     placeholder="Enter your analysis, thoughts, observations, and research notes..."
                   />
                 </div>
@@ -1086,13 +1085,132 @@
             </form>
           </div>
         </div>
+
+        <!-- Community Insights Tab -->
+        <div v-show="activeTab === 'insights'" class="p-6">
+          <div class="space-y-6">
+            <!-- Header -->
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Community Insights</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Investment insights and analysis from the community about {{ company?.name }}
+                </p>
+              </div>
+              <!-- Create New Insight Button -->
+              <button
+                @click="$emit('create-insight', company)"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Share Insight
+              </button>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loadingInsights" class="text-center py-8">
+              <svg class="animate-spin -ml-1 mr-3 h-8 w-8 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p class="text-gray-500 dark:text-gray-400 mt-2">Loading insights...</p>
+            </div>
+
+            <!-- Insights List -->
+            <div v-else-if="companyInsights?.length > 0" class="space-y-4">
+              <div
+                v-for="insight in companyInsights"
+                :key="insight.id"
+                class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"
+              >
+                <!-- Post Header -->
+                <div class="flex justify-between items-start mb-4">
+                  <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                      <div class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
+                        <span class="text-white font-medium text-sm">
+                          {{ insight.user?.name?.charAt(0).toUpperCase() }}
+                        </span>
+                      </div>
+                    </div>
+                    <div class="ml-3">
+                      <p class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ insight.user?.name }}
+                      </p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400">
+                        {{ formatDate(insight.published_at || insight.created_at) }}
+                        <span
+                          v-if="insight.status === 'draft'"
+                          class="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full"
+                        >
+                          Draft
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Actions dropdown could go here -->
+                </div>
+
+                <!-- Post Content -->
+                <div class="mb-4">
+                  <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                    {{ insight.title }}
+                  </h4>
+                  <div class="prose prose-sm max-w-none text-gray-700 dark:text-gray-300">
+                    <div v-html="renderMarkdown(insight.content)"></div>
+                  </div>
+                </div>
+
+                <!-- Post Footer -->
+                <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div class="flex items-center space-x-4">
+                    <!-- Read More Link -->
+                    <a
+                      :href="route('blog.show', insight.slug)"
+                      class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium transition-colors"
+                    >
+                      Read full post →
+                    </a>
+                  </div>
+
+                  <!-- Additional actions could go here -->
+                  <div class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ insight.content?.length > 200 ? Math.ceil(insight.content.length / 1000) + ' min read' : '< 1 min read' }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else class="text-center py-12">
+              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No insights yet</h3>
+              <p class="text-gray-500 dark:text-gray-400 mb-6">
+                Be the first to share an investment insight about {{ company?.name }}
+              </p>
+              <button
+                @click="$emit('create-insight', company)"
+                class="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Write First Insight
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { MdEditor, MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 
@@ -1161,12 +1279,16 @@ const props = defineProps({
     type: Function,
     default: null
   },
+  insights: {
+    type: Array,
+    default: () => []
+  },
 })
 
 const emit = defineEmits([
-  'close', 
-  'edit', 
-  'add-note', 
+  'close',
+  'edit',
+  'add-note',
   'upload-doc',
   'save-edit',
   'update:edit-form',
@@ -1178,7 +1300,8 @@ const emit = defineEmits([
   'save-document',
   'update:document-form',
   'file-upload',
-  'remove-file'
+  'remove-file',
+  'create-insight'
 ])
 
 // Markdown editor configuration
@@ -1232,6 +1355,15 @@ const activeTab = ref('overview')
 const researchViewMode = ref('list') // 'cards' or 'list'
 const documentsViewMode = ref('list') // 'cards' or 'list'
 
+// Insights-related refs
+const companyInsights = ref([])
+const loadingInsights = ref(false)
+
+// Watch for insights prop changes
+watch(() => props.insights, (newInsights) => {
+  companyInsights.value = newInsights || []
+}, { immediate: true })
+
 const tabs = [
   {
     id: 'overview',
@@ -1256,8 +1388,35 @@ const tabs = [
     name: 'Documents',
     icon: 'svg',
     count: null
+  },
+  {
+    id: 'insights',
+    name: 'Community Insights',
+    icon: 'svg',
+    count: null
   }
 ]
+
+// Utility functions for insights
+const renderMarkdown = (content) => {
+  if (!content) return ''
+  // Simple markdown rendering - you might want to use a proper markdown library
+  return content
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/\n/g, '<br>')
+}
+
+const formatDate = (dateString) => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
+  })
+}
 </script>
 
 <style scoped>

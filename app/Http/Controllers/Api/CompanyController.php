@@ -159,4 +159,16 @@ class CompanyController extends Controller
         $company->delete();
         return response()->json(null, 204);
     }
+
+    public function getBlogPosts(Company $company): JsonResponse
+    {
+        $posts = $company->blogPosts()
+            ->where('status', 'published')
+            ->with('user:id,name')
+            ->latest('published_at')
+            ->take(10)
+            ->get(['id', 'title', 'slug', 'content', 'status', 'published_at', 'created_at', 'user_id']);
+
+        return response()->json($posts);
+    }
 }

@@ -38,12 +38,6 @@
         >
           Roles
         </Link>
-        <Link 
-          :href="route('admin.permissions')" 
-          class="px-3 py-2 rounded-md text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-300"
-        >
-          Permissions
-        </Link>
       </nav>
 
       <!-- Stats Cards -->
@@ -92,27 +86,6 @@
           </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
-          <div class="p-5">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <div class="ml-5 w-0 flex-1">
-                <dl>
-                  <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">
-                    Total Permissions
-                  </dt>
-                  <dd class="text-lg font-medium text-gray-900 dark:text-white">
-                    {{ permissions_count }}
-                  </dd>
-                </dl>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- Quick Actions -->
@@ -140,15 +113,6 @@
               </svg>
               Manage Roles
             </Link>
-            <Link 
-              :href="route('admin.permissions')"
-              class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-            >
-              <svg class="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
-              Manage Permissions
-            </Link>
           </div>
         </div>
       </div>
@@ -165,10 +129,6 @@ defineProps({
     required: true
   },
   roles_count: {
-    type: Number,
-    required: true
-  },
-  permissions_count: {
     type: Number,
     required: true
   }

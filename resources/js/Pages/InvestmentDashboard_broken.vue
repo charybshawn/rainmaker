@@ -1,36 +1,35 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 transition-colors relative">
-
+  <div class="min-h-screen bg-gray-100 dark:bg-gray-950 transition-colors relative">
+    
     <!-- Canvas Shooting Stars Background -->
     <canvas
       ref="starsCanvas"
       class="fixed inset-0 w-full h-full pointer-events-none"
       style="z-index: 1;"
     ></canvas>
-
     <!-- Header Section -->
-    <div class="relative z-10 pt-4">
-      <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div class="bg-gray-100 dark:bg-gray-950 shadow-sm">
+      <div class="w-[80%] mx-auto px-6 py-8">
         <!-- Navigation Bar -->
         <div class="flex items-center justify-between mb-8">
           <div class="flex items-center gap-4">
             <!-- Rainmaker Logo Image -->
-            <img
-              src="/images/rainmaker-logo.png"
-              alt="Rainmaker Logo"
+            <img 
+              src="/images/rainmaker-logo.png" 
+              alt="Rainmaker Logo" 
               class="drop-shadow-sm"
               style="height: 120px; width: auto; opacity: 1 !important; filter: brightness(1.2) contrast(1.2) saturate(1.2);"
             />
           </div>
           <div class="flex items-center gap-4">
             <!-- Dark Mode Toggle -->
-            <button
+            <button 
               @click="toggleDarkMode"
               class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
               :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
             >
               <svg v-if="isDarkMode" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
               </svg>
               <svg v-else class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
@@ -51,8 +50,8 @@
                 </template>
                 <template #content>
                   <DropdownLink :href="route('profile.edit')">Profile</DropdownLink>
-                  <DropdownLink
-                    v-if="canAccessAdmin"
+                  <DropdownLink 
+                    v-if="canAccessAdmin" 
                     :href="route('admin.dashboard')"
                     class="border-t border-gray-100 dark:border-gray-600"
                   >
@@ -72,469 +71,224 @@
             </div>
           </div>
         </div>
-
+        
         <!-- Title and Action Button -->
         <div class="flex items-center justify-between mb-8">
           <div>
             <h2 class="text-4xl font-semibold text-gray-900 dark:text-white mb-2">Investment Research</h2>
             <p class="text-xl text-gray-600 dark:text-gray-300">Search and discover companies in your portfolio</p>
           </div>
-          <Link
-            v-if="!$page.props.auth.user"
+          <div v-if="$page.props.auth.user" class="flex space-x-3">
+            <button
+              @click="showQuickBlogModal = true"
+              class="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105 flex items-center"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              Quick Insight
+            </button>
+            <button
+              @click="openCreateModal"
+              class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105"
+            >
+              + Add Company
+            </button>
+          </div>
+          <Link 
+            v-else
             :href="route('login')"
             class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105"
           >
             Login to Add Companies
           </Link>
         </div>
-
+        
+        <!-- Search Input -->
+        <div class="w-full max-w-2xl">
+          <input 
+            v-model="searchQuery"
+            type="text" 
+            placeholder="Search companies, tickers, or sectors..."
+            class="w-full text-xl py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 shadow-sm focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-800 transition-all duration-200"
+          />
+        </div>
       </div>
     </div>
 
     <!-- Glass Container for Lower Content -->
-    <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6 sm:py-8">
-      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl sm:rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 p-4 sm:p-6 lg:p-8 relative" style="backdrop-filter: blur(20px) saturate(180%);">
+    <div class="w-[80%] mx-auto px-6 py-8">
+      <div class="backdrop-blur-xl bg-white/10 dark:bg-white/5 rounded-2xl shadow-2xl p-6">
 
-        <!-- Navigation Tabs with Search (top position) -->
-        <div class="flex items-center justify-between mb-16 pt-4">
-          <div class="flex items-center space-x-2 sm:space-x-4 lg:space-x-8 relative">
+        <!-- Tab Navigation -->
+        <div class="mb-8">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-bold text-white flex items-center">
+              <svg class="w-6 h-6 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              Investment Research Platform
+            </h2>
+          </div>
+
+          <!-- Tabbed Navigation -->
+          <div class="flex items-center space-x-2 mb-6 p-1 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
             <button
-                @click="switchTab('overview')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'overview'
-                    ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'overview'
-                      ? 'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Overview</span>
-                </div>
-                <div v-if="activeTab === 'overview'" class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('portfolio')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'portfolio'
-                    ? 'bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 scale-105 shadow-[0_0_8px_rgba(34,197,94,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'portfolio'
-                      ? 'bg-green-500/30 shadow-[0_0_5px_rgba(34,197,94,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Portfolio</span>
-                </div>
-                <div v-if="activeTab === 'portfolio'" class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('insights')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'insights'
-                    ? 'bg-gradient-to-br from-purple-500/20 via-purple-400/10 to-transparent text-purple-200 scale-105 shadow-[0_0_8px_rgba(147,51,234,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'insights'
-                      ? 'bg-purple-500/30 shadow-[0_0_5px_rgba(147,51,234,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Insights</span>
-                </div>
-                <div v-if="activeTab === 'insights'" class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('analytics')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'analytics'
-                    ? 'bg-gradient-to-br from-orange-500/20 via-orange-400/10 to-transparent text-orange-200 scale-105 shadow-[0_0_8px_rgba(249,115,22,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'analytics'
-                      ? 'bg-orange-500/30 shadow-[0_0_5px_rgba(249,115,22,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Analytics</span>
-                </div>
-                <div v-if="activeTab === 'analytics'" class="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-orange-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('actions')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'actions'
-                    ? 'bg-gradient-to-br from-yellow-500/20 via-yellow-400/10 to-transparent text-yellow-200 scale-105 shadow-[0_0_8px_rgba(234,179,8,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'actions'
-                      ? 'bg-yellow-500/30 shadow-[0_0_5px_rgba(234,179,8,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Actions</span>
-                </div>
-                <div v-if="activeTab === 'actions'" class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-yellow-400/5 rounded-full"></div>
-              </button>
-          </div>
-          <!-- Search Component aligned with navigation tabs -->
-          <div class="flex items-center">
-            <!-- Single Morphing Container -->
-            <div
+              @click="activeTab = 'overview'"
               :class="[
-                'relative flex items-center bg-gradient-to-r rounded-full shadow-inner border cursor-pointer transition-all duration-700 ease-out transform-gpu',
-                showHeaderSearch
-                  ? 'w-72 sm:w-96 h-12 from-white/8 to-white/12 border-white/10 shadow-[0_2px_8px_0_rgba(139,69,197,0.15)]'
-                  : 'w-10 h-10 from-white/5 to-white/5 border-white/5 hover:from-white/15 hover:to-white/20 hover:border-white/20 justify-center shadow-[0_2px_8px_0_rgba(31,38,135,0.1)] hover:shadow-[0_2px_8px_0_rgba(139,69,197,0.2)] hover:scale-105'
+                'flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 relative overflow-hidden',
+                activeTab === 'overview'
+                  ? 'bg-blue-500/40 text-blue-200 shadow-lg backdrop-blur-md border border-blue-400/30'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
               ]"
-              style="backdrop-filter: blur(20px) saturate(180%); transform-origin: right center;"
-              @click="!showHeaderSearch ? toggleHeaderSearch() : null"
-              @mouseenter="!showHeaderSearch ? toggleHeaderSearch() : null"
-              title="Search"
             >
-              <!-- Magnifying Glass Icon -->
-              <div
-                :class="[
-                  'flex items-center justify-center shrink-0 transition-all duration-700 ease-out transform-gpu',
-                  showHeaderSearch
-                    ? 'ml-4 w-4 h-4 text-white/70'
-                    : 'w-full h-full text-gray-300 hover:text-purple-200 hover:drop-shadow-[0_0_3px_rgba(139,69,197,0.4)]'
-                ]"
-              >
-                <svg class="w-4 h-4 transition-all duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-              </div>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+              </svg>
+              <span>Overview</span>
+              <div v-if="activeTab === 'overview'" class="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-blue-600/20 rounded-lg"></div>
+            </button>
 
-              <!-- Search Input (only visible when expanded) -->
-              <input
-                v-if="showHeaderSearch"
-                id="header-search-input"
-                v-model="searchQuery"
-                type="text"
-                placeholder="Search companies, tickers..."
-                class="flex-1 h-full ml-3 mr-4 sm:mr-6 bg-transparent border-0 text-white placeholder-white/60 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-white/80 transition-opacity duration-300 delay-200 text-xs sm:text-sm"
-                style="box-shadow: none !important;"
-                ref="searchInput"
-              />
-            </div>
+            <button
+              @click="activeTab = 'portfolio'"
+              :class="[
+                'flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 relative overflow-hidden',
+                activeTab === 'portfolio'
+                  ? 'bg-green-500/40 text-green-200 shadow-lg backdrop-blur-md border border-green-400/30'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              ]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+              </svg>
+              <span>Portfolio</span>
+              <div v-if="activeTab === 'portfolio'" class="absolute inset-0 bg-gradient-to-r from-green-500/20 to-green-600/20 rounded-lg"></div>
+            </button>
+
+            <button
+              @click="activeTab = 'insights'"
+              :class="[
+                'flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 relative overflow-hidden',
+                activeTab === 'insights'
+                  ? 'bg-purple-500/40 text-purple-200 shadow-lg backdrop-blur-md border border-purple-400/30'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              ]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <span>Insights</span>
+              <div v-if="activeTab === 'insights'" class="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-purple-600/20 rounded-lg"></div>
+            </button>
+
+            <button
+              @click="activeTab = 'analytics'"
+              :class="[
+                'flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 relative overflow-hidden',
+                activeTab === 'analytics'
+                  ? 'bg-orange-500/40 text-orange-200 shadow-lg backdrop-blur-md border border-orange-400/30'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              ]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
+              </svg>
+              <span>Analytics</span>
+              <div v-if="activeTab === 'analytics'" class="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-orange-600/20 rounded-lg"></div>
+            </button>
+
+            <button
+              @click="activeTab = 'actions'"
+              :class="[
+                'flex items-center space-x-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 relative overflow-hidden',
+                activeTab === 'actions'
+                  ? 'bg-yellow-500/40 text-yellow-200 shadow-lg backdrop-blur-md border border-yellow-400/30'
+                  : 'text-gray-300 hover:text-white hover:bg-white/10'
+              ]"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span>Quick Actions</span>
+              <div v-if="activeTab === 'actions'" class="absolute inset-0 bg-gradient-to-r from-yellow-500/20 to-yellow-600/20 rounded-lg"></div>
+            </button>
           </div>
-        </div>
-
-        <!-- Header Title (moved below tabs) -->
-        <div class="flex items-start mb-12">
-          <h2 class="text-4xl font-bold text-white flex items-center transition-all duration-500 ease-out">
-            <svg v-if="!showSearchResults" class="w-10 h-10 mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            <svg v-else class="w-10 h-10 mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-            </svg>
-            {{ showSearchResults ? 'Search Results' : 'Investment Research Platform' }}
-            <div v-if="showSearchResults && !isSearching" class="ml-6 text-sm text-gray-300 font-normal">
-              for "{{ searchQuery }}"
-            </div>
-            <div v-if="showSearchResults && isSearching" class="ml-6 flex items-center space-x-3 text-blue-300">
-              <div class="w-4 h-4 border-2 border-blue-300/30 border-t-blue-300 rounded-full animate-spin"></div>
-              <span class="text-sm font-normal">Searching...</span>
-            </div>
-          </h2>
         </div>
 
         <!-- Tab Content -->
         <div class="tab-content">
-          <!-- Search Results Content -->
-          <div v-if="showSearchResults" class="space-y-8">
-            <!-- Search Results Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <!-- Companies Results -->
-              <div v-if="searchResults.companies.length > 0" class="backdrop-blur-3xl bg-gradient-to-br from-blue-500/10 via-white/5 to-blue-400/8 rounded-2xl border border-blue-400/20 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
-                <h3 class="text-lg font-semibold text-blue-200 mb-4 flex items-center justify-between">
-                  <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                    Companies ({{ searchResults.companies.length }})
-                  </div>
-                  <div class="text-sm text-blue-300/70" v-if="totalPages.companies > 1">
-                    Page {{ pagination.companies.currentPage }} of {{ totalPages.companies }}
-                  </div>
-                </h3>
-                <div class="space-y-3 mb-4">
-                  <div
-                    v-for="company in paginatedCompanies"
-                    :key="'company-' + company.id"
-                    @click="openCompanyDetails(company)"
-                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-300 group"
-                  >
-                    <div class="flex items-center justify-between">
-                      <div>
-                        <p class="font-medium text-white group-hover:text-blue-200">{{ company.name }}</p>
-                        <p class="text-sm text-gray-400">{{ company.ticker_symbol || company.ticker }}</p>
-                      </div>
-                      <div class="text-xs text-gray-500">{{ company.sector }}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Pagination Controls -->
-                <div v-if="totalPages.companies > 1" class="flex items-center justify-center space-x-2 pt-4 border-t border-blue-400/20">
-                  <button
-                    @click="changePage('companies', pagination.companies.currentPage - 1)"
-                    :disabled="pagination.companies.currentPage === 1"
-                    class="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-200 hover:bg-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                  >
-                    ←
-                  </button>
-                  <span class="text-sm text-blue-300/70 px-2">
-                    {{ pagination.companies.currentPage }} / {{ totalPages.companies }}
-                  </span>
-                  <button
-                    @click="changePage('companies', pagination.companies.currentPage + 1)"
-                    :disabled="pagination.companies.currentPage === totalPages.companies"
-                    class="px-3 py-1 rounded-lg bg-blue-500/20 text-blue-200 hover:bg-blue-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                  >
-                    →
-                  </button>
-                </div>
-              </div>
-
-              <!-- Blog Posts Results -->
-              <div v-if="searchResults.blogPosts.length > 0" class="backdrop-blur-3xl bg-gradient-to-br from-green-500/10 via-white/5 to-green-400/8 rounded-2xl border border-green-400/20 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
-                <h3 class="text-lg font-semibold text-green-200 mb-4 flex items-center justify-between">
-                  <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                    Blog Posts ({{ searchResults.blogPosts.length }})
-                  </div>
-                  <div class="text-sm text-green-300/70" v-if="totalPages.blogPosts > 1">
-                    Page {{ pagination.blogPosts.currentPage }} of {{ totalPages.blogPosts }}
-                  </div>
-                </h3>
-                <div class="space-y-3 mb-4">
-                  <div
-                    v-for="post in paginatedBlogPosts"
-                    :key="'post-' + post.id"
-                    @click="openBlogPost(post)"
-                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-300 group"
-                  >
-                    <p class="font-medium text-white group-hover:text-green-200 line-clamp-2">{{ post.title }}</p>
-                    <p class="text-sm text-gray-400 mt-1">by {{ post.user?.name || post.author }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ formatDate(post.published_at || post.created_at) }}</p>
-                  </div>
-                </div>
-
-                <!-- Pagination Controls -->
-                <div v-if="totalPages.blogPosts > 1" class="flex items-center justify-center space-x-2 pt-4 border-t border-green-400/20">
-                  <button
-                    @click="changePage('blogPosts', pagination.blogPosts.currentPage - 1)"
-                    :disabled="pagination.blogPosts.currentPage === 1"
-                    class="px-3 py-1 rounded-lg bg-green-500/20 text-green-200 hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                  >
-                    ←
-                  </button>
-                  <span class="text-sm text-green-300/70 px-2">
-                    {{ pagination.blogPosts.currentPage }} / {{ totalPages.blogPosts }}
-                  </span>
-                  <button
-                    @click="changePage('blogPosts', pagination.blogPosts.currentPage + 1)"
-                    :disabled="pagination.blogPosts.currentPage === totalPages.blogPosts"
-                    class="px-3 py-1 rounded-lg bg-green-500/20 text-green-200 hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                  >
-                    →
-                  </button>
-                </div>
-              </div>
-
-              <!-- Research Items Results -->
-              <div v-if="searchResults.researchItems.length > 0" class="backdrop-blur-3xl bg-gradient-to-br from-purple-500/10 via-white/5 to-purple-400/8 rounded-2xl border border-purple-400/20 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
-                <h3 class="text-lg font-semibold text-purple-200 mb-4 flex items-center justify-between">
-                  <div class="flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                    Research Items ({{ searchResults.researchItems.length }})
-                  </div>
-                  <div class="text-sm text-purple-300/70" v-if="totalPages.researchItems > 1">
-                    Page {{ pagination.researchItems.currentPage }} of {{ totalPages.researchItems }}
-                  </div>
-                </h3>
-                <div class="space-y-3 mb-4">
-                  <div
-                    v-for="item in paginatedResearchItems"
-                    :key="'research-' + item.id"
-                    @click="openResearchItem(item)"
-                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-300 group"
-                  >
-                    <p class="font-medium text-white group-hover:text-purple-200 line-clamp-2">{{ item.title || item.name }}</p>
-                    <p class="text-sm text-gray-400 mt-1">{{ item.category?.name || 'Uncategorized' }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ formatDate(item.created_at) }}</p>
-                  </div>
-                </div>
-
-                <!-- Pagination Controls -->
-                <div v-if="totalPages.researchItems > 1" class="flex items-center justify-center space-x-2 pt-4 border-t border-purple-400/20">
-                  <button
-                    @click="changePage('researchItems', pagination.researchItems.currentPage - 1)"
-                    :disabled="pagination.researchItems.currentPage === 1"
-                    class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                  >
-                    ←
-                  </button>
-                  <span class="text-sm text-purple-300/70 px-2">
-                    {{ pagination.researchItems.currentPage }} / {{ totalPages.researchItems }}
-                  </span>
-                  <button
-                    @click="changePage('researchItems', pagination.researchItems.currentPage + 1)"
-                    :disabled="pagination.researchItems.currentPage === totalPages.researchItems"
-                    class="px-3 py-1 rounded-lg bg-purple-500/20 text-purple-200 hover:bg-purple-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                  >
-                    →
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
-            <!-- No Results -->
-            <div v-if="!isSearching && !searchResults.companies.length && !searchResults.blogPosts.length && !searchResults.researchItems.length && searchQuery.length >= 2" class="text-center py-12">
-              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-              <h3 class="text-xl font-medium text-gray-300 mb-2">No results found</h3>
-              <p class="text-gray-500">Try adjusting your search terms or browse our content.</p>
-            </div>
-          </div>
 
           <!-- Overview Tab -->
-          <div v-else-if="!showSearchResults && activeTab === 'overview'" class="space-y-8">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
-              <!-- Total Companies -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/10 rounded-2xl"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                  <div>
-                    <p class="text-xs text-blue-300/80 font-medium tracking-wider uppercase mb-2">Companies</p>
-                    <p class="text-3xl font-light text-white/90">{{ companies.length }}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
+          <div v-if="activeTab === 'overview'" class="space-y-8">
+            <!-- Executive Overview Section -->
 
-              <!-- Total Market Cap -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/10 rounded-2xl"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                  <div>
-                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Portfolio</p>
-                    <p class="text-3xl font-light text-white/90">{{ formatTotalMarketCap() }}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.15)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
-                  </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Total Companies -->
+            <div class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-300 dark:text-gray-400">Total Companies</p>
+                  <p class="text-2xl font-bold text-white">{{ companies.length }}</p>
                 </div>
-              </div>
-
-              <!-- Insights Published -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/10 rounded-2xl"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                  <div>
-                    <p class="text-xs text-purple-300/80 font-medium tracking-wider uppercase mb-2">Insights</p>
-                    <p class="text-3xl font-light text-white/90">{{ $page.props.recentBlogPosts?.length || 0 }}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(147,51,234,0.15)] group-hover:shadow-[0_0_15px_rgba(147,51,234,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Active Research -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-orange-400/10 rounded-2xl"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                  <div>
-                    <p class="text-xs text-orange-300/80 font-medium tracking-wider uppercase mb-2">Research</p>
-                    <p class="text-3xl font-light text-white/90">{{ getTotalResearchItems() }}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(249,115,22,0.15)] group-hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
+                <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
                 </div>
               </div>
             </div>
+
+            <!-- Total Market Cap -->
+            <div class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-300 dark:text-gray-400">Portfolio Value</p>
+                  <p class="text-2xl font-bold text-white">{{ formatTotalMarketCap() }}</p>
+                </div>
+                <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Insights Published -->
+            <div class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-300 dark:text-gray-400">Published Insights</p>
+                  <p class="text-2xl font-bold text-white">{{ $page.props.recentBlogPosts?.length || 0 }}</p>
+                </div>
+                <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Active Research -->
+            <div class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-300 dark:text-gray-400">Research Items</p>
+                  <p class="text-2xl font-bold text-white">{{ getTotalResearchItems() }}</p>
+                </div>
+                <div class="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                  <svg class="w-5 h-5 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
           </div>
 
           <!-- Portfolio Tab -->
-          <div v-if="!showSearchResults && activeTab === 'portfolio'" class="space-y-6">
+          <div v-if="activeTab === 'portfolio'" class="space-y-6">
             <!-- Portfolio Header -->
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-xl font-bold text-white flex items-center">
@@ -543,7 +297,6 @@
                 </svg>
                 Company Portfolio Management
               </h3>
-
               <!-- View Toggle -->
               <div class="flex items-center rounded-lg p-1 bg-white/10">
                 <button
@@ -577,6 +330,23 @@
               </div>
             </div>
 
+            <!-- Bulk Actions (only in list mode) -->
+            <div v-if="viewMode === 'list' && selectedCompanies.length > 0" class="mb-4 flex items-center space-x-3 p-3 bg-red-500/20 rounded-lg border border-red-500/30">
+              <span class="text-sm text-red-300">
+                {{ selectedCompanies.length }} companies selected
+              </span>
+              <button
+                @click="bulkDeleteCompanies"
+                :disabled="bulkDeleting"
+                class="bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium py-1 px-3 rounded-md transition-all duration-200 flex items-center space-x-2 text-sm"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                <span>{{ bulkDeleting ? 'Deleting...' : 'Delete Selected' }}</span>
+              </button>
+            </div>
+
             <!-- Portfolio Content -->
             <div v-if="loading" class="text-center py-12">
               <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto"></div>
@@ -599,6 +369,7 @@
                     <h4 class="text-lg font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">{{ company.name }}</h4>
                     <p class="text-sm text-blue-400 font-medium">{{ company.ticker }}</p>
                   </div>
+
                   <!-- Quick Actions -->
                   <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
@@ -611,6 +382,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
                     </button>
+
                     <button
                       v-if="$page.props.auth.user"
                       @click.stop="openQuickBlogWithCompany(company)"
@@ -623,6 +395,7 @@
                     </button>
                   </div>
                 </div>
+
                 <!-- Company Details -->
                 <div class="grid grid-cols-2 gap-3 text-sm">
                   <div>
@@ -637,20 +410,143 @@
               </div>
             </div>
 
+            <!-- List View -->
+            <div v-else-if="filteredCompanies.length > 0 && viewMode === 'list'" class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+              <!-- Table Header -->
+              <div class="px-4 py-3 border-b border-white/20">
+                <div class="flex items-center">
+                  <div class="flex items-center mr-4">
+                    <input
+                      type="checkbox"
+                      :checked="isSelectAll"
+                      @change="toggleSelectAll"
+                      class="w-4 h-4 text-blue-600 bg-white/20 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                    <label class="ml-2 text-sm font-medium text-gray-300">Select All</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Table Body -->
+              <div class="divide-y divide-white/10">
+                <div
+                  v-for="company in filteredCompanies"
+                  :key="company.id"
+                  class="px-4 py-3 hover:bg-white/20 transition-colors duration-150"
+                >
+                  <div class="flex items-center">
+                    <!-- Checkbox -->
+                    <div class="flex items-center mr-3">
+                      <input
+                        type="checkbox"
+                        :checked="selectedCompanies.includes(company.id)"
+                        @change="toggleCompanySelection(company.id)"
+                        class="w-4 h-4 text-blue-600 bg-white/20 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                      />
+                    </div>
+
+                    <!-- Company Logo -->
+                    <div class="w-8 h-8 bg-blue-500/30 rounded-lg flex items-center justify-center text-blue-300 font-semibold text-sm mr-3">
+                      {{ company.ticker.charAt(0) }}
+                    </div>
+
+                    <!-- Company Info -->
+                    <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-3 items-center">
+                      <div class="lg:col-span-1">
+                        <h4 class="text-sm font-medium text-white">{{ company.name }}</h4>
+                        <p class="text-xs text-blue-400 font-medium">{{ company.ticker }}</p>
+                      </div>
+
+                      <div class="text-center lg:text-left">
+                        <p class="text-xs text-gray-400">Sector</p>
+                        <p class="text-sm font-medium text-white">{{ company.sector || 'N/A' }}</p>
+                      </div>
+
+                      <div class="text-center lg:text-left">
+                        <p class="text-xs text-gray-400">Market Cap</p>
+                        <p class="text-sm font-medium text-white">{{ formatMarketCap(company.marketCap) }}</p>
+                      </div>
+
+                      <div class="text-center lg:text-right">
+                        <p class="text-xs text-gray-400">Research Items</p>
+                        <p class="text-sm font-medium text-white">{{ company.researchItemsCount || 0 }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="ml-4 flex items-center space-x-1">
+                      <!-- View Button -->
+                      <button
+                        @click.stop="viewCompanyDetails(company)"
+                        class="w-7 h-7 rounded-lg bg-blue-500/30 hover:bg-blue-500/50 flex items-center justify-center transition-colors"
+                        title="View Details"
+                      >
+                        <svg class="w-3 h-3 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </button>
+
+                      <!-- Share Insight Button -->
+                      <button
+                        v-if="$page.props.auth.user"
+                        @click.stop="openQuickBlogWithCompany(company)"
+                        class="w-7 h-7 rounded-lg bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center transition-colors"
+                        title="Share Insight"
+                      >
+                        <svg class="w-3 h-3 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                      </button>
+
+                      <!-- Edit Button -->
+                      <button
+                        v-if="$page.props.auth.user"
+                        @click.stop="editCompany(company)"
+                        class="w-7 h-7 rounded-lg bg-gray-500/30 hover:bg-gray-500/50 flex items-center justify-center transition-colors"
+                        title="Edit Company"
+                      >
+                        <svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+
+                      <!-- Delete Button -->
+                      <button
+                        v-if="$page.props.auth.user"
+                        @click.stop="deleteCompany(company)"
+                        :disabled="deleting"
+                        class="w-7 h-7 rounded-lg bg-red-500/30 hover:bg-red-500/50 disabled:bg-red-300/30 flex items-center justify-center transition-colors"
+                        title="Delete Company"
+                      >
+                        <svg class="w-3 h-3 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Empty State -->
             <div v-else class="text-center py-12">
-              <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
+              <div class="max-w-md mx-auto">
+                <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-white mb-2">No companies found</h4>
+                <p class="text-sm text-gray-300">Try adjusting your search terms or add a new company</p>
               </div>
-              <h4 class="text-lg font-semibold text-white mb-2">No companies found</h4>
-              <p class="text-sm text-gray-300">Try adjusting your search terms or add a new company</p>
             </div>
           </div>
 
+          </div>
+
           <!-- Insights Tab -->
-          <div v-if="!showSearchResults && activeTab === 'insights'" class="space-y-6">
+          <div v-if="activeTab === 'insights'" class="space-y-6">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-xl font-bold text-white flex items-center">
                 <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -720,7 +616,7 @@
           </div>
 
           <!-- Analytics Tab -->
-          <div v-if="!showSearchResults && activeTab === 'analytics'" class="space-y-6">
+          <div v-if="activeTab === 'analytics'" class="space-y-6">
             <div class="flex items-center justify-between mb-6">
               <h3 class="text-xl font-bold text-white flex items-center">
                 <svg class="w-5 h-5 mr-2 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -789,7 +685,7 @@
           </div>
 
           <!-- Quick Actions Tab -->
-          <div v-if="!showSearchResults && activeTab === 'actions'" class="space-y-6">
+          <div v-if="activeTab === 'actions'" class="space-y-6">
             <div class="mb-6">
               <h3 class="text-xl font-bold text-white flex items-center">
                 <svg class="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -840,7 +736,7 @@
                 </Link>
 
                 <button
-                  @click="switchTab('analytics')"
+                  @click="activeTab = 'analytics'"
                   class="w-full bg-orange-500/30 hover:bg-orange-500/50 text-orange-300 font-medium py-4 px-6 rounded-lg transition-all duration-300 flex items-center justify-center border border-orange-500/30 hover:shadow-lg hover:scale-105"
                 >
                   <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -854,7 +750,7 @@
               <div class="space-y-4">
                 <h4 class="text-lg font-semibold text-white mb-4">Quick Switch</h4>
                 <button
-                  @click="switchTab('portfolio')"
+                  @click="activeTab = 'portfolio'"
                   class="w-full bg-green-500/30 hover:bg-green-500/50 text-green-300 font-medium py-4 px-6 rounded-lg transition-all duration-300 flex items-center justify-center border border-green-500/30 hover:shadow-lg hover:scale-105"
                 >
                   <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -864,7 +760,7 @@
                 </button>
 
                 <button
-                  @click="switchTab('insights')"
+                  @click="activeTab = 'insights'"
                   class="w-full bg-purple-500/30 hover:bg-purple-500/50 text-purple-300 font-medium py-4 px-6 rounded-lg transition-all duration-300 flex items-center justify-center border border-purple-500/30 hover:shadow-lg hover:scale-105"
                 >
                   <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -879,6 +775,7 @@
         </div> <!-- End Tab Content -->
       </div> <!-- End Glass Container -->
     </div> <!-- End Lower Content Container -->
+
 
     <!-- Create Company Modal -->
     <CreateCompanyModal
@@ -896,8 +793,8 @@
     />
 
     <!-- Company Details Modal -->
-    <CompanyDetailsModal
-      :show="showDetailsModal"
+    <CompanyDetailsModal 
+      :show="showDetailsModal" 
       :company="selectedCompany"
       :editForm="companyForm"
       :editErrors="errors"
@@ -966,10 +863,6 @@
   </div>
 </template>
 
-<style scoped>
-/* Custom styling for smoother transitions */
-</style>
-
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { Head, Link, usePage } from '@inertiajs/vue3'
@@ -1011,23 +904,6 @@ const isEditingCompany = ref(false)
 const editingCompany = ref(false)
 const starsCanvas = ref(null)
 const activeTab = ref('overview') // Tab navigation state
-
-// Universal Search State
-const searchResults = ref({
-  companies: [],
-  blogPosts: [],
-  researchItems: []
-})
-const isSearching = ref(false)
-const showSearchResults = ref(false)
-const showHeaderSearch = ref(false)
-
-// Pagination State
-const pagination = ref({
-  companies: { currentPage: 1, perPage: 5 },
-  blogPosts: { currentPage: 1, perPage: 5 },
-  researchItems: { currentPage: 1, perPage: 5 }
-})
 
 const companyForm = ref({
   name: '',
@@ -1078,31 +954,6 @@ const canAccessAdmin = computed(() => {
   return user && (user.roles?.some(role => role.name === 'admin') || user.permissions?.some(permission => ['manage users', 'manage roles', 'manage permissions'].includes(permission.name)))
 })
 
-// Pagination computed properties
-const paginatedCompanies = computed(() => {
-  const start = (pagination.value.companies.currentPage - 1) * pagination.value.companies.perPage
-  const end = start + pagination.value.companies.perPage
-  return searchResults.value.companies.slice(start, end)
-})
-
-const paginatedBlogPosts = computed(() => {
-  const start = (pagination.value.blogPosts.currentPage - 1) * pagination.value.blogPosts.perPage
-  const end = start + pagination.value.blogPosts.perPage
-  return searchResults.value.blogPosts.slice(start, end)
-})
-
-const paginatedResearchItems = computed(() => {
-  const start = (pagination.value.researchItems.currentPage - 1) * pagination.value.researchItems.perPage
-  const end = start + pagination.value.researchItems.perPage
-  return searchResults.value.researchItems.slice(start, end)
-})
-
-const totalPages = computed(() => ({
-  companies: Math.ceil(searchResults.value.companies.length / pagination.value.companies.perPage),
-  blogPosts: Math.ceil(searchResults.value.blogPosts.length / pagination.value.blogPosts.perPage),
-  researchItems: Math.ceil(searchResults.value.researchItems.length / pagination.value.researchItems.perPage)
-}))
-
 const fetchCompanies = async (search = '') => {
   try {
     loading.value = true
@@ -1116,133 +967,14 @@ const fetchCompanies = async (search = '') => {
   }
 }
 
-// Universal Search Function
-const performUniversalSearch = async (query) => {
-  if (query.length < 2) {
-    showSearchResults.value = false
-    return
-  }
-
-  try {
-    isSearching.value = true
-    showSearchResults.value = true
-
-    // API calls for actual content
-    const [companiesRes, blogPostsRes, researchItemsRes] = await Promise.all([
-      // Companies search
-      axios.get('/api/companies', { params: { search: query } }),
-      // Blog posts search - search by title, content, AND related companies
-      axios.get('/api/blog-posts/search', {
-        params: {
-          q: query,
-          include_companies: true // Include posts linked to companies that match
-        }
-      }).catch((error) => {
-        console.error('Blog posts search error:', error)
-        return { data: [] }
-      }),
-      // Research items search - search by title, content, AND related companies
-      axios.get('/api/research-items', {
-        params: {
-          search: query,
-          include_companies: true // Include research linked to companies that match
-        }
-      }).catch(() => ({ data: [] }))
-    ])
-
-    console.log('Search API responses:', {
-      companies: companiesRes.data,
-      blogPosts: blogPostsRes.data,
-      researchItems: researchItemsRes.data
-    })
-
-    searchResults.value = {
-      companies: companiesRes.data, // Remove slicing - pagination will handle display
-      blogPosts: blogPostsRes.data,
-      researchItems: researchItemsRes.data
-    }
-
-    // Reset pagination when new search results arrive
-    resetPagination()
-  } catch (error) {
-    console.error('Universal search error:', error)
-  } finally {
-    isSearching.value = false
-  }
-}
-
-// Pagination functions
-const changePage = (section, page) => {
-  if (page >= 1 && page <= totalPages.value[section]) {
-    pagination.value[section].currentPage = page
-  }
-}
-
-const resetPagination = () => {
-  pagination.value.companies.currentPage = 1
-  pagination.value.blogPosts.currentPage = 1
-  pagination.value.researchItems.currentPage = 1
-}
-
-// Debounced universal search
+// Debounced search
 let searchTimeout = null
 watch(searchQuery, (newValue) => {
   clearTimeout(searchTimeout)
-
-  if (newValue.length === 0) {
-    showSearchResults.value = false
-    return
-  }
-
   searchTimeout = setTimeout(() => {
-    performUniversalSearch(newValue)
+    fetchCompanies(newValue)
   }, 300)
 })
-
-const closeSearch = () => {
-  showSearchResults.value = false
-  searchQuery.value = ''
-  showHeaderSearch.value = false
-}
-
-const switchTab = (tabName) => {
-  activeTab.value = tabName
-  closeSearch() // Clear search when switching tabs
-}
-
-const toggleHeaderSearch = () => {
-  if (!showHeaderSearch.value) {
-    showHeaderSearch.value = true
-    // Focus on the input after Vue updates the DOM
-    nextTick(() => {
-      const input = document.querySelector('#header-search-input')
-      if (input) input.focus()
-    })
-  }
-}
-
-const closeHeaderSearch = () => {
-  showHeaderSearch.value = false
-  closeSearch()
-}
-
-// Search result click handlers
-const openCompanyDetails = (company) => {
-  selectedCompany.value = company
-  showDetailsModal.value = true
-  closeSearch()
-}
-
-const openBlogPost = (post) => {
-  window.open(route('blog.show', post.slug), '_blank')
-  closeSearch()
-}
-
-const openResearchItem = (item) => {
-  // Navigate to research item or open modal - implement based on your research item structure
-  console.log('Opening research item:', item)
-  closeSearch()
-}
 
 
 
@@ -2136,15 +1868,15 @@ const initStarsAnimation = () => {
     
     // Create Milky Way background gradient
     const createMilkyWayBackground = () => {
-      // Create subtle diagonal Milky Way band
+      // Create diagonal Milky Way band
       const gradient = ctx.createLinearGradient(0, canvas.height * 0.3, canvas.width, canvas.height * 0.7)
-      gradient.addColorStop(0, 'rgba(30, 30, 40, 0.02)')
-      gradient.addColorStop(0.2, 'rgba(40, 40, 50, 0.05)')
-      gradient.addColorStop(0.4, 'rgba(50, 50, 70, 0.08)')
-      gradient.addColorStop(0.6, 'rgba(45, 45, 60, 0.06)')
-      gradient.addColorStop(0.8, 'rgba(35, 35, 45, 0.04)')
-      gradient.addColorStop(1, 'rgba(25, 25, 35, 0.02)')
-
+      gradient.addColorStop(0, 'rgba(40, 30, 60, 0.05)')
+      gradient.addColorStop(0.2, 'rgba(80, 60, 120, 0.15)')
+      gradient.addColorStop(0.4, 'rgba(120, 90, 160, 0.25)')
+      gradient.addColorStop(0.6, 'rgba(100, 80, 140, 0.2)')
+      gradient.addColorStop(0.8, 'rgba(60, 50, 100, 0.12)')
+      gradient.addColorStop(1, 'rgba(30, 25, 50, 0.05)')
+      
       ctx.fillStyle = gradient
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       

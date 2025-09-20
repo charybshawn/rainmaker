@@ -12,7 +12,7 @@ const props = defineProps({
     },
     contentClasses: {
         type: String,
-        default: 'py-1 bg-white',
+        default: 'py-2 backdrop-blur-3xl bg-gradient-to-br from-white/10 via-white/5 to-white/10 border border-white/20 shadow-[0_5px_16px_0_rgba(31,38,135,0.3)]',
     },
 });
 
@@ -67,14 +67,15 @@ const open = ref(false);
         >
             <div
                 v-show="open"
-                class="absolute z-50 mt-2 rounded-md shadow-lg"
+                class="absolute z-50 mt-3 rounded-2xl"
                 :class="[widthClass, alignmentClasses]"
-                style="display: none"
+                style="display: none; backdrop-filter: blur(20px) saturate(180%);"
                 @click="open = false"
             >
                 <div
-                    class="rounded-md ring-1 ring-black ring-opacity-5"
+                    class="rounded-2xl"
                     :class="contentClasses"
+                    style="backdrop-filter: blur(20px) saturate(180%);"
                 >
                     <slot name="content" />
                 </div>

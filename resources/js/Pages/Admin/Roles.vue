@@ -46,10 +46,10 @@
       </nav>
 
       <!-- Success/Error Messages -->
-      <div v-if="$page.props.flash.success" class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
+      <div v-if="$page.props.flash?.success" class="mb-6 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative">
         {{ $page.props.flash.success }}
       </div>
-      <div v-if="$page.props.errors.error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
+      <div v-if="$page.props.errors?.error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
         {{ $page.props.errors.error }}
       </div>
 
