@@ -17,4 +17,11 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        rollupOptions: {
+            input: {
+                app: 'resources/js/app.js'
+            }
+        }
+    }
 });
