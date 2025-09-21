@@ -1384,6 +1384,7 @@ import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 import axios from 'axios'
 
+const $page = usePage()
 const companies = ref([])
 const searchQuery = ref('')
 const showCreateModal = ref(false)
@@ -1811,6 +1812,69 @@ const handleMobileSearch = (query) => {
     performSearch()
   } else {
     closeSearch()
+  }
+}
+
+// Perform search across all content types
+const performSearch = async () => {
+  if (!searchQuery.value.trim() || searchQuery.value.length < 2) {
+    showSearchResults.value = false
+    return
+  }
+
+  isSearching.value = true
+  showSearchResults.value = true
+
+  try {
+    const query = searchQuery.value.trim()
+
+    // Reset search results
+    searchResults.value = {
+      companies: [],
+      blogPosts: [],
+      researchItems: []
+    }
+
+    // Search companies (public endpoint)
+    try {
+      const companiesResponse = await axios.get('/api/companies', {
+        params: { search: query }
+      })
+      searchResults.value.companies = companiesResponse.data || []
+    } catch (error) {
+      console.error('Error searching companies:', error)
+      searchResults.value.companies = []
+    }
+
+    // Search blog posts and research items (requires authentication)
+    if ($page.props.auth.user) {
+      try {
+        // Search blog posts
+        const blogResponse = await axios.get('/api/blog-posts/search', {
+          params: { q: query }
+        })
+        searchResults.value.blogPosts = blogResponse.data || []
+      } catch (error) {
+        console.error('Error searching blog posts:', error)
+        searchResults.value.blogPosts = []
+      }
+
+      try {
+        // Search research items
+        const researchResponse = await axios.get('/api/research-items', {
+          params: { search: query }
+        })
+        searchResults.value.researchItems = researchResponse.data || []
+      } catch (error) {
+        console.error('Error searching research items:', error)
+        searchResults.value.researchItems = []
+      }
+    }
+
+  } catch (error) {
+    console.error('Search error:', error)
+  } finally {
+    isSearching.value = false
   }
 }
 
