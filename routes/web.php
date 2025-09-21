@@ -80,6 +80,14 @@ Route::prefix('api')->group(function () {
     Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
     Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
 
+    // Public Categories and Tags (accessible to everyone for dashboard filtering)
+    Route::get('categories', function() {
+        return response()->json(\App\Models\Category::all(['id', 'name', 'color']));
+    });
+    Route::get('tags', function() {
+        return response()->json(\App\Models\Tag::all(['id', 'name', 'color']));
+    });
+
     Route::middleware('auth')->group(function () {
         Route::post('companies', [CompanyController::class, 'store']);
         Route::get('companies/{company}', [CompanyController::class, 'show']);
@@ -89,14 +97,6 @@ Route::prefix('api')->group(function () {
 
         // Research Items
         Route::apiResource('research-items', \App\Http\Controllers\Api\ResearchItemController::class);
-
-        // Categories and Tags (for research item creation)
-        Route::get('categories', function() {
-            return response()->json(\App\Models\Category::all(['id', 'name', 'color']));
-        });
-        Route::get('tags', function() {
-            return response()->json(\App\Models\Tag::all(['id', 'name', 'color']));
-        });
     });
 });
 

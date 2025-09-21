@@ -9,30 +9,31 @@
     ></canvas>
 
     <!-- Header Section -->
-    <div class="relative z-10 pt-4">
-      <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <div class="relative z-10">
+      <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-3 sm:py-4 lg:py-6">
         <!-- Navigation Bar -->
-        <div class="flex items-center justify-between mb-8">
+        <div class="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
           <div class="flex items-center gap-4">
             <!-- Rainmaker Logo Image -->
             <img
               src="/images/rainmaker-logo.png"
               alt="Rainmaker Logo"
-              class="drop-shadow-sm"
-              style="height: 120px; width: auto; opacity: 1 !important; filter: brightness(1.2) contrast(1.2) saturate(1.2);"
+              class="drop-shadow-sm h-20 sm:h-24 lg:h-28 xl:h-32 w-auto"
+              style="opacity: 1 !important; filter: brightness(1.2) contrast(1.2) saturate(1.2);"
             />
           </div>
           <div class="flex items-center gap-4">
             <!-- Dark Mode Toggle -->
             <button
               @click="toggleDarkMode"
-              class="p-2 rounded-lg bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+              class="group relative p-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-purple-500/20 via-purple-400/10 to-transparent rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(147,51,234,0.2)] border border-white/10 backdrop-blur-xl"
+              style="backdrop-filter: blur(20px) saturate(150%);"
               :title="isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'"
             >
-              <svg v-if="isDarkMode" class="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+              <svg v-if="isDarkMode" class="w-5 h-5 text-yellow-300" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
               </svg>
-              <svg v-else class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <svg v-else class="w-5 h-5 text-purple-200" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
               </svg>
             </button>
@@ -63,12 +64,20 @@
               </Dropdown>
             </div>
             <div v-else class="flex items-center gap-3">
-              <Link :href="route('login')" class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white font-medium transition-colors">
+              <button
+                @click="showLoginModal = true"
+                class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10 backdrop-blur-xl"
+                style="backdrop-filter: blur(20px) saturate(150%);"
+              >
                 Login
-              </Link>
-              <Link :href="route('register')" class="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+              </button>
+              <button
+                @click="showRegisterModal = true"
+                class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl"
+                style="backdrop-filter: blur(20px) saturate(150%);"
+              >
                 Register
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -78,26 +87,16 @@
           <AnimatedQuotes />
         </div>
 
-        <!-- Action Button Row -->
-        <div class="flex justify-end mb-8">
-          <Link
-            v-if="!$page.props.auth.user"
-            :href="route('login')"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-sm transition-all duration-200 transform hover:scale-105"
-          >
-            Login to Add Companies
-          </Link>
-        </div>
 
       </div>
     </div>
 
     <!-- Glass Container for Lower Content -->
-    <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-6 sm:py-8 mt-24">
-      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl sm:rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 p-4 sm:p-6 lg:p-8 relative pt-24" style="backdrop-filter: blur(20px) saturate(180%);">
+    <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-3 sm:py-4 lg:py-6 -mt-12">
+      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl sm:rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 p-4 sm:p-6 lg:p-8 relative" style="backdrop-filter: blur(20px) saturate(180%);">
 
         <!-- Navigation Tabs with Search (top position) -->
-        <div class="flex items-center justify-between mb-16 pt-4">
+        <div class="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
           <div class="flex items-center space-x-2 sm:space-x-4 lg:space-x-8 relative">
             <button
                 @click="switchTab('overview')"
@@ -455,8 +454,33 @@
 
             </div>
 
+            <!-- Login Required for Search -->
+            <div v-if="!$page.props.auth.user && searchQuery.length >= 2" class="text-center py-12">
+              <svg class="w-16 h-16 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+              </svg>
+              <h3 class="text-xl font-medium text-white mb-2">Login Required</h3>
+              <p class="text-gray-300 mb-6">Please log in to search and view investment research content.</p>
+              <div class="flex items-center justify-center space-x-4">
+                <button
+                  @click="showLoginModal = true"
+                  class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10 backdrop-blur-xl font-medium"
+                  style="backdrop-filter: blur(20px) saturate(150%);"
+                >
+                  Log In
+                </button>
+                <button
+                  @click="showRegisterModal = true"
+                  class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium"
+                  style="backdrop-filter: blur(20px) saturate(150%);"
+                >
+                  Register
+                </button>
+              </div>
+            </div>
+
             <!-- No Results -->
-            <div v-if="!isSearching && !searchResults.companies.length && !searchResults.blogPosts.length && !searchResults.researchItems.length && searchQuery.length >= 2" class="text-center py-12">
+            <div v-else-if="!isSearching && !searchResults.companies.length && !searchResults.blogPosts.length && !searchResults.researchItems.length && searchQuery.length >= 2" class="text-center py-12">
               <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
@@ -466,8 +490,8 @@
           </div>
 
           <!-- Overview Tab -->
-          <div v-else-if="!showSearchResults && activeTab === 'overview'" class="space-y-8">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+          <div v-else-if="!showSearchResults && activeTab === 'overview'" class="space-y-4">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-4">
               <!-- Total Companies -->
               <div class="group relative p-6 transition-all duration-500 hover:scale-105">
                 <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/10 rounded-2xl"></div>
@@ -798,16 +822,28 @@
                   <div
                     v-for="post in paginatedInsights"
                     :key="post.id"
-                    @click="viewBlogPost(post)"
                     class="group relative p-6 transition-all duration-500 hover:scale-105 cursor-pointer"
+                    @click="viewBlogPost(post)"
                   >
                     <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/10 rounded-2xl border border-purple-400/20"></div>
                     <div class="relative z-10">
                       <div class="flex items-center justify-between mb-3">
                         <p class="font-medium text-white group-hover:text-purple-200 line-clamp-2 flex-1 pr-3">{{ post.title }}</p>
-                        <span v-if="post.category" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-400/20 whitespace-nowrap">
-                          {{ post.category }}
-                        </span>
+                        <div class="flex items-center gap-2">
+                          <span v-if="post.category" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-400/20 whitespace-nowrap">
+                            {{ post.category }}
+                          </span>
+                          <button
+                            v-if="$page.props.auth.user && post.user_id === $page.props.auth.user.id"
+                            @click.stop="editBlogPost(post)"
+                            class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 hover:text-white transition-all duration-200"
+                            title="Edit post"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                       <p class="text-sm text-gray-400 mt-1 line-clamp-2 group-hover:text-gray-300">{{ getExcerpt(post.content) }}</p>
                       <div class="flex items-center justify-between mt-3">
@@ -843,6 +879,16 @@
                             {{ post.user.name }}
                           </span>
                           <span class="text-sm text-gray-400 whitespace-nowrap">{{ formatDate(post.published_at) }}</span>
+                          <button
+                            v-if="$page.props.auth.user && post.user_id === $page.props.auth.user.id"
+                            @click.stop="editBlogPost(post)"
+                            class="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-200 hover:text-white transition-all duration-200 ml-2"
+                            title="Edit post"
+                          >
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                          </button>
                         </div>
                         <p class="text-gray-300 text-sm line-clamp-1 pr-4">
                           {{ getExcerpt(post.content) }}
@@ -1151,8 +1197,23 @@
     <QuickBlogModal
       :show="showQuickBlogModal"
       :preselected-company="quickBlogCompany"
+      :editing-post="editingBlogPost"
       @close="closeQuickBlogModal"
       @posted="handleBlogPosted"
+    />
+
+    <!-- Auth Modals -->
+    <LoginModal
+      :show="showLoginModal"
+      :can-reset-password="true"
+      @close="showLoginModal = false"
+      @switch-to-register="showLoginModal = false; showRegisterModal = true"
+    />
+
+    <RegisterModal
+      :show="showRegisterModal"
+      @close="showRegisterModal = false"
+      @switch-to-login="showRegisterModal = false; showLoginModal = true"
     />
 
   </div>
@@ -1173,6 +1234,8 @@ import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import QuickBlogModal from '@/Components/Modals/QuickBlogModal.vue'
+import LoginModal from '@/Components/Modals/LoginModal.vue'
+import RegisterModal from '@/Components/Modals/RegisterModal.vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 import axios from 'axios'
 
@@ -1185,6 +1248,9 @@ const showNoteModal = ref(false)
 const showUploadModal = ref(false)
 const showQuickBlogModal = ref(false)
 const quickBlogCompany = ref(null)
+const editingBlogPost = ref(null)
+const showLoginModal = ref(false)
+const showRegisterModal = ref(false)
 const selectedCompany = ref(null)
 const companyInsights = ref([])
 const loading = ref(false)
@@ -1327,6 +1393,18 @@ const performUniversalSearch = async (query) => {
     return
   }
 
+  // Check if user is logged in
+  if (!$page.props.auth.user) {
+    showSearchResults.value = true
+    isSearching.value = false
+    searchResults.value = {
+      companies: [],
+      blogPosts: [],
+      researchItems: []
+    }
+    return
+  }
+
   try {
     isSearching.value = true
     showSearchResults.value = true
@@ -1438,7 +1516,7 @@ const openCompanyDetails = (company) => {
 }
 
 const openBlogPost = (post) => {
-  window.open(route('blog.show', post.slug), '_blank')
+  viewBlogPost(post)
   closeSearch()
 }
 
@@ -1694,6 +1772,7 @@ const closeCreateModal = () => {
 const closeQuickBlogModal = () => {
   showQuickBlogModal.value = false
   quickBlogCompany.value = null
+  editingBlogPost.value = null
 }
 
 const handleBlogPosted = () => {
@@ -1703,6 +1782,10 @@ const handleBlogPosted = () => {
 
 const openQuickBlogWithCompany = (company) => {
   quickBlogCompany.value = company
+  showQuickBlogModal.value = true
+}
+const editBlogPost = (post) => {
+  editingBlogPost.value = post
   showQuickBlogModal.value = true
 }
 

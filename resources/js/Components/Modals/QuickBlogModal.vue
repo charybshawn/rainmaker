@@ -11,7 +11,7 @@
           <div class="sm:flex sm:items-start">
             <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
               <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4" id="modal-title">
-                Share Investment Insight
+                {{ editingPost ? 'Edit Investment Insight' : 'Share Investment Insight' }}
               </h3>
 
               <form @submit.prevent="submitPost" class="space-y-4">
@@ -110,10 +110,10 @@
           <button
             @click="submitPost"
             type="button"
-            :disabled="creating || !form.title || !form.content"
+            :disabled="creating || !form.title || !form.content || (form.category === 'quotes' && !form.author_name)"
             class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm disabled:bg-gray-400 disabled:cursor-not-allowed"
           >
-            {{ creating ? 'Posting...' : (form.status === 'published' ? 'Publish Insight' : 'Save Draft') }}
+            {{ creating ? (editingPost ? 'Updating...' : 'Posting...') : (form.status === 'published' ? (editingPost ? 'Update Insight' : 'Publish Insight') : 'Save Draft') }}
           </button>
           <button
             @click="$emit('close')"
@@ -140,6 +140,10 @@ const props = defineProps({
   preselectedCompany: {
     type: Object,
     default: null
+  },
+  editingPost: {
+    type: Object,
+    default: null
   }
 })
 
@@ -164,6 +168,20 @@ watch(() => props.preselectedCompany, (company) => {
   }
 }, { immediate: true })
 
+// Watch for editing post
+watch(() => props.editingPost, (post) => {
+  if (post) {
+    form.value = {
+      title: post.title || '',
+      content: post.content || '',
+      category: post.category || '',
+      author_name: post.author_name || '',
+      status: post.status || 'published',
+      company_ids: []
+    }
+  }
+}, { immediate: true })
+
 // Reset form when modal closes
 watch(() => props.show, (isShown) => {
   if (!isShown) {
@@ -180,13 +198,20 @@ watch(() => props.show, (isShown) => {
 })
 
 const submitPost = async () => {
-  if (creating.value || !form.value.title || !form.value.content) return
+  if (creating.value || !form.value.title || !form.value.content || (form.value.category === 'quotes' && !form.value.author_name)) return
 
   creating.value = true
   errors.value = {}
 
   try {
-    const response = await axios.post('/my-blog', form.value)
+    let response
+    if (props.editingPost) {
+      // Update existing post
+      response = await axios.put(`/my-blog/${props.editingPost.id}`, form.value)
+    } else {
+      // Create new post
+      response = await axios.post('/my-blog', form.value)
+    }
 
     emit('posted', response.data)
     emit('close')
@@ -194,7 +219,9 @@ const submitPost = async () => {
     // Show success message
     window.dispatchEvent(new CustomEvent('blog-posted', {
       detail: {
-        message: form.value.status === 'published' ? 'Investment insight published!' : 'Draft saved successfully!',
+        message: props.editingPost
+          ? 'Investment insight updated successfully!'
+          : (form.value.status === 'published' ? 'Investment insight published!' : 'Draft saved successfully!'),
         type: 'success'
       }
     }))
@@ -204,7 +231,7 @@ const submitPost = async () => {
     } else {
       window.dispatchEvent(new CustomEvent('blog-posted', {
         detail: {
-          message: 'Failed to save post. Please try again.',
+          message: props.editingPost ? 'Failed to update post. Please try again.' : 'Failed to save post. Please try again.',
           type: 'error'
         }
       }))
