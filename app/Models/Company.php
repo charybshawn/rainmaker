@@ -18,6 +18,7 @@ class Company extends Model
         'industry',
         'market_cap',
         'description',
+        'reports_financial_data_in',
         'website_url',
         'headquarters',
         'employees',

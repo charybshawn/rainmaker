@@ -43,6 +43,7 @@ class CompanyController extends Controller
                 'marketCap' => $company->market_cap,
                 'marketCapFormatted' => $company->market_cap_formatted,
                 'description' => $company->description,
+                'reports_financial_data_in' => $company->reports_financial_data_in,
                 'headquarters' => $company->headquarters,
                 'employees' => $company->employees,
                 'foundedDate' => $company->founded_date?->format('Y-m-d'),
@@ -63,6 +64,7 @@ class CompanyController extends Controller
             'industry' => 'nullable|string|max:255',
             'market_cap' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'reports_financial_data_in' => 'nullable|string|max:3',
             'website_url' => 'nullable|url',
             'headquarters' => 'nullable|string|max:255',
             'employees' => 'nullable|integer|min:0',
@@ -82,6 +84,7 @@ class CompanyController extends Controller
             'industry' => $company->industry,
             'marketCap' => $company->market_cap,
             'marketCapFormatted' => $company->market_cap_formatted,
+            'reports_financial_data_in' => $company->reports_financial_data_in,
         ], 201);
     }
 
@@ -98,6 +101,7 @@ class CompanyController extends Controller
             'marketCap' => $company->market_cap,
             'marketCapFormatted' => $company->market_cap_formatted,
             'description' => $company->description,
+            'reports_financial_data_in' => $company->reports_financial_data_in,
             'headquarters' => $company->headquarters,
             'employees' => $company->employees,
             'foundedDate' => $company->founded_date?->format('Y-m-d'),
@@ -134,6 +138,7 @@ class CompanyController extends Controller
             'industry' => 'nullable|string|max:255',
             'market_cap' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'reports_financial_data_in' => 'nullable|string|max:3',
             'website_url' => 'nullable|url',
             'headquarters' => 'nullable|string|max:255',
             'employees' => 'nullable|integer|min:0',
@@ -151,6 +156,7 @@ class CompanyController extends Controller
             'industry' => $company->industry,
             'marketCap' => $company->market_cap,
             'marketCapFormatted' => $company->market_cap_formatted,
+            'reports_financial_data_in' => $company->reports_financial_data_in,
         ]);
     }
 

@@ -1381,7 +1381,8 @@ const companyForm = ref({
   sector: '',
   industry: '',
   market_cap: '',
-  description: ''
+  description: '',
+  reports_financial_data_in: ''
 })
 
 const noteForm = ref({
