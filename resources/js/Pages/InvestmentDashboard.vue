@@ -501,21 +501,6 @@
                 </div>
               </div>
 
-              <!-- Total Market Cap -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/10 rounded-2xl"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                  <div>
-                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Portfolio</p>
-                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ formatTotalMarketCap() }}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.15)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
 
               <!-- Insights Published -->
               <div class="group relative p-6 transition-all duration-500 hover:scale-105">

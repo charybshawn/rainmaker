@@ -1,5 +1,5 @@
 <template>
-  <div class="relative overflow-visible h-64 flex items-end justify-center perspective-1000">
+  <div class="relative overflow-visible h-32 sm:h-48 lg:h-64 flex items-end justify-center perspective-1000">
     <div
       v-for="(quote, index) in quotes"
       :key="quote.id"
@@ -7,16 +7,16 @@
       :class="getQuoteClasses(index)"
       :style="getQuoteStyles(index)"
     >
-      <blockquote class="text-4xl font-medium italic text-white leading-relaxed mb-3 max-w-5xl filter transition-all duration-[30000ms] ease-out relative"
+      <blockquote class="text-lg sm:text-2xl lg:text-4xl font-medium italic text-white leading-relaxed mb-1 sm:mb-2 lg:mb-3 max-w-5xl filter transition-all duration-[30000ms] ease-out relative"
         :class="{
           'blur-sm': index !== currentQuoteIndex,
           'blur-none': index === currentQuoteIndex
         }"
         :style="`font-family: ${quoteFonts[index] || 'Georgia, serif'}; font-style: italic;`"
       >
-        <span class="relative z-10 px-4">{{ quote.content }}</span>
+        <span class="relative z-10 px-2 sm:px-3 lg:px-4">{{ quote.content }}</span>
       </blockquote>
-      <cite class="text-lg font-semibold filter transition-all duration-[30000ms] ease-out"
+      <cite class="text-sm sm:text-base lg:text-lg font-semibold filter transition-all duration-[30000ms] ease-out"
         :class="[
           {
             'blur-sm': index !== currentQuoteIndex,
