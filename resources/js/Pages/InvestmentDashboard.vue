@@ -1395,13 +1395,30 @@ const showQuickBlogModal = ref(false)
 const quickBlogCompany = ref(null)
 const editingBlogPost = ref(null)
 
-// Git information for footer
+// Git information for footer (loaded dynamically)
 const gitInfo = ref({
-  branch: 'mobile-responsive',
-  commit: 'f10f3ff',
-  message: 'fix: ensure contiguous glassmorphic background across all sections',
+  branch: 'loading...',
+  commit: 'loading...',
+  message: 'Loading git information...',
   version: '1.0.0'
 })
+
+// Fetch git information from API
+const fetchGitInfo = async () => {
+  try {
+    const response = await fetch('/api/git-info')
+    const data = await response.json()
+    gitInfo.value = data
+  } catch (error) {
+    console.error('Failed to fetch git info:', error)
+    gitInfo.value = {
+      branch: 'unknown',
+      commit: 'unknown',
+      message: 'Failed to load git info',
+      version: '1.0.0'
+    }
+  }
+}
 const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
 const selectedCompany = ref(null)
@@ -2705,6 +2722,7 @@ onMounted(() => {
   fetchCompanies()
   fetchCompaniesWithResearch() // Fetch companies with research counts for companies tab
   fetchCategoriesAndTags()
+  fetchGitInfo() // Fetch current git information for footer
 
   // Initialize dark mode using the composable
   initializeDarkMode()

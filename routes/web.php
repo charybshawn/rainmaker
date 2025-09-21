@@ -77,6 +77,7 @@ Route::prefix('api')->group(function () {
     // Public endpoints (accessible to everyone)
     Route::get('companies', [CompanyController::class, 'index']);
     Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
+    Route::get('git-info', [\App\Http\Controllers\GitInfoController::class, 'index']);
 
     // Public Categories and Tags (accessible to everyone for dashboard filtering)
     Route::get('categories', function() {
