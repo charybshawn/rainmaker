@@ -126,11 +126,38 @@
               </button>
 
               <button
-                @click="switchTab('portfolio')"
+                @click="switchTab('companies')"
                 :class="[
                   'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
                   'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'portfolio'
+                  activeTab === 'companies'
+                    ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
+                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
+                ]"
+                style="backdrop-filter: blur(0px);"
+              >
+                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
+                  <div :class="[
+                    'p-2 rounded-full transition-all duration-500',
+                    activeTab === 'companies'
+                      ? 'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]'
+                      : 'bg-white/5 group-hover:bg-white/10'
+                  ]">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                  <span class="font-semibold tracking-wide">Companies</span>
+                </div>
+                <div v-if="activeTab === 'companies'" class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full"></div>
+              </button>
+
+              <button
+                @click="switchTab('research')"
+                :class="[
+                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
+                  'border-0 shadow-none backdrop-blur-none',
+                  activeTab === 'research'
                     ? 'bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 scale-105 shadow-[0_0_8px_rgba(34,197,94,0.2)]'
                     : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
                 ]"
@@ -139,17 +166,17 @@
                 <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
                   <div :class="[
                     'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'portfolio'
+                    activeTab === 'research'
                       ? 'bg-green-500/30 shadow-[0_0_5px_rgba(34,197,94,0.3)]'
                       : 'bg-white/5 group-hover:bg-white/10'
                   ]">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                   </div>
-                  <span class="font-semibold tracking-wide">Portfolio</span>
+                  <span class="font-semibold tracking-wide">Research</span>
                 </div>
-                <div v-if="activeTab === 'portfolio'" class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/5 rounded-full"></div>
+                <div v-if="activeTab === 'research'" class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/5 rounded-full"></div>
               </button>
 
               <button
@@ -177,61 +204,6 @@
                   <span class="font-semibold tracking-wide">Insights</span>
                 </div>
                 <div v-if="activeTab === 'insights'" class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('analytics')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'analytics'
-                    ? 'bg-gradient-to-br from-orange-500/20 via-orange-400/10 to-transparent text-orange-200 scale-105 shadow-[0_0_8px_rgba(249,115,22,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'analytics'
-                      ? 'bg-orange-500/30 shadow-[0_0_5px_rgba(249,115,22,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Analytics</span>
-                </div>
-                <div v-if="activeTab === 'analytics'" class="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-orange-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('actions')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'actions'
-                    ? 'bg-gradient-to-br from-yellow-500/20 via-yellow-400/10 to-transparent text-yellow-200 scale-105 shadow-[0_0_8px_rgba(234,179,8,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'actions'
-                      ? 'bg-yellow-500/30 shadow-[0_0_5px_rgba(234,179,8,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Actions</span>
-                </div>
-                <div v-if="activeTab === 'actions'" class="absolute inset-0 bg-gradient-to-br from-yellow-500/5 via-transparent to-yellow-400/5 rounded-full"></div>
               </button>
           </div>
           <!-- Search Component aligned with navigation tabs -->
@@ -491,9 +463,11 @@
 
           <!-- Overview Tab -->
           <div v-else-if="!showSearchResults && activeTab === 'overview'" class="space-y-4">
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-4">
+            <div class="grid grid-cols-3 gap-8 mb-4">
               <!-- Total Companies -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
+              <div
+                @click="switchTab('companies')"
+                class="group relative p-6 transition-all duration-500 hover:scale-105 cursor-pointer">
                 <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/10 rounded-2xl"></div>
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
@@ -508,21 +482,6 @@
                 </div>
               </div>
 
-              <!-- Total Market Cap -->
-              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/10 rounded-2xl"></div>
-                <div class="relative z-10 flex items-center justify-between">
-                  <div>
-                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Portfolio</p>
-                    <p class="text-3xl font-light text-white/90">{{ formatTotalMarketCap() }}</p>
-                  </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.15)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                    </svg>
-                  </div>
-                </div>
-              </div>
 
               <!-- Insights Published -->
               <div class="group relative p-6 transition-all duration-500 hover:scale-105">
@@ -558,121 +517,6 @@
             </div>
           </div>
 
-          <!-- Portfolio Tab -->
-          <div v-if="!showSearchResults && activeTab === 'portfolio'" class="space-y-6">
-            <!-- Portfolio Header -->
-            <div class="flex items-center justify-between mb-6">
-              <h3 class="text-xl font-bold text-white flex items-center">
-                <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                </svg>
-                Company Portfolio Management
-              </h3>
-
-              <!-- View Toggle -->
-              <div class="flex items-center rounded-lg p-1 bg-white/10">
-                <button
-                  @click="viewMode = 'cards'"
-                  :class="[
-                    'flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200',
-                    viewMode === 'cards'
-                      ? 'bg-green-500/30 text-green-300'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  ]"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                  </svg>
-                  <span class="text-sm">Cards</span>
-                </button>
-                <button
-                  @click="viewMode = 'list'"
-                  :class="[
-                    'flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200',
-                    viewMode === 'list'
-                      ? 'bg-green-500/30 text-green-300'
-                      : 'text-gray-300 hover:text-white hover:bg-white/10'
-                  ]"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                  </svg>
-                  <span class="text-sm">List</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Portfolio Content -->
-            <div v-if="loading" class="text-center py-12">
-              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-green-400 mx-auto"></div>
-              <p class="text-gray-300 mt-3">Loading companies...</p>
-            </div>
-
-            <!-- Cards View -->
-            <div v-else-if="filteredCompanies.length > 0 && viewMode === 'cards'" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              <div
-                v-for="company in filteredCompanies"
-                :key="company.id"
-                class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20 hover:bg-white/30 dark:hover:bg-white/15 transition-all duration-200 group"
-              >
-                <!-- Company Header -->
-                <div class="flex items-center mb-4">
-                  <div class="w-10 h-10 bg-blue-500/30 rounded-lg flex items-center justify-center text-blue-300 font-semibold text-sm">
-                    {{ company.ticker.charAt(0) }}
-                  </div>
-                  <div class="ml-3 flex-1">
-                    <h4 class="text-lg font-semibold text-white mb-1 group-hover:text-blue-300 transition-colors">{{ company.name }}</h4>
-                    <p class="text-sm text-blue-400 font-medium">{{ company.ticker }}</p>
-                  </div>
-                  <!-- Quick Actions -->
-                  <div class="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      @click.stop="viewCompanyDetails(company)"
-                      class="w-8 h-8 rounded-lg bg-blue-500/30 hover:bg-blue-500/50 flex items-center justify-center transition-colors"
-                      title="View Details"
-                    >
-                      <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                      </svg>
-                    </button>
-                    <button
-                      v-if="$page.props.auth.user"
-                      @click.stop="openQuickBlogWithCompany(company)"
-                      class="w-8 h-8 rounded-lg bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center transition-colors"
-                      title="Share Insight"
-                    >
-                      <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-                <!-- Company Details -->
-                <div class="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p class="text-gray-400">Sector</p>
-                    <p class="text-white font-medium">{{ company.sector || 'N/A' }}</p>
-                  </div>
-                  <div>
-                    <p class="text-gray-400">Market Cap</p>
-                    <p class="text-white font-medium">{{ formatMarketCap(company.marketCap) }}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Empty State -->
-            <div v-else class="text-center py-12">
-              <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                </svg>
-              </div>
-              <h4 class="text-lg font-semibold text-white mb-2">No companies found</h4>
-              <p class="text-sm text-gray-300">Try adjusting your search terms or add a new company</p>
-            </div>
-          </div>
 
           <!-- Insights Tab -->
           <div v-if="!showSearchResults && activeTab === 'insights'" class="space-y-6">
@@ -956,6 +800,239 @@
             </div>
           </div>
 
+          <!-- Companies Tab -->
+          <div v-if="!showSearchResults && activeTab === 'companies'" class="space-y-6">
+            <!-- Page Header -->
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <h3 class="text-2xl font-bold text-white flex items-center">
+                  <svg class="w-6 h-6 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                  Company Research Database
+                </h3>
+                <p class="text-gray-300 mt-2">{{ companiesFiltered.length }} companies with {{ totalCompanyResearchItems }} research items</p>
+              </div>
+
+              <!-- Add Company Button -->
+              <button
+                v-if="$page.props.auth.user"
+                @click="showCreateModal = true"
+                class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium"
+                style="backdrop-filter: blur(20px) saturate(150%);"
+              >
+                <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Add Company
+              </button>
+            </div>
+
+            <!-- Filters and Search -->
+            <div class="flex flex-col lg:flex-row gap-4 mb-8">
+              <!-- Search -->
+              <div class="flex-1">
+                <div class="relative">
+                  <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                  <input
+                    v-model="companiesSearchQuery"
+                    type="text"
+                    placeholder="Search companies by name, symbol, or sector..."
+                    class="w-full pl-10 pr-4 py-3 rounded-xl border border-white/20 text-white placeholder-gray-400 transition-all duration-500 bg-black/10"
+                    style="backdrop-filter: blur(20px) saturate(180%) !important; box-shadow: 0 4px 12px 0 rgba(31, 38, 135, 0.15) !important;"
+                  />
+                </div>
+              </div>
+
+              <!-- Sector Filter -->
+              <div class="w-full lg:w-48">
+                <select
+                  v-model="companiesSelectedSector"
+                  class="w-full py-3 px-4 rounded-xl border border-white/20 text-white transition-all duration-500 bg-black/10"
+                  style="backdrop-filter: blur(20px) saturate(180%) !important; box-shadow: 0 4px 12px 0 rgba(31, 38, 135, 0.15) !important;"
+                >
+                  <option value="">All Sectors</option>
+                  <option v-for="sector in companiesSectors" :key="sector" :value="sector">{{ sector }}</option>
+                </select>
+              </div>
+
+              <!-- Sort By -->
+              <div class="w-full lg:w-48">
+                <select
+                  v-model="companiesSortBy"
+                  class="w-full py-3 px-4 rounded-xl border border-white/20 text-white transition-all duration-500 bg-black/10"
+                  style="backdrop-filter: blur(20px) saturate(180%) !important; box-shadow: 0 4px 12px 0 rgba(31, 38, 135, 0.15) !important;"
+                >
+                  <option value="name">Name (A-Z)</option>
+                  <option value="symbol">Symbol (A-Z)</option>
+                  <option value="market_cap">Market Cap (High-Low)</option>
+                  <option value="research_count">Research Count (High-Low)</option>
+                  <option value="created_at">Recently Added</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Companies List -->
+            <div v-if="companiesLoading" class="text-center py-12">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto"></div>
+              <p class="text-gray-300 mt-3">Loading companies...</p>
+            </div>
+
+            <div v-else-if="companiesPaginated.length === 0" class="text-center py-16">
+              <div class="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </div>
+              <h4 class="text-xl font-semibold text-white mb-2">No Companies Found</h4>
+              <p class="text-gray-300 mb-6">{{ companiesSearchQuery || companiesSelectedSector ? 'Try adjusting your filters' : 'Start by adding your first company' }}</p>
+              <button
+                v-if="$page.props.auth.user && !companiesSearchQuery && !companiesSelectedSector"
+                @click="showCreateModal = true"
+                class="px-6 py-3 bg-blue-500/30 hover:bg-blue-500/50 text-blue-300 font-medium rounded-lg transition-colors border border-blue-400/30"
+              >
+                Add Your First Company
+              </button>
+            </div>
+
+            <!-- Companies Table -->
+            <div v-else class="overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl" style="backdrop-filter: blur(20px) saturate(180%);">
+              <!-- Table Header -->
+              <div class="px-6 py-4 border-b border-white/20 bg-black/10">
+                <div class="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-300">
+                  <div class="col-span-4">Company</div>
+                  <div class="col-span-2">Sector</div>
+                  <div class="col-span-2">Market Cap</div>
+                  <div class="col-span-1 text-center">Research</div>
+                  <div class="col-span-1 text-center">Insights</div>
+                  <div class="col-span-2 text-center">Actions</div>
+                </div>
+              </div>
+
+              <!-- Table Body -->
+              <div class="divide-y divide-white/20">
+                <div
+                  v-for="company in companiesPaginated"
+                  :key="company.id"
+                  class="group px-6 py-4 hover:bg-black/10 transition-all duration-300 cursor-pointer border-b border-white/10 hover:border-white/20 last:border-b-0"
+                  @click="viewCompanyDetails(company)"
+                >
+                  <div class="grid grid-cols-12 gap-4 items-center">
+                    <!-- Company Info -->
+                    <div class="col-span-4 flex items-center space-x-3">
+                      <!-- Stock Ticker -->
+                      <div class="w-16 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-all duration-300">
+                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker || 'N/A' }}</span>
+                      </div>
+
+                      <!-- Company Details -->
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 mb-1">
+                          <h4 class="text-lg font-semibold text-white group-hover:text-blue-200 transition-colors truncate">{{ company.name }}</h4>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <span class="text-gray-400 text-sm truncate">{{ company.industry || 'N/A' }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Sector -->
+                    <div class="col-span-2">
+                      <span class="text-white font-medium truncate">{{ company.sector || 'N/A' }}</span>
+                    </div>
+
+                    <!-- Market Cap -->
+                    <div class="col-span-2">
+                      <span class="text-white font-medium">{{ formatMarketCap(company.market_cap) }}</span>
+                    </div>
+
+                    <!-- Research Count -->
+                    <div class="col-span-1 text-center">
+                      <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-green-500/20 border border-green-400/20">
+                        <span class="text-green-300 font-bold text-sm">{{ company.research_items_count || 0 }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Insights Count -->
+                    <div class="col-span-1 text-center">
+                      <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 border border-purple-400/20">
+                        <span class="text-purple-300 font-bold text-sm">{{ company.blog_posts_count || 0 }}</span>
+                      </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-span-2 flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        @click.stop="viewCompanyDetails(company)"
+                        class="w-8 h-8 rounded-lg bg-blue-500/30 hover:bg-blue-500/50 flex items-center justify-center transition-colors"
+                        title="View Details"
+                      >
+                        <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                      </button>
+
+                      <button
+                        v-if="$page.props.auth.user"
+                        @click.stop="openQuickBlogWithCompany(company)"
+                        class="w-8 h-8 rounded-lg bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center transition-colors"
+                        title="Add Research"
+                      >
+                        <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination -->
+            <div v-if="companiesTotalPages > 1" class="flex items-center justify-center space-x-2 mt-8 pt-6 border-t border-white/10">
+              <button
+                @click="companiesCurrentPage = Math.max(1, companiesCurrentPage - 1)"
+                :disabled="companiesCurrentPage === 1"
+                class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-blue-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
+              >
+                Previous
+              </button>
+
+              <!-- Page Numbers -->
+              <div class="flex space-x-1">
+                <button
+                  v-for="page in companiesPageNumbers"
+                  :key="page"
+                  @click="companiesCurrentPage = page"
+                  :class="[
+                    'px-3 py-2 rounded-lg transition-all duration-200',
+                    page === companiesCurrentPage
+                      ? 'bg-blue-500/30 text-blue-200 border border-blue-400/30'
+                      : 'bg-white/10 text-gray-300 border border-white/20 hover:bg-white/20 hover:text-white'
+                  ]"
+                >
+                  {{ page }}
+                </button>
+              </div>
+
+              <button
+                @click="companiesCurrentPage = Math.min(companiesTotalPages, companiesCurrentPage + 1)"
+                :disabled="companiesCurrentPage === companiesTotalPages"
+                class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-blue-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
+              >
+                Next
+              </button>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="text-center text-gray-400 text-sm mt-4">
+              Showing {{ ((companiesCurrentPage - 1) * companiesPerPage) + 1 }} to {{ Math.min(companiesCurrentPage * companiesPerPage, companiesFiltered.length) }} of {{ companiesFiltered.length }} companies
+            </div>
+          </div>
+
           <!-- Analytics Tab -->
           <div v-if="!showSearchResults && activeTab === 'analytics'" class="space-y-6">
             <div class="flex items-center justify-between mb-6">
@@ -1090,15 +1167,6 @@
               <!-- Quick Switches -->
               <div class="space-y-4">
                 <h4 class="text-lg font-semibold text-white mb-4">Quick Switch</h4>
-                <button
-                  @click="switchTab('portfolio')"
-                  class="w-full bg-green-500/30 hover:bg-green-500/50 text-green-300 font-medium py-4 px-6 rounded-lg transition-all duration-300 flex items-center justify-center border border-green-500/30 hover:shadow-lg hover:scale-105"
-                >
-                  <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                  Manage Portfolio
-                </button>
 
                 <button
                   @click="switchTab('insights')"
@@ -1292,6 +1360,14 @@ const isSearching = ref(false)
 const showSearchResults = ref(false)
 const showHeaderSearch = ref(false)
 
+// Companies Tab State
+const companiesLoading = ref(false)
+const companiesSearchQuery = ref('')
+const companiesSelectedSector = ref('')
+const companiesSortBy = ref('name')
+const companiesCurrentPage = ref(1)
+const companiesPerPage = ref(10)
+
 // Pagination State
 const pagination = ref({
   companies: { currentPage: 1, perPage: 5 },
@@ -1372,6 +1448,84 @@ const totalPages = computed(() => ({
   blogPosts: Math.ceil(searchResults.value.blogPosts.length / pagination.value.blogPosts.perPage),
   researchItems: Math.ceil(searchResults.value.researchItems.length / pagination.value.researchItems.perPage)
 }))
+
+// Companies Tab Computed Properties
+const companiesSectors = computed(() => {
+  const sectors = new Set()
+  companies.value.forEach(company => {
+    if (company.sector) sectors.add(company.sector)
+  })
+  return Array.from(sectors).sort()
+})
+
+const companiesFiltered = computed(() => {
+  let filtered = companies.value
+
+  // Search filter
+  if (companiesSearchQuery.value.trim()) {
+    const query = companiesSearchQuery.value.toLowerCase()
+    filtered = filtered.filter(company =>
+      company.name.toLowerCase().includes(query) ||
+      company.ticker?.toLowerCase().includes(query) ||
+      company.sector?.toLowerCase().includes(query) ||
+      company.industry?.toLowerCase().includes(query)
+    )
+  }
+
+  // Sector filter
+  if (companiesSelectedSector.value) {
+    filtered = filtered.filter(company => company.sector === companiesSelectedSector.value)
+  }
+
+  // Sort
+  if (companiesSortBy.value === 'name') {
+    filtered.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (companiesSortBy.value === 'ticker') {
+    filtered.sort((a, b) => (a.ticker || '').localeCompare(b.ticker || ''))
+  } else if (companiesSortBy.value === 'sector') {
+    filtered.sort((a, b) => (a.sector || '').localeCompare(b.sector || ''))
+  } else if (companiesSortBy.value === 'research_count') {
+    filtered.sort((a, b) => (b.researchItemsCount || 0) - (a.researchItemsCount || 0))
+  }
+
+  return filtered
+})
+
+const companiesTotalPages = computed(() =>
+  Math.ceil(companiesFiltered.value.length / companiesPerPage.value)
+)
+
+const companiesPaginated = computed(() => {
+  const start = (companiesCurrentPage.value - 1) * companiesPerPage.value
+  const end = start + companiesPerPage.value
+  return companiesFiltered.value.slice(start, end)
+})
+
+const companiesPageNumbers = computed(() => {
+  const pages = []
+  const total = companiesTotalPages.value
+  const current = companiesCurrentPage.value
+
+  if (total <= 7) {
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+  } else {
+    if (current <= 3) {
+      pages.push(1, 2, 3, 4, '...', total)
+    } else if (current >= total - 2) {
+      pages.push(1, '...', total - 3, total - 2, total - 1, total)
+    } else {
+      pages.push(1, '...', current - 1, current, current + 1, '...', total)
+    }
+  }
+
+  return pages
+})
+
+const totalCompanyResearchItems = computed(() =>
+  companies.value.reduce((total, company) => total + (company.researchItemsCount || 0), 0)
+)
 
 const fetchCompanies = async (search = '') => {
   try {
@@ -2363,14 +2517,64 @@ const closeDetailsModal = () => {
   errors.value = {}
 }
 
+// Companies Tab Methods
+const fetchCompaniesWithResearch = async () => {
+  try {
+    companiesLoading.value = true
+    const response = await axios.get('/api/companies')
+    companies.value = response.data
+  } catch (error) {
+    console.error('Error fetching companies with research:', error)
+  } finally {
+    companiesLoading.value = false
+  }
+}
+
+const clearCompaniesFilters = () => {
+  companiesSearchQuery.value = ''
+  companiesSelectedSector.value = ''
+  companiesSortBy.value = 'name'
+  companiesCurrentPage.value = 1
+}
+
+const goToCompaniesPage = (page) => {
+  if (page >= 1 && page <= companiesTotalPages.value) {
+    companiesCurrentPage.value = page
+  }
+}
+
+const previousCompaniesPage = () => {
+  if (companiesCurrentPage.value > 1) {
+    companiesCurrentPage.value--
+  }
+}
+
+const nextCompaniesPage = () => {
+  if (companiesCurrentPage.value < companiesTotalPages.value) {
+    companiesCurrentPage.value++
+  }
+}
+
+const viewCompanyResearch = (company) => {
+  // This could open a modal or navigate to research items for this company
+  console.log('Viewing research for company:', company.name)
+  // Future implementation: Could switch to research tab with company filter
+}
+
+// Watch for companies tab state changes
+watch([companiesSearchQuery, companiesSelectedSector, companiesSortBy], () => {
+  companiesCurrentPage.value = 1 // Reset to first page when filters change
+})
+
 onMounted(() => {
   fetchCompanies()
+  fetchCompaniesWithResearch() // Fetch companies with research counts for companies tab
   fetchCategoriesAndTags()
-  
+
   // Initialize dark mode using the composable
   initializeDarkMode()
-  
-  // Initialize shooting stars animation  
+
+  // Initialize shooting stars animation
   initStarsAnimation()
 })
 

@@ -1,33 +1,36 @@
 <template>
-  <div v-show="show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
-    <div class="bg-white dark:bg-gray-800 rounded-lg w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl max-h-[90vh] overflow-y-auto shadow-sm transition-all duration-200">
+  <div v-show="show" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
+    <div class="bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 w-full max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl 2xl:max-w-6xl max-h-[90vh] overflow-y-auto shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
       <!-- Modal Header -->
-      <div class="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-8 py-6 rounded-t-2xl">
+      <div class="sticky top-0 bg-black/10 backdrop-blur-xl border-b border-white/20 px-8 py-6 rounded-t-2xl" style="backdrop-filter: blur(20px) saturate(180%);">
         <div class="flex items-center justify-between">
-          <h2 class="text-3xl font-semibold text-gray-900 dark:text-white">Add New Company</h2>
-          <div class="flex items-center space-x-2">
+          <h2 class="text-3xl font-semibold text-white">Add New Company</h2>
+          <div class="flex items-center space-x-3">
           <!-- Save Button -->
-          <button 
+          <button
             @click="$emit('save')"
             :disabled="creating"
-            class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 disabled:bg-blue-300 dark:disabled:bg-blue-800 flex items-center justify-center transition-colors"
+            class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            style="backdrop-filter: blur(20px) saturate(150%);"
             title="Save Company"
           >
-            <svg v-if="!creating" class="w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="!creating" class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
             </svg>
-            <svg v-else class="animate-spin w-5 h-5 text-blue-600 dark:text-blue-300" fill="none" viewBox="0 0 24 24">
+            <svg v-else class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
+            {{ creating ? 'Saving...' : 'Save Company' }}
           </button>
           <!-- Close Button -->
-          <button 
+          <button
             @click="$emit('close')"
-            class="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex items-center justify-center transition-colors"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 flex items-center justify-center transition-all duration-300 hover:scale-105 backdrop-blur-xl"
+            style="backdrop-filter: blur(20px) saturate(150%);"
             title="Close"
           >
-            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5 text-white/70 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -40,7 +43,7 @@
       
       <form class="space-y-6">
         <!-- General Error Message -->
-        <div v-if="errors.general" class="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg mb-4">
+        <div v-if="errors.general" class="bg-gradient-to-br from-red-500/20 via-red-400/10 to-transparent backdrop-blur-xl border border-red-400/30 text-red-200 px-4 py-3 rounded-xl mb-4" style="backdrop-filter: blur(20px) saturate(180%);">
           {{ errors.general }}
         </div>
         
@@ -50,43 +53,46 @@
           <div class="space-y-6">
             <!-- Company Name -->
             <div>
-              <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Company Name</label>
-              <input 
+              <label for="name" class="block text-sm font-medium text-white mb-2">Company Name</label>
+              <input
                 id="name"
 :value="form.name"
                 @input="$emit('update:form', { ...form, name: $event.target.value })"
-                type="text" 
+                type="text"
                 required
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                style="backdrop-filter: blur(20px) saturate(180%);"
                 placeholder="e.g., Apple Inc."
               />
-              <div v-if="errors.name" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.name }}</div>
+              <div v-if="errors.name" class="text-red-400 text-sm mt-1">{{ errors.name }}</div>
             </div>
 
             <!-- Ticker Symbol -->
             <div>
-              <label for="ticker_symbol" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Ticker Symbol</label>
-              <input 
+              <label for="ticker_symbol" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
+              <input
                 id="ticker_symbol"
                 :value="form.ticker_symbol"
                 @input="handleTickerInput"
-                type="text" 
+                type="text"
                 required
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors uppercase"
+                class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500 uppercase"
+                style="backdrop-filter: blur(20px) saturate(180%);"
                 placeholder="e.g., AAPL"
                 maxlength="10"
               />
-              <div v-if="errors.ticker_symbol" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.ticker_symbol }}</div>
+              <div v-if="errors.ticker_symbol" class="text-red-400 text-sm mt-1">{{ errors.ticker_symbol }}</div>
             </div>
 
             <!-- Sector -->
             <div>
-              <label for="sector" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sector</label>
-              <select 
+              <label for="sector" class="block text-sm font-medium text-white mb-2">Sector</label>
+              <select
                 id="sector"
 :value="form.sector"
                 @input="$emit('update:form', { ...form, sector: $event.target.value })"
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                style="backdrop-filter: blur(20px) saturate(180%);"
               >
                 <option value="">Select a sector</option>
                 <option value="Technology">Technology</option>
@@ -101,7 +107,7 @@
                 <option value="Real Estate">Real Estate</option>
                 <option value="Materials">Materials</option>
               </select>
-              <div v-if="errors.sector" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.sector }}</div>
+              <div v-if="errors.sector" class="text-red-400 text-sm mt-1">{{ errors.sector }}</div>
             </div>
           </div>
 
@@ -109,34 +115,36 @@
           <div class="space-y-6">
             <!-- Industry -->
             <div>
-              <label for="industry" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Industry</label>
-              <input 
+              <label for="industry" class="block text-sm font-medium text-white mb-2">Industry</label>
+              <input
                 id="industry"
 :value="form.industry"
                 @input="$emit('update:form', { ...form, industry: $event.target.value })"
-                type="text" 
-                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                type="text"
+                class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                style="backdrop-filter: blur(20px) saturate(180%);"
                 placeholder="e.g., Consumer Electronics"
               />
-              <div v-if="errors.industry" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.industry }}</div>
+              <div v-if="errors.industry" class="text-red-400 text-sm mt-1">{{ errors.industry }}</div>
             </div>
 
             <!-- Market Cap -->
             <div>
-              <label for="market_cap" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Market Cap (USD)</label>
+              <label for="market_cap" class="block text-sm font-medium text-white mb-2">Market Cap (USD)</label>
               <div class="relative">
-                <input 
+                <input
                   id="market_cap"
                   :value="marketCapInput"
-                  type="text" 
+                  type="text"
                   :class="[
-                    'w-full px-4 py-3 pr-10 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 transition-colors',
-                    marketCapValidation.state === 'valid' 
-                      ? 'border-green-300 dark:border-green-500 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400' 
-                      : marketCapValidation.state === 'invalid' 
-                      ? 'border-red-300 dark:border-red-500 focus:ring-red-500 dark:focus:ring-red-400 focus:border-red-500 dark:focus:border-red-400'
-                      : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400'
+                    'w-full px-4 py-3 pr-10 rounded-xl bg-black/10 backdrop-blur-xl text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] transition-all duration-500',
+                    marketCapValidation.state === 'valid'
+                      ? 'border border-green-400/50 focus:ring-green-400/20 focus:border-green-400/70 focus:ring-2'
+                      : marketCapValidation.state === 'invalid'
+                      ? 'border border-red-400/50 focus:ring-red-400/20 focus:border-red-400/70 focus:ring-2'
+                      : 'border border-white/20 focus:ring-blue-400/20 focus:border-blue-400/50 focus:ring-2'
                   ]"
+                  style="backdrop-filter: blur(20px) saturate(180%);"
                   placeholder="e.g., 1.2M, 500B, 2.5T or 1500000"
                   @input="$emit('market-cap-input', $event)"
                 />
@@ -158,10 +166,10 @@
                   </svg>
                 </div>
               </div>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Enter numbers with decimals, or use shorthand: K (thousands), M (millions), B (billions), T (trillions)</p>
-              <div v-if="errors.market_cap" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.market_cap }}</div>
+              <p class="text-sm text-gray-400 mt-1">Enter numbers with decimals, or use shorthand: K (thousands), M (millions), B (billions), T (trillions)</p>
+              <div v-if="errors.market_cap" class="text-red-400 text-sm mt-1">{{ errors.market_cap }}</div>
               <!-- Validation Success Message -->
-              <div v-if="marketCapValidation.state === 'valid' && form.market_cap" class="text-green-600 dark:text-green-400 text-sm mt-1">
+              <div v-if="marketCapValidation.state === 'valid' && form.market_cap" class="text-green-400 text-sm mt-1">
                 ✓ Valid: {{ formatMarketCap(form.market_cap) }}
               </div>
             </div>
@@ -170,16 +178,17 @@
 
         <!-- Description (Full Width) -->
         <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description</label>
-          <textarea 
+          <label for="description" class="block text-sm font-medium text-white mb-2">Description</label>
+          <textarea
             id="description"
 :value="form.description"
             @input="$emit('update:form', { ...form, description: $event.target.value })"
             rows="3"
-            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors resize-none"
+            class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500 resize-none"
+            style="backdrop-filter: blur(20px) saturate(180%);"
             placeholder="Brief description of the company and its business..."
           ></textarea>
-          <div v-if="errors.description" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ errors.description }}</div>
+          <div v-if="errors.description" class="text-red-400 text-sm mt-1">{{ errors.description }}</div>
         </div>
 
       </form>
