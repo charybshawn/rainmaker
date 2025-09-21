@@ -177,22 +177,6 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Left Column -->
                 <div class="space-y-6">
-                  <!-- Company Name -->
-                  <div>
-                    <label for="edit_name" class="block text-sm font-medium text-white mb-2">Company Name</label>
-                    <input
-                      id="edit_name"
-                      :value="editForm.name"
-                      @input="$emit('update:edit-form', { ...editForm, name: $event.target.value })"
-                      type="text"
-                      required
-                      class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
-                      style="backdrop-filter: blur(20px) saturate(180%);"
-                      placeholder="e.g., Apple Inc."
-                    />
-                    <div v-if="editErrors.name" class="text-red-400 text-sm mt-1">{{ editErrors.name }}</div>
-                  </div>
-
                   <!-- Ticker Symbol -->
                   <div>
                     <label for="edit_ticker_symbol" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
@@ -210,35 +194,6 @@
                     <div v-if="editErrors.ticker_symbol" class="text-red-400 text-sm mt-1">{{ editErrors.ticker_symbol }}</div>
                   </div>
 
-                  <!-- Sector -->
-                  <div>
-                    <label for="edit_sector" class="block text-sm font-medium text-white mb-2">Sector</label>
-                    <select
-                      id="edit_sector"
-                      :value="editForm.sector"
-                      @input="$emit('update:edit-form', { ...editForm, sector: $event.target.value })"
-                      class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
-                      style="backdrop-filter: blur(20px) saturate(180%);"
-                    >
-                      <option value="">Select a sector</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Healthcare">Healthcare</option>
-                      <option value="Financials">Financials</option>
-                      <option value="Consumer Discretionary">Consumer Discretionary</option>
-                      <option value="Communication Services">Communication Services</option>
-                      <option value="Industrials">Industrials</option>
-                      <option value="Consumer Staples">Consumer Staples</option>
-                      <option value="Energy">Energy</option>
-                      <option value="Utilities">Utilities</option>
-                      <option value="Real Estate">Real Estate</option>
-                      <option value="Materials">Materials</option>
-                    </select>
-                    <div v-if="editErrors.sector" class="text-red-400 text-sm mt-1">{{ editErrors.sector }}</div>
-                  </div>
-                </div>
-
-                <!-- Right Column -->
-                <div class="space-y-6">
                   <!-- Industry -->
                   <div>
                     <label for="edit_industry" class="block text-sm font-medium text-white mb-2">Industry</label>
@@ -299,15 +254,61 @@
                       ✓ Valid: {{ formatMarketCap(editForm.market_cap) }}
                     </div>
                   </div>
+                </div>
 
-                  <!-- Reports Financial Data In -->
+                <!-- Right Column -->
+                <div class="space-y-6">
+                  <!-- Company Name -->
                   <div>
-                    <label for="edit_reports_financial_data_in" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reports Financial Data In</label>
+                    <label for="edit_name" class="block text-sm font-medium text-white mb-2">Company Name</label>
+                    <input
+                      id="edit_name"
+                      :value="editForm.name"
+                      @input="$emit('update:edit-form', { ...editForm, name: $event.target.value })"
+                      type="text"
+                      required
+                      class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                      style="backdrop-filter: blur(20px) saturate(180%);"
+                      placeholder="e.g., Apple Inc."
+                    />
+                    <div v-if="editErrors.name" class="text-red-400 text-sm mt-1">{{ editErrors.name }}</div>
+                  </div>
+
+                  <!-- Sector -->
+                  <div>
+                    <label for="edit_sector" class="block text-sm font-medium text-white mb-2">Sector</label>
+                    <select
+                      id="edit_sector"
+                      :value="editForm.sector"
+                      @input="$emit('update:edit-form', { ...editForm, sector: $event.target.value })"
+                      class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                      style="backdrop-filter: blur(20px) saturate(180%);"
+                    >
+                      <option value="">Select a sector</option>
+                      <option value="Technology">Technology</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Financials">Financials</option>
+                      <option value="Consumer Discretionary">Consumer Discretionary</option>
+                      <option value="Communication Services">Communication Services</option>
+                      <option value="Industrials">Industrials</option>
+                      <option value="Consumer Staples">Consumer Staples</option>
+                      <option value="Energy">Energy</option>
+                      <option value="Utilities">Utilities</option>
+                      <option value="Real Estate">Real Estate</option>
+                      <option value="Materials">Materials</option>
+                    </select>
+                    <div v-if="editErrors.sector" class="text-red-400 text-sm mt-1">{{ editErrors.sector }}</div>
+                  </div>
+
+                  <!-- Currency -->
+                  <div>
+                    <label for="edit_reports_financial_data_in" class="block text-sm font-medium text-white mb-2">Reports Financial Data In</label>
                     <select
                       id="edit_reports_financial_data_in"
                       :value="editForm.reports_financial_data_in"
                       @input="$emit('update:edit-form', { ...editForm, reports_financial_data_in: $event.target.value })"
-                      class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                      class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                      style="backdrop-filter: blur(20px) saturate(180%);"
                     >
                       <option value="">Select currency...</option>
                       <option value="USD">USD - US Dollar</option>
@@ -336,7 +337,7 @@
                       <option value="TRY">TRY - Turkish Lira</option>
                       <option value="ILS">ILS - Israeli Shekel</option>
                     </select>
-                    <div v-if="editErrors.reports_financial_data_in" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ editErrors.reports_financial_data_in }}</div>
+                    <div v-if="editErrors.reports_financial_data_in" class="text-red-400 text-sm mt-1">{{ editErrors.reports_financial_data_in }}</div>
                   </div>
                 </div>
               </div>

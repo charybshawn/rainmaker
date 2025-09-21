@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Companies Click</title>
+    <script>
+        // Simple test to see if page loads and basic JS works
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Debug page loaded');
+
+            // Test if we can access the main page
+            fetch('http://localhost:8001')
+                .then(response => response.text())
+                .then(html => {
+                    console.log('Main page accessible:', html.length > 0);
+                    // Check if switchTab function exists in the page
+                    if (html.includes('switchTab')) {
+                        console.log('switchTab function found in page');
+                    } else {
+                        console.log('switchTab function NOT found in page');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error accessing main page:', error);
+                });
+        });
+    </script>
+</head>
+<body>
+    <h1>Debug Page</h1>
+    <p>Check console for debug information</p>
+    <button onclick="window.open('http://localhost:8001', '_blank')">Open Main Dashboard</button>
+</body>
+</html>

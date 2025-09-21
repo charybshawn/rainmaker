@@ -173,6 +173,46 @@
                 ✓ Valid: {{ formatMarketCap(form.market_cap) }}
               </div>
             </div>
+
+            <!-- Currency -->
+            <div>
+              <label for="reports_financial_data_in" class="block text-sm font-medium text-white mb-2">Reports Financial Data In</label>
+              <select
+                id="reports_financial_data_in"
+                :value="form.reports_financial_data_in"
+                @input="$emit('update:form', { ...form, reports_financial_data_in: $event.target.value })"
+                class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                style="backdrop-filter: blur(20px) saturate(180%);"
+              >
+                <option value="">Select currency...</option>
+                <option value="USD">USD - US Dollar</option>
+                <option value="EUR">EUR - Euro</option>
+                <option value="GBP">GBP - British Pound</option>
+                <option value="JPY">JPY - Japanese Yen</option>
+                <option value="CAD">CAD - Canadian Dollar</option>
+                <option value="AUD">AUD - Australian Dollar</option>
+                <option value="CHF">CHF - Swiss Franc</option>
+                <option value="CNY">CNY - Chinese Yuan</option>
+                <option value="SEK">SEK - Swedish Krona</option>
+                <option value="NOK">NOK - Norwegian Krone</option>
+                <option value="DKK">DKK - Danish Krone</option>
+                <option value="PLN">PLN - Polish Zloty</option>
+                <option value="CZK">CZK - Czech Koruna</option>
+                <option value="HUF">HUF - Hungarian Forint</option>
+                <option value="RUB">RUB - Russian Ruble</option>
+                <option value="BRL">BRL - Brazilian Real</option>
+                <option value="MXN">MXN - Mexican Peso</option>
+                <option value="INR">INR - Indian Rupee</option>
+                <option value="KRW">KRW - South Korean Won</option>
+                <option value="SGD">SGD - Singapore Dollar</option>
+                <option value="HKD">HKD - Hong Kong Dollar</option>
+                <option value="NZD">NZD - New Zealand Dollar</option>
+                <option value="ZAR">ZAR - South African Rand</option>
+                <option value="TRY">TRY - Turkish Lira</option>
+                <option value="ILS">ILS - Israeli Shekel</option>
+              </select>
+              <div v-if="errors.reports_financial_data_in" class="text-red-400 text-sm mt-1">{{ errors.reports_financial_data_in }}</div>
+            </div>
           </div>
         </div>
 
