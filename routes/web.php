@@ -21,7 +21,7 @@ Route::get('/', function () {
         ->take(5)
         ->get(['id', 'title', 'slug', 'content', 'published_at', 'user_id']);
 
-    return Inertia::render('InvestmentDashboardSimple', [
+    return Inertia::render('InvestmentDashboard', [
         'auth' => $auth,
         'recentBlogPosts' => $recentPosts
     ]);
@@ -36,7 +36,7 @@ Route::get('/dashboard', function () {
         ->take(5)
         ->get(['id', 'title', 'slug', 'content', 'published_at', 'user_id']);
 
-    return Inertia::render('InvestmentDashboardSimple', [
+    return Inertia::render('InvestmentDashboard', [
         'auth' => [
             'user' => auth()->user()->load('roles', 'permissions')
         ],
