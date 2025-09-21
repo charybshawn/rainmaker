@@ -21,8 +21,7 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 manualChunks: {
-                    vendor: ['vue', '@inertiajs/vue3', 'axios'],
-                    dashboard: ['./resources/js/Pages/InvestmentDashboard.vue']
+                    vendor: ['vue', '@inertiajs/vue3', 'axios']
                 }
             }
         }
