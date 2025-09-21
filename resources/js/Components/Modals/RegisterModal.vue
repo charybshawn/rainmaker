@@ -51,21 +51,21 @@ const switchToLogin = () => {
         <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <!-- Background overlay -->
             <div
-                class="fixed inset-0 bg-gray-500/75 dark:bg-gray-900/80 backdrop-blur-sm transition-opacity"
+                class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
                 aria-hidden="true"
             ></div>
 
             <!-- Modal panel -->
             <div
-                class="relative inline-block align-bottom bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-[0_20px_25px_-5px_rgba(0,0,0,0.1),0_10px_10px_-5px_rgba(0,0,0,0.04)] dark:shadow-[0_20px_25px_-5px_rgba(0,0,0,0.25),0_10px_10px_-5px_rgba(0,0,0,0.1)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 border border-white/20 dark:border-white/10"
-                style="backdrop-filter: blur(20px) saturate(150%);"
+                class="relative inline-block align-bottom bg-black/20 backdrop-blur-3xl rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4),0_10px_10px_-5px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 border border-white/20"
+                style="backdrop-filter: blur(20px) saturate(180%); background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));"
                 @click.stop
             >
                 <!-- Close button -->
                 <div class="absolute top-0 right-0 pt-4 pr-4">
                     <button
                         type="button"
-                        class="bg-white/10 dark:bg-white/5 rounded-md p-2 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 hover:bg-white/20 dark:hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500 transition-all duration-200"
+                        class="bg-white/10 rounded-md p-2 inline-flex items-center justify-center text-white/60 hover:text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-green-500 transition-all duration-200"
                         @click="closeModal"
                     >
                         <span class="sr-only">Close</span>
@@ -87,7 +87,7 @@ const switchToLogin = () => {
                                     style="filter: brightness(1.2) contrast(1.2) saturate(1.2);"
                                 />
                             </div>
-                            <h3 class="text-2xl font-bold leading-6 text-gray-900 dark:text-white">
+                            <h3 class="text-2xl font-bold leading-6 text-white">
                                 Join Rainmaker
                             </h3>
                         </div>
@@ -150,7 +150,7 @@ const switchToLogin = () => {
                                 <button
                                     type="button"
                                     @click="switchToLogin"
-                                    class="text-sm text-gray-600 dark:text-gray-300 underline hover:text-gray-900 dark:hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
+                                    class="text-sm text-white/60 underline hover:text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors duration-200"
                                 >
                                     Already have an account?
                                 </button>

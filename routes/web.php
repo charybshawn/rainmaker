@@ -74,10 +74,8 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 
 // API Routes
 Route::prefix('api')->group(function () {
+    // Public endpoints (accessible to everyone)
     Route::get('companies', [CompanyController::class, 'index']);
-
-    // Public search endpoints
-    Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
     Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
 
     // Public Categories and Tags (accessible to everyone for dashboard filtering)
@@ -89,14 +87,22 @@ Route::prefix('api')->group(function () {
     });
 
     Route::middleware('auth')->group(function () {
+        // Protected search endpoints (require authentication)
+        Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
+        Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
+        Route::get('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'index']);
+
         Route::post('companies', [CompanyController::class, 'store']);
         Route::get('companies/{company}', [CompanyController::class, 'show']);
         Route::put('companies/{company}', [CompanyController::class, 'update']);
         Route::delete('companies/{company}', [CompanyController::class, 'destroy']);
         Route::get('companies/{company}/blog-posts', [CompanyController::class, 'getBlogPosts']);
 
-        // Research Items
-        Route::apiResource('research-items', \App\Http\Controllers\Api\ResearchItemController::class);
+        // Research Items (protected operations)
+        Route::post('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'store']);
+        Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
+        Route::put('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'update']);
+        Route::delete('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'destroy']);
     });
 });
 

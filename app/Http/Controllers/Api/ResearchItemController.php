@@ -15,20 +15,34 @@ class ResearchItemController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = ResearchItem::query()
-            ->with(['company', 'category', 'tags', 'user'])
-            ->where('user_id', auth()->id());
+            ->with(['company', 'category', 'tags', 'user']);
+
+        // If user is authenticated, show their own items + public items
+        // If user is not authenticated, show only public items
+        if (auth()->check()) {
+            $query->where(function($q) {
+                $q->where('user_id', auth()->id())
+                  ->orWhere('visibility', 'public');
+            });
+        } else {
+            $query->where('visibility', 'public');
+        }
 
         // Filter by company if provided
         if ($request->has('company_id') && !empty($request->company_id)) {
             $query->where('company_id', $request->company_id);
         }
 
-        // Search functionality
+        // Search functionality (enhanced to also search company names)
         if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('content', 'like', '%' . $searchTerm . '%');
+                  ->orWhere('content', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('company', function($companyQuery) use ($searchTerm) {
+                      $companyQuery->where('name', 'like', '%' . $searchTerm . '%')
+                                  ->orWhere('ticker_symbol', 'like', '%' . $searchTerm . '%');
+                  });
             });
         }
 
