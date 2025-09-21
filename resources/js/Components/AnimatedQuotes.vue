@@ -106,14 +106,14 @@ const getQuoteStyles = (index) => {
 
   if (isActive) {
     return {
-      transform: 'translateX(0px) translateY(160px) translateZ(0px) scale(1) rotateY(0deg) rotateX(0deg)',
+      transform: 'translateX(0px) translateY(-20px) translateZ(0px) scale(1) rotateY(0deg) rotateX(0deg)',
       opacity: '1',
       filter: 'blur(0px)',
       transition: 'all 30000ms cubic-bezier(0.23, 1, 0.32, 1)'
     }
   } else {
     return {
-      transform: `translateX(${path.startX}px) translateY(${path.startY + 160}px) translateZ(-500px) scale(0.05) rotateY(${path.rotation}deg) rotateX(${path.rotation / 2}deg)`,
+      transform: `translateX(${path.startX}px) translateY(${path.startY - 20}px) translateZ(-500px) scale(0.05) rotateY(${path.rotation}deg) rotateX(${path.rotation / 2}deg)`,
       opacity: '0',
       filter: 'blur(20px)',
       transition: 'all 30000ms cubic-bezier(0.23, 1, 0.32, 1)'
