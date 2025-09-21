@@ -8,8 +8,8 @@
       style="z-index: 1;"
     ></canvas>
 
-    <!-- Header Section -->
-    <div class="relative z-10">
+    <!-- Header Section (Hidden on Mobile) -->
+    <div class="relative z-10 hidden sm:block">
       <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-3 sm:py-4 lg:py-6">
         <!-- Navigation Bar -->
         <div class="flex items-center justify-between mb-2 sm:mb-3 lg:mb-4">
@@ -18,7 +18,7 @@
             <img
               src="/images/rainmaker-logo.png"
               alt="Rainmaker Logo"
-              class="drop-shadow-sm h-20 sm:h-24 lg:h-28 xl:h-32 w-auto"
+              class="drop-shadow-sm h-12 sm:h-16 lg:h-20 xl:h-24 w-auto"
               style="opacity: 1 !important; filter: brightness(1.2) contrast(1.2) saturate(1.2);"
             />
           </div>
@@ -82,8 +82,8 @@
           </div>
         </div>
 
-        <!-- Animated Quotes Section - Crown above content -->
-        <div class="mb-0">
+        <!-- Animated Quotes Section - Crown above content (Hidden on Mobile) -->
+        <div class="mb-0 hidden sm:block">
           <AnimatedQuotes />
         </div>
 
@@ -91,158 +91,176 @@
       </div>
     </div>
 
-    <!-- Glass Container for Lower Content -->
-    <div class="w-[95%] sm:w-[90%] lg:w-[80%] mx-auto px-4 sm:px-6 py-3 sm:py-4 lg:py-6 -mt-12">
-      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl sm:rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 p-4 sm:p-6 lg:p-8 relative" style="backdrop-filter: blur(20px) saturate(180%);">
+    <!-- Unified Glass Container for All Content -->
+    <div class="w-full mx-auto">
+      <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] p-0 sm:p-6 lg:p-8 relative min-h-[calc(100vh-1rem)]" style="backdrop-filter: blur(20px) saturate(180%);">
 
-        <!-- Navigation Tabs with Search (top position) -->
-        <div class="flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
-          <div class="flex items-center space-x-2 sm:space-x-4 lg:space-x-8 relative">
-            <button
-                @click="switchTab('overview')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'overview'
-                    ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'overview'
-                      ? 'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Overview</span>
-                </div>
-                <div v-if="activeTab === 'overview'" class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('companies')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'companies'
-                    ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'companies'
-                      ? 'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Companies</span>
-                </div>
-                <div v-if="activeTab === 'companies'" class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('research')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'research'
-                    ? 'bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 scale-105 shadow-[0_0_8px_rgba(34,197,94,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'research'
-                      ? 'bg-green-500/30 shadow-[0_0_5px_rgba(34,197,94,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Research</span>
-                </div>
-                <div v-if="activeTab === 'research'" class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/5 rounded-full"></div>
-              </button>
-
-              <button
-                @click="switchTab('insights')"
-                :class="[
-                  'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
-                  'border-0 shadow-none backdrop-blur-none',
-                  activeTab === 'insights'
-                    ? 'bg-gradient-to-br from-purple-500/20 via-purple-400/10 to-transparent text-purple-200 scale-105 shadow-[0_0_8px_rgba(147,51,234,0.2)]'
-                    : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                ]"
-                style="backdrop-filter: blur(0px);"
-              >
-                <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
-                  <div :class="[
-                    'p-2 rounded-full transition-all duration-500',
-                    activeTab === 'insights'
-                      ? 'bg-purple-500/30 shadow-[0_0_5px_rgba(147,51,234,0.3)]'
-                      : 'bg-white/5 group-hover:bg-white/10'
-                  ]">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                    </svg>
-                  </div>
-                  <span class="font-semibold tracking-wide">Insights</span>
-                </div>
-                <div v-if="activeTab === 'insights'" class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/5 rounded-full"></div>
-              </button>
+        <!-- Mobile Header (now inside glass container) -->
+        <div class="sm:hidden">
+          <div class="flex items-center justify-between p-4">
+            <HamburgerMenu
+              :all-tabs="allTabs"
+              :active-tab="activeTab"
+              :user="$page.props.auth.user"
+              :can-access-admin="canAccessAdmin"
+              @tab-selected="switchTab"
+              @search="handleMobileSearch"
+              :is-full-screen="true"
+            />
+            <img
+              src="/images/rainmaker-logo.png"
+              alt="Rainmaker Logo"
+              class="h-12 w-auto"
+            />
           </div>
-          <!-- Search Component aligned with navigation tabs -->
-          <div class="flex items-center">
-            <!-- Single Morphing Container -->
+        </div>
+
+        <!-- Investment Research Platform Container -->
+        <div class="mx-2 mt-2 p-4 sm:p-6 lg:p-8 rounded-2xl border border-white/10 bg-gradient-to-br from-white/3 via-transparent to-white/3" style="backdrop-filter: blur(10px);">
+
+          <!-- Responsive Navigation (Hidden on Mobile) -->
+          <div class="hidden sm:flex items-center justify-between mb-4 sm:mb-6 lg:mb-8">
+          <!-- Desktop Navigation (lg+): Show all tabs -->
+          <div class="hidden lg:flex items-center space-x-2 sm:space-x-4 lg:space-x-8 relative">
+            <button
+              v-for="tab in allTabs"
+              :key="tab.id"
+              @click="switchTab(tab.id)"
+              :class="[
+                'group relative flex items-center space-x-1 sm:space-x-2 lg:space-x-3 px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
+                'border-0 shadow-none backdrop-blur-none',
+                activeTab === tab.id
+                  ? (tab.color === 'blue' ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]' :
+                     tab.color === 'green' ? 'bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 scale-105 shadow-[0_0_8px_rgba(34,197,94,0.2)]' :
+                     tab.color === 'purple' ? 'bg-gradient-to-br from-purple-500/20 via-purple-400/10 to-transparent text-purple-200 scale-105 shadow-[0_0_8px_rgba(147,51,234,0.2)]' :
+                     'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]')
+                  : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
+              ]"
+              style="backdrop-filter: blur(0px);"
+            >
+              <div class="relative z-10 flex items-center space-x-1 sm:space-x-2 lg:space-x-3">
+                <div :class="[
+                  'p-1.5 sm:p-2 rounded-full transition-all duration-500',
+                  activeTab === tab.id
+                    ? (tab.color === 'blue' ? 'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]' :
+                       tab.color === 'green' ? 'bg-green-500/30 shadow-[0_0_5px_rgba(34,197,94,0.3)]' :
+                       tab.color === 'purple' ? 'bg-purple-500/30 shadow-[0_0_5px_rgba(147,51,234,0.3)]' :
+                       'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]')
+                    : 'bg-white/5 group-hover:bg-white/10'
+                ]">
+                  <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path v-if="tab.id === 'overview'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    <path v-else-if="tab.id === 'companies'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    <path v-else-if="tab.id === 'research'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <path v-else-if="tab.id === 'insights'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+                <span class="font-semibold tracking-wide">{{ tab.label }}</span>
+              </div>
+              <div v-if="activeTab === tab.id" :class="tab.color === 'blue' ? 'absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full' :
+                                                        tab.color === 'green' ? 'absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/5 rounded-full' :
+                                                        tab.color === 'purple' ? 'absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/5 rounded-full' :
+                                                        'absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full'"></div>
+            </button>
+          </div>
+
+          <!-- Tablet Navigation (sm to lg): Show visible tabs + overflow menu -->
+          <div class="hidden sm:flex lg:hidden items-center space-x-2 sm:space-x-3 relative">
+            <button
+              v-for="tab in visibleTabs"
+              :key="tab.id"
+              @click="switchTab(tab.id)"
+              :class="[
+                'group relative flex items-center space-x-1 sm:space-x-2 px-2 sm:px-3 py-2 sm:py-2.5 rounded-full font-medium transition-all duration-500 transform-gpu text-xs sm:text-sm',
+                'border-0 shadow-none backdrop-blur-none',
+                activeTab === tab.id
+                  ? (tab.color === 'blue' ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]' :
+                     tab.color === 'green' ? 'bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 scale-105 shadow-[0_0_8px_rgba(34,197,94,0.2)]' :
+                     tab.color === 'purple' ? 'bg-gradient-to-br from-purple-500/20 via-purple-400/10 to-transparent text-purple-200 scale-105 shadow-[0_0_8px_rgba(147,51,234,0.2)]' :
+                     'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]')
+                  : 'text-gray-300 hover:text-white hover:scale-105 hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
+              ]"
+              style="backdrop-filter: blur(0px);"
+            >
+              <div class="relative z-10 flex items-center space-x-1 sm:space-x-2">
+                <div :class="[
+                  'p-1.5 sm:p-2 rounded-full transition-all duration-500',
+                  activeTab === tab.id
+                    ? (tab.color === 'blue' ? 'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]' :
+                       tab.color === 'green' ? 'bg-green-500/30 shadow-[0_0_5px_rgba(34,197,94,0.3)]' :
+                       tab.color === 'purple' ? 'bg-purple-500/30 shadow-[0_0_5px_rgba(147,51,234,0.3)]' :
+                       'bg-blue-500/30 shadow-[0_0_5px_rgba(59,130,246,0.3)]')
+                    : 'bg-white/5 group-hover:bg-white/10'
+                ]">
+                  <svg class="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path v-if="tab.id === 'overview'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    <path v-else-if="tab.id === 'companies'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    <path v-else-if="tab.id === 'research'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    <path v-else-if="tab.id === 'insights'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                </div>
+                <span class="font-semibold tracking-wide">{{ tab.label }}</span>
+              </div>
+              <div v-if="activeTab === tab.id" :class="tab.color === 'blue' ? 'absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full' :
+                                                        tab.color === 'green' ? 'absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/5 rounded-full' :
+                                                        tab.color === 'purple' ? 'absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/5 rounded-full' :
+                                                        'absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/5 rounded-full'"></div>
+            </button>
+
+            <!-- Overflow Menu for Tablet -->
+            <OverflowMenu
+              :hidden-tabs="hiddenTabs"
+              :active-tab="activeTab"
+              @tab-selected="switchTab"
+            />
+          </div>
+
+          <!-- Mobile Navigation (<sm): Hamburger menu -->
+          <div class="flex sm:hidden items-center">
+            <HamburgerMenu
+              :all-tabs="allTabs"
+              :active-tab="activeTab"
+              :user="$page.props.auth.user"
+              :can-access-admin="canAccessAdmin"
+              @tab-selected="switchTab"
+              @search="handleMobileSearch"
+            />
+          </div>
+
+          <!-- Search Component (Desktop and Tablet only) -->
+          <div class="hidden sm:flex items-center">
             <div
               :class="[
                 'relative flex items-center bg-gradient-to-r rounded-full shadow-inner border cursor-pointer transition-all duration-700 ease-out transform-gpu',
                 showHeaderSearch
-                  ? 'w-72 sm:w-96 h-12 from-white/8 to-white/12 border-white/10 shadow-[0_2px_8px_0_rgba(139,69,197,0.15)]'
-                  : 'w-10 h-10 from-white/5 to-white/5 border-white/5 hover:from-white/15 hover:to-white/20 hover:border-white/20 justify-center shadow-[0_2px_8px_0_rgba(31,38,135,0.1)] hover:shadow-[0_2px_8px_0_rgba(139,69,197,0.2)] hover:scale-105'
+                  ? 'w-64 sm:w-72 lg:w-96 h-10 sm:h-12 from-white/8 to-white/12 border-white/10 shadow-[0_2px_8px_0_rgba(139,69,197,0.15)]'
+                  : 'w-8 sm:w-10 h-8 sm:h-10 from-white/5 to-white/5 border-white/5 hover:from-white/15 hover:to-white/20 hover:border-white/20 justify-center shadow-[0_2px_8px_0_rgba(31,38,135,0.1)] hover:shadow-[0_2px_8px_0_rgba(139,69,197,0.2)] hover:scale-105'
               ]"
               style="backdrop-filter: blur(20px) saturate(180%); transform-origin: right center;"
               @click="!showHeaderSearch ? toggleHeaderSearch() : null"
               @mouseenter="!showHeaderSearch ? toggleHeaderSearch() : null"
               title="Search"
             >
-              <!-- Magnifying Glass Icon -->
               <div
                 :class="[
                   'flex items-center justify-center shrink-0 transition-all duration-700 ease-out transform-gpu',
                   showHeaderSearch
-                    ? 'ml-4 w-4 h-4 text-white/70'
+                    ? 'ml-3 sm:ml-4 w-3 h-3 sm:w-4 sm:h-4 text-white/70'
                     : 'w-full h-full text-gray-300 hover:text-purple-200 hover:drop-shadow-[0_0_3px_rgba(139,69,197,0.4)]'
                 ]"
               >
-                <svg class="w-4 h-4 transition-all duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-3 h-3 sm:w-4 sm:h-4 transition-all duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
               </div>
 
-              <!-- Search Input (only visible when expanded) -->
               <input
                 v-if="showHeaderSearch"
                 id="header-search-input"
                 v-model="searchQuery"
                 type="text"
                 placeholder="Search companies, tickers..."
-                class="flex-1 h-full ml-3 mr-4 sm:mr-6 bg-transparent border-0 text-white placeholder-white/60 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-white/80 transition-opacity duration-300 delay-200 text-xs sm:text-sm"
+                class="flex-1 h-full ml-2 sm:ml-3 mr-3 sm:mr-4 lg:mr-6 bg-transparent border-0 text-white placeholder-white/60 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-white/80 transition-opacity duration-300 delay-200 text-xs sm:text-sm"
                 style="box-shadow: none !important;"
                 ref="searchInput"
               />
@@ -251,12 +269,12 @@
         </div>
 
         <!-- Header Title (moved below tabs) -->
-        <div class="flex items-start mb-12">
-          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white flex items-center transition-all duration-500 ease-out">
-            <svg v-if="!showSearchResults" class="w-10 h-10 mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="flex items-start mb-6 sm:mb-8 lg:mb-12">
+          <h2 class="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-white flex items-center transition-all duration-500 ease-out">
+            <svg v-if="!showSearchResults" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
-            <svg v-else class="w-10 h-10 mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-else class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
             {{ showSearchResults ? 'Search Results' : 'Investment Research Platform' }}
@@ -270,10 +288,11 @@
           </h2>
         </div>
 
-        <!-- Tab Content -->
-        <div class="tab-content">
-          <!-- Search Results Content -->
-          <div v-if="showSearchResults" class="space-y-8">
+          <!-- Tab Content -->
+          <div class="tab-content">
+          <!-- Content Container -->
+            <!-- Search Results Content -->
+            <div v-if="showSearchResults" class="space-y-8">
             <!-- Search Results Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <!-- Companies Results -->
@@ -463,7 +482,7 @@
 
           <!-- Overview Tab -->
           <div v-else-if="!showSearchResults && activeTab === 'overview'" class="space-y-4">
-            <div class="grid grid-cols-3 gap-8 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-4">
               <!-- Total Companies -->
               <div
                 @click="switchTab('companies')"
@@ -677,7 +696,7 @@
               <!-- Insights Content -->
               <div v-if="paginatedInsights.length > 0">
                 <!-- Card View -->
-                <div v-if="insightsViewMode === 'cards'" class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                <div v-if="insightsViewMode === 'cards'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
                   <div
                     v-for="post in paginatedInsights"
                     :key="post.id"
@@ -913,7 +932,33 @@
             </div>
 
             <!-- Companies Table -->
-            <div v-else class="overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl" style="backdrop-filter: blur(20px) saturate(180%);">
+            <!-- Mobile Simple List View -->
+            <div v-else class="sm:hidden space-y-3">
+              <div
+                v-for="company in companiesPaginated"
+                :key="company.id"
+                class="p-3 rounded-xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl cursor-pointer hover:bg-black/20 transition-all duration-300"
+                style="backdrop-filter: blur(20px) saturate(180%);"
+                @click="viewCompanyDetails(company)"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2 min-w-0 flex-1">
+                    <div class="w-10 h-8 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded flex items-center justify-center flex-shrink-0">
+                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker || '').substring(0, 3) }}</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                      <h4 class="text-white font-medium truncate text-sm">{{ company.name }}</h4>
+                    </div>
+                  </div>
+                  <div class="text-xs text-gray-400 flex-shrink-0 ml-2">
+                    {{ company.researchItemsCount || 0 }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden sm:block overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl" style="backdrop-filter: blur(20px) saturate(180%);">
               <!-- Table Header -->
               <div class="px-6 py-4 border-b border-white/20 bg-black/10">
                 <div class="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-300">
@@ -1060,7 +1105,7 @@
               </h3>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 gap-8">
               <!-- Sector Distribution -->
               <div class="bg-white/20 dark:bg-white/10 backdrop-blur-sm rounded-lg p-6 border border-white/20">
                 <h4 class="text-lg font-semibold text-white mb-4 flex items-center">
@@ -1102,7 +1147,7 @@
                     <div class="text-2xl font-bold text-white mb-2">{{ formatTotalMarketCap() }}</div>
                     <div class="text-sm text-gray-400">Total Portfolio Value</div>
                   </div>
-                  <div class="grid grid-cols-2 gap-4 text-center">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-center">
                     <div class="p-3 bg-white/10 rounded-lg">
                       <div class="text-lg font-semibold text-green-400">{{ getLargeCapCount() }}</div>
                       <div class="text-xs text-gray-400">Large Cap (>$10B)</div>
@@ -1128,7 +1173,7 @@
               </h3>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               <!-- Primary Actions -->
               <div class="space-y-4">
                 <h4 class="text-lg font-semibold text-white mb-4">Primary Actions</h4>
@@ -1196,7 +1241,9 @@
             </div>
           </div>
 
-        </div> <!-- End Tab Content -->
+          </div> <!-- End Tab Content -->
+
+        </div> <!-- End Investment Research Platform Container -->
       </div> <!-- End Glass Container -->
     </div> <!-- End Lower Content Container -->
 
@@ -1319,6 +1366,9 @@ import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import QuickBlogModal from '@/Components/Modals/QuickBlogModal.vue'
 import LoginModal from '@/Components/Modals/LoginModal.vue'
 import RegisterModal from '@/Components/Modals/RegisterModal.vue'
+import OverflowMenu from '@/Components/Navigation/OverflowMenu.vue'
+import HamburgerMenu from '@/Components/Navigation/HamburgerMenu.vue'
+import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import { useDarkMode } from '@/composables/useDarkMode'
 import axios from 'axios'
 
@@ -1353,6 +1403,45 @@ const isEditingCompany = ref(false)
 const editingCompany = ref(false)
 const starsCanvas = ref(null)
 const activeTab = ref('overview') // Tab navigation state
+
+// Tab configuration for responsive navigation
+const allTabs = ref([
+  {
+    id: 'overview',
+    label: 'Overview',
+    color: 'blue',
+    icon: 'svg'
+  },
+  {
+    id: 'companies',
+    label: 'Companies',
+    color: 'blue',
+    icon: 'svg'
+  },
+  {
+    id: 'research',
+    label: 'Research',
+    color: 'green',
+    icon: 'svg'
+  },
+  {
+    id: 'insights',
+    label: 'Insights',
+    color: 'purple',
+    icon: 'svg'
+  }
+])
+
+// Responsive navigation logic
+const visibleTabs = computed(() => {
+  // Show first 2 tabs on tablet (sm to lg), all on desktop (lg+)
+  return allTabs.value.slice(0, 2)
+})
+
+const hiddenTabs = computed(() => {
+  // Show remaining tabs in overflow menu on tablet
+  return allTabs.value.slice(2)
+})
 
 // Blog post viewing state
 const selectedBlogPost = ref(null)
@@ -1676,6 +1765,16 @@ const toggleHeaderSearch = () => {
 const closeHeaderSearch = () => {
   showHeaderSearch.value = false
   closeSearch()
+}
+
+// Mobile search handler
+const handleMobileSearch = (query) => {
+  searchQuery.value = query
+  if (query.trim()) {
+    performSearch()
+  } else {
+    closeSearch()
+  }
 }
 
 // Search result click handlers
