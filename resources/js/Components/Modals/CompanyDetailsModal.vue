@@ -291,6 +291,45 @@
                       ✓ Valid: {{ formatMarketCap(editForm.market_cap) }}
                     </div>
                   </div>
+
+                  <!-- Reports Financial Data In -->
+                  <div>
+                    <label for="edit_reports_financial_data_in" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reports Financial Data In</label>
+                    <select
+                      id="edit_reports_financial_data_in"
+                      :value="editForm.reports_financial_data_in"
+                      @input="$emit('update:edit-form', { ...editForm, reports_financial_data_in: $event.target.value })"
+                      class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    >
+                      <option value="">Select currency...</option>
+                      <option value="USD">USD - US Dollar</option>
+                      <option value="EUR">EUR - Euro</option>
+                      <option value="GBP">GBP - British Pound</option>
+                      <option value="JPY">JPY - Japanese Yen</option>
+                      <option value="CAD">CAD - Canadian Dollar</option>
+                      <option value="AUD">AUD - Australian Dollar</option>
+                      <option value="CHF">CHF - Swiss Franc</option>
+                      <option value="CNY">CNY - Chinese Yuan</option>
+                      <option value="SEK">SEK - Swedish Krona</option>
+                      <option value="NOK">NOK - Norwegian Krone</option>
+                      <option value="DKK">DKK - Danish Krone</option>
+                      <option value="PLN">PLN - Polish Zloty</option>
+                      <option value="CZK">CZK - Czech Koruna</option>
+                      <option value="HUF">HUF - Hungarian Forint</option>
+                      <option value="RUB">RUB - Russian Ruble</option>
+                      <option value="BRL">BRL - Brazilian Real</option>
+                      <option value="MXN">MXN - Mexican Peso</option>
+                      <option value="INR">INR - Indian Rupee</option>
+                      <option value="KRW">KRW - South Korean Won</option>
+                      <option value="SGD">SGD - Singapore Dollar</option>
+                      <option value="HKD">HKD - Hong Kong Dollar</option>
+                      <option value="NZD">NZD - New Zealand Dollar</option>
+                      <option value="ZAR">ZAR - South African Rand</option>
+                      <option value="TRY">TRY - Turkish Lira</option>
+                      <option value="ILS">ILS - Israeli Shekel</option>
+                    </select>
+                    <div v-if="editErrors.reports_financial_data_in" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ editErrors.reports_financial_data_in }}</div>
+                  </div>
                 </div>
               </div>
 
@@ -307,7 +346,6 @@
                 ></textarea>
                 <div v-if="editErrors.description" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ editErrors.description }}</div>
               </div>
-
             </form>
           </div>
         </div>
@@ -315,22 +353,27 @@
         <!-- Research Tab -->
         <div v-show="activeTab === 'research'" class="p-6">
           <div class="max-w-6xl mx-auto">
-            <div class="flex items-center justify-between mb-6">
+            <!-- Floating decorative elements -->
+            <div class="absolute -top-4 -left-4 w-3 h-3 bg-blue-400/30 rounded-full blur-sm animate-pulse"></div>
+            <div class="absolute -top-8 right-12 w-2 h-2 bg-purple-400/40 rounded-full blur-sm animate-pulse delay-1000"></div>
+            <div class="absolute -bottom-6 left-8 w-1.5 h-1.5 bg-green-400/30 rounded-full blur-sm animate-pulse delay-500"></div>
+
+            <div class="flex items-center justify-between mb-8">
               <div class="flex items-center space-x-6">
-                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Research & Notes</h3>
-                
+                <h3 class="text-2xl font-bold text-white/90">📚 Research & Notes</h3>
+
                 <!-- View Toggle -->
-                <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <div class="backdrop-blur-3xl bg-gradient-to-r from-white/5 via-white/10 to-white/5 rounded-full p-1 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] border border-white/10">
                   <button
                     @click="researchViewMode = 'cards'"
                     :class="[
-                      'flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200',
-                      researchViewMode === 'cards' 
-                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm' 
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                      'flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-500 hover:scale-105',
+                      researchViewMode === 'cards'
+                        ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
+                        : 'text-white/60 hover:text-white hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
                     ]"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" :class="researchViewMode === 'cards' ? 'shadow-[0_0_5px_rgba(59,130,246,0.3)]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
                     </svg>
                     <span class="text-sm font-medium">Cards</span>
@@ -338,25 +381,26 @@
                   <button
                     @click="researchViewMode = 'list'"
                     :class="[
-                      'flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200',
-                      researchViewMode === 'list' 
-                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm' 
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
+                      'flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-500 hover:scale-105',
+                      researchViewMode === 'list'
+                        ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
+                        : 'text-white/60 hover:text-white hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
                     ]"
                   >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" :class="researchViewMode === 'list' ? 'shadow-[0_0_5px_rgba(59,130,246,0.3)]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
                     </svg>
                     <span class="text-sm font-medium">List</span>
                   </button>
                 </div>
               </div>
-              
-              <button 
+
+              <button
                 @click="activeTab = 'research-new'"
-                class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-3 px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10"
+                style="backdrop-filter: blur(20px) saturate(180%);"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-5 h-5 shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 <span>Add Research Note</span>
@@ -367,63 +411,63 @@
             <div v-if="company?.researchItems && company.researchItems.length > 0">
               
               <!-- List View -->
-              <div v-if="researchViewMode === 'list'" class="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                  <div 
-                    v-for="item in company.researchItems" 
+              <div v-if="researchViewMode === 'list'" class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10" style="backdrop-filter: blur(20px) saturate(180%);">
+                <div class="divide-y divide-white/10">
+                  <div
+                    v-for="item in company.researchItems"
                     :key="item.id"
-                    class="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-150"
+                    class="group px-6 py-6 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/10 transition-all duration-500 hover:scale-[1.02] rounded-3xl"
                   >
                     <div class="flex items-center">
                       <!-- Research Item Info -->
                       <div class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
                         <div class="lg:col-span-2">
-                          <h3 class="text-lg font-medium text-gray-900 dark:text-white">{{ item.title }}</h3>
-                          <p class="text-sm text-gray-500 dark:text-gray-400">{{ item.category?.name || 'Uncategorized' }}</p>
+                          <h3 class="text-lg font-medium text-white/90">{{ item.title }}</h3>
+                          <p class="text-sm text-blue-200/70">{{ item.category?.name || 'Uncategorized' }}</p>
                         </div>
-                        
+
                         <div class="text-center lg:text-left">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Visibility</p>
-                          <div class="flex items-center">
-                            <svg v-if="item.visibility === 'public'" class="w-4 h-4 mr-2 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <p class="text-sm text-white/60">Visibility</p>
+                          <div class="flex items-center justify-center lg:justify-start">
+                            <svg v-if="item.visibility === 'public'" class="w-4 h-4 mr-2 text-green-400 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
-                            <svg v-else class="w-4 h-4 mr-2 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg v-else class="w-4 h-4 mr-2 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
                             </svg>
-                            <span class="font-medium text-gray-900 dark:text-white">
+                            <span class="font-medium text-white/90">
                               {{ item.visibility === 'public' ? 'Visible' : 'Hidden' }}
                             </span>
                           </div>
                         </div>
-                        
+
                         <div class="text-center lg:text-left">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Created</p>
-                          <p class="font-medium text-gray-900 dark:text-white">{{ item.created_at }}</p>
+                          <p class="text-sm text-white/60">Created</p>
+                          <p class="font-medium text-white/90">{{ item.created_at }}</p>
                         </div>
-                        
+
                         <div class="text-center lg:text-right">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Attachments</p>
-                          <p class="font-medium text-gray-900 dark:text-white">{{ item.attachments?.length || 0 }}</p>
+                          <p class="text-sm text-white/60">Attachments</p>
+                          <p class="font-medium text-white/90">{{ item.attachments?.length || 0 }}</p>
                         </div>
                       </div>
                       
                       <!-- Actions -->
-                      <div class="ml-6 flex items-center space-x-2">
-                        <button 
-                          class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 flex items-center justify-center transition-colors"
+                      <div class="ml-6 flex items-center space-x-3">
+                        <button
+                          class="group w-10 h-10 rounded-full backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(59,130,246,0.15)] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-white/10"
                           title="Edit Research Note"
                         >
-                          <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-4 h-4 text-blue-200 group-hover:text-white shadow-[0_0_5px_rgba(59,130,246,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                           </svg>
                         </button>
-                        <button 
-                          class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-700 hover:bg-red-200 dark:hover:bg-red-600 flex items-center justify-center transition-colors"
+                        <button
+                          class="group w-10 h-10 rounded-full backdrop-blur-3xl bg-gradient-to-br from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] border border-white/10"
                           title="Delete Research Note"
                         >
-                          <svg class="w-4 h-4 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg class="w-4 h-4 text-red-200 group-hover:text-white shadow-[0_0_5px_rgba(239,68,68,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                           </svg>
                         </button>
@@ -434,66 +478,68 @@
               </div>
 
               <!-- Cards View -->
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div 
-                  v-for="item in company.researchItems" 
+              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div
+                  v-for="item in company.researchItems"
                   :key="item.id"
-                  class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200"
+                  class="group relative p-6 transition-all duration-500 hover:scale-105 backdrop-blur-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/10 rounded-2xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 hover:shadow-[0_8px_20px_0_rgba(31,38,135,0.3)]"
+                  style="backdrop-filter: blur(20px) saturate(180%);"
                 >
-                  <div class="p-6">
-                    <div class="flex items-start justify-between mb-4">
-                      <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">{{ item.title }}</h3>
-                      <div class="ml-4 flex items-center space-x-2 flex-shrink-0">
-                        <button 
-                          class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 flex items-center justify-center transition-colors"
-                          title="Edit Research Note"
-                        >
-                          <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                          </svg>
-                        </button>
-                        <button 
-                          class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-700 hover:bg-red-200 dark:hover:bg-red-600 flex items-center justify-center transition-colors"
-                          title="Delete Research Note"
-                        >
-                          <svg class="w-4 h-4 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                        </button>
+                  <!-- Floating particle decoration -->
+                  <div class="absolute top-2 right-2 w-2 h-2 bg-blue-400/30 rounded-full blur-sm animate-pulse"></div>
+
+                  <div class="flex items-start justify-between mb-4">
+                    <h3 class="text-lg font-semibold text-white/90 line-clamp-2">{{ item.title }}</h3>
+                    <div class="ml-4 flex items-center space-x-2 flex-shrink-0">
+                      <button
+                        class="group w-8 h-8 rounded-full backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(59,130,246,0.15)] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-white/10"
+                        title="Edit Research Note"
+                      >
+                        <svg class="w-3 h-3 text-blue-200 group-hover:text-white shadow-[0_0_5px_rgba(59,130,246,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        class="group w-8 h-8 rounded-full backdrop-blur-3xl bg-gradient-to-br from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] border border-white/10"
+                        title="Delete Research Note"
+                      >
+                        <svg class="w-3 h-3 text-red-200 group-hover:text-white shadow-[0_0_5px_rgba(239,68,68,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                    
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-white/60">Category</span>
+                      <span class="text-sm font-medium text-blue-200">{{ item.category?.name || 'Uncategorized' }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-white/60">Visibility</span>
+                      <div class="flex items-center">
+                        <svg v-if="item.visibility === 'public'" class="w-4 h-4 mr-1 text-green-400 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
+                        <svg v-else class="w-4 h-4 mr-1 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
+                        </svg>
+                        <span class="text-sm font-medium text-white/90">
+                          {{ item.visibility === 'public' ? 'Visible' : 'Hidden' }}
+                        </span>
                       </div>
                     </div>
-                    
-                    <div class="space-y-3">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Category</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.category?.name || 'Uncategorized' }}</span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Visibility</span>
-                        <div class="flex items-center">
-                          <svg v-if="item.visibility === 'public'" class="w-4 h-4 mr-1 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                          </svg>
-                          <svg v-else class="w-4 h-4 mr-1 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
-                          </svg>
-                          <span class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ item.visibility === 'public' ? 'Visible' : 'Hidden' }}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Created</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.created_at }}</span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Attachments</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ item.attachments?.length || 0 }}</span>
-                      </div>
+
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-white/60">Created</span>
+                      <span class="text-sm font-medium text-white/90">{{ item.created_at }}</span>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                      <span class="text-sm text-white/60">Attachments</span>
+                      <span class="text-sm font-medium text-white/90">{{ item.attachments?.length || 0 }}</span>
                     </div>
                   </div>
                 </div>
@@ -501,18 +547,25 @@
             </div>
             
             <!-- No Research Items -->
-            <div v-else class="text-center py-12">
-              <svg class="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-2">No Research Items Yet</h3>
-              <p class="text-gray-600 dark:text-gray-300 mb-6">Start documenting your research and analysis for this company.</p>
-              <button 
-                @click="activeTab = 'research-new'"
-                class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-              >
-                Create First Research Note
-              </button>
+            <div v-else class="relative text-center py-16">
+              <!-- Floating decorative elements -->
+              <div class="absolute top-8 left-12 w-2 h-2 bg-purple-400/40 rounded-full blur-sm animate-pulse delay-500"></div>
+              <div class="absolute bottom-12 right-16 w-1.5 h-1.5 bg-green-400/30 rounded-full blur-sm animate-pulse delay-1000"></div>
+
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl p-12 shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 max-w-2xl mx-auto" style="backdrop-filter: blur(20px) saturate(180%);">
+                <svg class="w-20 h-20 text-white/40 mx-auto mb-6 shadow-[0_0_10px_rgba(255,255,255,0.1)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <h3 class="text-2xl font-semibold text-white/90 mb-3">📝 No Research Items Yet</h3>
+                <p class="text-white/70 mb-8 leading-relaxed">Start documenting your research and analysis for this company to build a comprehensive investment profile.</p>
+                <button
+                  @click="activeTab = 'research-new'"
+                  class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10"
+                  style="backdrop-filter: blur(20px) saturate(180%);"
+                >
+                  <span class="shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]">🚀 Create First Research Note</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
