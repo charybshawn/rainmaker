@@ -252,7 +252,7 @@
 
         <!-- Header Title (moved below tabs) -->
         <div class="flex items-start mb-12">
-          <h2 class="text-4xl font-bold text-white flex items-center transition-all duration-500 ease-out">
+          <h2 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white flex items-center transition-all duration-500 ease-out">
             <svg v-if="!showSearchResults" class="w-10 h-10 mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
@@ -472,7 +472,7 @@
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
                     <p class="text-xs text-blue-300/80 font-medium tracking-wider uppercase mb-2">Companies</p>
-                    <p class="text-3xl font-light text-white/90">{{ companies.length }}</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ companies.length }}</p>
                   </div>
                   <div class="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] transition-all duration-500">
                     <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -482,6 +482,21 @@
                 </div>
               </div>
 
+              <!-- Total Market Cap -->
+              <div class="group relative p-6 transition-all duration-500 hover:scale-105">
+                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/10 rounded-2xl"></div>
+                <div class="relative z-10 flex items-center justify-between">
+                  <div>
+                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Portfolio</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ formatTotalMarketCap() }}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.15)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] transition-all duration-500">
+                    <svg class="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
 
               <!-- Insights Published -->
               <div class="group relative p-6 transition-all duration-500 hover:scale-105">
@@ -489,7 +504,7 @@
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
                     <p class="text-xs text-purple-300/80 font-medium tracking-wider uppercase mb-2">Insights</p>
-                    <p class="text-3xl font-light text-white/90">{{ $page.props.recentBlogPosts?.length || 0 }}</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ $page.props.recentBlogPosts?.length || 0 }}</p>
                   </div>
                   <div class="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(147,51,234,0.15)] group-hover:shadow-[0_0_15px_rgba(147,51,234,0.25)] transition-all duration-500">
                     <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -505,7 +520,7 @@
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
                     <p class="text-xs text-orange-300/80 font-medium tracking-wider uppercase mb-2">Research</p>
-                    <p class="text-3xl font-light text-white/90">{{ getTotalResearchItems() }}</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ getTotalResearchItems() }}</p>
                   </div>
                   <div class="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(249,115,22,0.15)] group-hover:shadow-[0_0_15px_rgba(249,115,22,0.25)] transition-all duration-500">
                     <svg class="w-6 h-6 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -537,7 +552,7 @@
 
               <!-- Blog Post Content -->
               <div class="backdrop-blur-3xl bg-gradient-to-br from-white/8 via-white/4 to-transparent rounded-2xl shadow-[0_8px_24px_0_rgba(31,38,135,0.15)] border border-white/15 p-8" style="backdrop-filter: blur(20px) saturate(180%);">
-                <h1 class="text-3xl font-bold text-white mb-6">{{ selectedBlogPost.title }}</h1>
+                <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-6">{{ selectedBlogPost.title }}</h1>
 
                 <div class="flex items-center gap-4 mb-8 text-sm text-gray-300">
                   <span class="text-purple-400 font-medium">{{ selectedBlogPost.user?.name }}</span>
@@ -672,7 +687,7 @@
                     <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/10 rounded-2xl border border-purple-400/20"></div>
                     <div class="relative z-10">
                       <div class="flex items-center justify-between mb-3">
-                        <p class="font-medium text-white group-hover:text-purple-200 line-clamp-2 flex-1 pr-3">{{ post.title }}</p>
+                        <p class="text-sm sm:text-base font-medium text-white group-hover:text-purple-200 line-clamp-2 flex-1 pr-3">{{ post.title }}</p>
                         <div class="flex items-center gap-2">
                           <span v-if="post.category" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-400/20 whitespace-nowrap">
                             {{ post.category }}
@@ -689,9 +704,9 @@
                           </button>
                         </div>
                       </div>
-                      <p class="text-sm text-gray-400 mt-1 line-clamp-2 group-hover:text-gray-300">{{ getExcerpt(post.content) }}</p>
+                      <p class="text-xs sm:text-sm text-gray-400 mt-1 line-clamp-2 group-hover:text-gray-300">{{ getExcerpt(post.content) }}</p>
                       <div class="flex items-center justify-between mt-3">
-                        <p class="text-sm text-gray-400 group-hover:text-gray-300">by {{ post.user.name }}</p>
+                        <p class="text-xs sm:text-sm text-gray-400 group-hover:text-gray-300">by {{ post.user.name }}</p>
                         <p class="text-xs text-gray-500 group-hover:text-gray-400">{{ formatDate(post.published_at) }}</p>
                       </div>
                     </div>
