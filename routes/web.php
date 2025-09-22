@@ -99,11 +99,19 @@ Route::prefix('api')->group(function () {
         Route::delete('companies/{company}', [CompanyController::class, 'destroy']);
         Route::get('companies/{company}/blog-posts', [CompanyController::class, 'getBlogPosts']);
 
+        // Bulk operations for companies
+        Route::post('companies/deletion-impact', [CompanyController::class, 'deletionImpact']);
+        Route::delete('companies/bulk', [CompanyController::class, 'bulkDestroy']);
+
         // Research Items (protected operations)
         Route::post('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'store']);
         Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
         Route::put('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'update']);
         Route::delete('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'destroy']);
+
+        // File management for research items
+        Route::get('research-items/files/available', [\App\Http\Controllers\Api\ResearchItemController::class, 'getAvailableFiles']);
+        Route::post('research-items/{research_item}/link-files', [\App\Http\Controllers\Api\ResearchItemController::class, 'linkExistingFiles']);
 
         // Documents (protected operations)
         Route::get('documents', [\App\Http\Controllers\Api\DocumentController::class, 'index']);

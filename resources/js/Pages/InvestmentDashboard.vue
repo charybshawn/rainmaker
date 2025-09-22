@@ -1214,12 +1214,42 @@
               </div>
             </div>
 
+            <!-- Bulk Actions Toolbar -->
+            <div v-if="selectedCompanies.length > 0" class="hidden sm:flex items-center justify-between p-4 mb-4 rounded-xl bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-400/30 backdrop-blur-xl" style="backdrop-filter: blur(20px) saturate(180%);">
+              <div class="flex items-center space-x-3">
+                <span class="text-white font-medium">{{ selectedCompanies.length }} companies selected</span>
+                <button @click="clearSelection" class="text-blue-300 hover:text-white transition-colors text-sm">
+                  Clear selection
+                </button>
+              </div>
+              <div class="flex items-center space-x-2">
+                <button
+                  @click="bulkDeleteCompanies"
+                  class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 text-red-300 hover:text-white rounded-lg transition-all duration-300 flex items-center space-x-2"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  <span>Delete Selected</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Desktop Table View -->
             <div class="hidden sm:block overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl" style="backdrop-filter: blur(20px) saturate(180%);">
               <!-- Table Header -->
               <div class="px-6 py-4 border-b border-white/20 bg-black/10">
                 <div class="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-300">
-                  <div class="col-span-4">Company</div>
+                  <div class="col-span-1 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      @change="toggleSelectAll"
+                      :checked="isAllSelected"
+                      :indeterminate="isIndeterminate"
+                      class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-2"
+                    />
+                  </div>
+                  <div class="col-span-3">Company</div>
                   <div class="col-span-2">Sector</div>
                   <div class="col-span-2">Market Cap</div>
                   <div class="col-span-1 text-center">Research</div>
@@ -1233,12 +1263,23 @@
                 <div
                   v-for="company in companiesInfinite"
                   :key="company.id"
-                  class="group px-6 py-4 hover:bg-black/10 transition-all duration-300 cursor-pointer border-b border-white/10 hover:border-white/20 last:border-b-0"
-                  @click="viewCompanyDetails(company)"
+                  class="group px-6 py-4 hover:bg-black/10 transition-all duration-300 border-b border-white/10 hover:border-white/20 last:border-b-0"
+                  :class="{ 'bg-blue-500/10': selectedCompanies.includes(company.id) }"
                 >
                   <div class="grid grid-cols-12 gap-4 items-center">
+                    <!-- Checkbox -->
+                    <div class="col-span-1 flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        :checked="selectedCompanies.includes(company.id)"
+                        @change="toggleCompanySelection(company.id)"
+                        @click.stop
+                        class="w-4 h-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500 focus:ring-2"
+                      />
+                    </div>
+
                     <!-- Company Info -->
-                    <div class="col-span-4 flex items-center space-x-3">
+                    <div class="col-span-3 flex items-center space-x-3 cursor-pointer" @click="viewCompanyDetails(company)">
                       <!-- Stock Ticker -->
                       <div class="w-16 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-all duration-300">
                         <span class="text-blue-300 font-bold text-sm">{{ company.ticker || 'N/A' }}</span>
@@ -1294,7 +1335,7 @@
 
                       <button
                         v-if="$page.props.auth.user"
-                        @click.stop="openQuickBlogWithCompany(company)"
+                        @click.stop="viewCompanyResearch(company)"
                         class="w-8 h-8 rounded-lg bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center transition-colors"
                         title="Add Research"
                       >
@@ -1632,6 +1673,134 @@
       @update:form="companyForm = $event"
     />
 
+    <!-- Bulk Delete Confirmation Modal -->
+    <div
+      v-if="showDeleteConfirmModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      @click.self="cancelBulkDelete"
+    >
+      <div class="relative w-full max-w-2xl bg-gradient-to-br from-slate-900/95 to-slate-800/95 rounded-2xl border border-white/10 backdrop-blur-xl shadow-2xl">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-white/10">
+          <h3 class="text-xl font-semibold text-white">
+            Confirm Bulk Deletion
+          </h3>
+          <button
+            @click="cancelBulkDelete"
+            class="p-1 rounded-lg hover:bg-white/10 transition-colors"
+          >
+            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="p-6">
+          <!-- Loading State -->
+          <div v-if="loadingDeletionImpact" class="flex items-center justify-center py-8">
+            <div class="text-center">
+              <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto"></div>
+              <p class="text-gray-400 mt-2">Analyzing deletion impact...</p>
+            </div>
+          </div>
+
+          <!-- Deletion Impact Summary -->
+          <div v-else-if="deletionImpact" class="space-y-6">
+            <!-- Warning Message -->
+            <div class="flex items-start space-x-3 p-4 bg-red-500/20 border border-red-400/30 rounded-lg">
+              <svg class="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+              </svg>
+              <div>
+                <h4 class="text-red-300 font-medium">Deletion Impact Analysis</h4>
+                <p class="text-red-200/80 text-sm mt-1">
+                  You are about to soft-delete {{ deletionImpact.totals.companies }} companies. This will also affect related data:
+                </p>
+              </div>
+            </div>
+
+            <!-- Impact Summary -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="p-4 bg-blue-500/20 border border-blue-400/30 rounded-lg">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-blue-300">{{ deletionImpact.totals.research_items }}</div>
+                  <div class="text-sm text-blue-200/80">Research Items</div>
+                </div>
+              </div>
+              <div class="p-4 bg-purple-500/20 border border-purple-400/30 rounded-lg">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-purple-300">{{ deletionImpact.totals.documents }}</div>
+                  <div class="text-sm text-purple-200/80">Documents</div>
+                </div>
+              </div>
+              <div class="p-4 bg-orange-500/20 border border-orange-400/30 rounded-lg">
+                <div class="text-center">
+                  <div class="text-2xl font-bold text-orange-300">{{ deletionImpact.totals.blog_post_associations }}</div>
+                  <div class="text-sm text-orange-200/80">Blog Associations</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Company List -->
+            <div v-if="deletionImpact.companies.length > 0" class="space-y-3">
+              <h4 class="text-lg font-medium text-white border-b border-white/10 pb-2">Companies to be deleted:</h4>
+              <div class="max-h-60 overflow-y-auto space-y-2">
+                <div
+                  v-for="company in deletionImpact.companies"
+                  :key="company.id"
+                  class="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10"
+                >
+                  <div>
+                    <div class="font-medium text-white">{{ company.name }}</div>
+                    <div class="text-sm text-gray-400">{{ company.ticker }}</div>
+                  </div>
+                  <div class="text-sm text-gray-400 space-x-4">
+                    <span v-if="company.research_items > 0">{{ company.research_items }} research</span>
+                    <span v-if="company.documents > 0">{{ company.documents }} docs</span>
+                    <span v-if="company.blog_associations > 0">{{ company.blog_associations }} blogs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Soft Delete Notice -->
+            <div class="p-4 bg-green-500/20 border border-green-400/30 rounded-lg">
+              <div class="flex items-start space-x-3">
+                <svg class="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                  <h4 class="text-green-300 font-medium">Soft Delete</h4>
+                  <p class="text-green-200/80 text-sm mt-1">
+                    Data will be marked as deleted but can be recovered by administrators. Related data will remain intact.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="flex items-center justify-end space-x-3 p-6 border-t border-white/10">
+          <button
+            @click="cancelBulkDelete"
+            class="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            @click="confirmBulkDelete"
+            :disabled="loadingDeletionImpact || bulkDeleting"
+            class="px-6 py-2 bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 text-red-300 hover:text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span v-if="bulkDeleting">Deleting...</span>
+            <span v-else>Confirm Deletion</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -1676,6 +1845,9 @@ const showUploadModal = ref(false)
 const showQuickBlogModal = ref(false)
 const quickBlogCompany = ref(null)
 const editingBlogPost = ref(null)
+const showDeleteConfirmModal = ref(false)
+const deletionImpact = ref(null)
+const loadingDeletionImpact = ref(false)
 
 // Git information for footer (loaded dynamically)
 const gitInfo = ref({
@@ -2624,11 +2796,25 @@ const createCompany = async () => {
     showCreateModal.value = false
     
   } catch (error) {
+    console.error('Full error object:', error)
+    console.error('Error response:', error.response)
+    console.error('Error response data:', error.response?.data)
+    console.error('Error response status:', error.response?.status)
+
     if (error.response && error.response.status === 422) {
       errors.value = error.response.data.errors || {}
+      console.error('Validation errors:', errors.value)
+    } else if (error.response && error.response.data) {
+      // Show specific error message from server
+      const serverMessage = error.response.data.message || error.response.data.error || 'Unknown server error'
+      console.error('Server error message:', serverMessage)
+      errors.value = { general: `Server Error (${error.response.status}): ${serverMessage}` }
+    } else if (error.message) {
+      console.error('Network/Client error:', error.message)
+      errors.value = { general: `Network Error: ${error.message}` }
     } else {
-      console.error('Error creating company:', error)
-      errors.value = { general: 'An error occurred while creating the company. Please try again.' }
+      console.error('Unknown error occurred')
+      errors.value = { general: 'An unknown error occurred while creating the company. Please try again.' }
     }
   } finally {
     creating.value = false
@@ -2794,7 +2980,7 @@ const openUploadModal = (company) => {
   showUploadModal.value = true
 }
 
-const createNote = async () => {
+const createNote = async (eventData = {}) => {
   try {
     creatingNote.value = true
     errors.value = {}
@@ -2806,11 +2992,16 @@ const createNote = async () => {
       : '/api/research-items'
     const method = isEditing ? 'put' : 'post'
 
-    // Use FormData if files are attached, otherwise use regular JSON
+    // Check if we need to use FormData (for file uploads) or JSON
+    const hasFiles = noteForm.value.files && noteForm.value.files.length > 0
+    const hasUrls = noteForm.value.urls && noteForm.value.urls.length > 0
+    const selectedExistingFiles = eventData.selectedExistingFiles || []
+    const hasExistingFiles = selectedExistingFiles && selectedExistingFiles.length > 0
+
     let requestData
     let requestConfig = {}
 
-    if (noteForm.value.files && noteForm.value.files.length > 0) {
+    if (hasFiles) {
       // Use FormData for file uploads
       const formData = new FormData()
       formData.append('title', noteForm.value.title)
@@ -2832,6 +3023,21 @@ const createNote = async () => {
         formData.append(`attachments[${index}]`, file)
       })
 
+      // Add URL data if present
+      if (hasUrls) {
+        noteForm.value.urls.forEach((urlData, index) => {
+          formData.append(`document_urls[${index}]`, urlData.url)
+          formData.append(`document_names[${index}]`, urlData.name)
+        })
+      }
+
+      // Add existing file IDs if present
+      if (hasExistingFiles) {
+        selectedExistingFiles.forEach((file, index) => {
+          formData.append(`existing_file_ids[${index}]`, file.id)
+        })
+      }
+
       requestData = formData
       requestConfig = {
         headers: {
@@ -2839,13 +3045,24 @@ const createNote = async () => {
         }
       }
     } else {
-      // Use regular JSON for notes without files
+      // Use regular JSON for notes without file uploads
       requestData = {
         title: noteForm.value.title,
         content: noteForm.value.content,
         company_id: noteForm.value.company_id,
         category_id: noteForm.value.category_id,
         visibility: noteForm.value.visibility
+      }
+
+      // Add URL data if present
+      if (hasUrls) {
+        requestData.document_urls = noteForm.value.urls.map(urlData => urlData.url)
+        requestData.document_names = noteForm.value.urls.map(urlData => urlData.name)
+      }
+
+      // Add existing file IDs if present
+      if (hasExistingFiles) {
+        requestData.existing_file_ids = selectedExistingFiles.map(file => file.id)
       }
     }
 
@@ -2858,7 +3075,9 @@ const createNote = async () => {
       company_id: '',
       category_id: '',
       visibility: 'private',
-      files: []
+      files: [],
+      urls: [],
+      uploadType: 'file'
     }
 
     // Reset edit mode
@@ -3026,10 +3245,7 @@ const deleteResearchItem = async (item) => {
         await viewCompanyDetails(selectedCompany.value)
       }
 
-      successMessage.value = 'Research item deleted successfully'
-      setTimeout(() => {
-        successMessage.value = ''
-      }, 3000)
+      console.log('Research item deleted successfully')
     }
   } catch (error) {
     console.error('Error deleting research item:', error)
@@ -3066,10 +3282,7 @@ const deleteDocument = async (document) => {
         await viewCompanyDetails(selectedCompany.value)
       }
 
-      successMessage.value = 'Document deleted successfully'
-      setTimeout(() => {
-        successMessage.value = ''
-      }, 3000)
+      console.log('Document deleted successfully')
     }
   } catch (error) {
     console.error('Error deleting document:', error)
@@ -3182,37 +3395,73 @@ const toggleCompanySelection = (companyId) => {
   isSelectAll.value = selectedCompanies.value.length === filteredCompanies.value.length
 }
 
+// Fetch deletion impact for selected companies
+const fetchDeletionImpact = async () => {
+  if (selectedCompanies.value.length === 0) return
+
+  try {
+    loadingDeletionImpact.value = true
+    const response = await axios.post('/api/companies/deletion-impact', {
+      company_ids: selectedCompanies.value
+    })
+    deletionImpact.value = response.data
+  } catch (error) {
+    console.error('Error fetching deletion impact:', error)
+    alert('Error loading deletion preview. Please try again.')
+  } finally {
+    loadingDeletionImpact.value = false
+  }
+}
+
+// Show bulk delete confirmation modal
 const bulkDeleteCompanies = async () => {
   if (selectedCompanies.value.length === 0) return
-  
-  if (!confirm(`Are you sure you want to delete ${selectedCompanies.value.length} selected companies? This action cannot be undone.`)) {
-    return
-  }
-  
+
+  // Fetch deletion impact first
+  await fetchDeletionImpact()
+
+  // Show confirmation modal
+  showDeleteConfirmModal.value = true
+}
+
+// Confirm and execute bulk deletion
+const confirmBulkDelete = async () => {
+  if (selectedCompanies.value.length === 0) return
+
   try {
     bulkDeleting.value = true
-    
-    // Delete companies one by one
-    const deletePromises = selectedCompanies.value.map(companyId => 
-      axios.delete(`/api/companies/${companyId}`)
-    )
-    
-    await Promise.all(deletePromises)
-    
+    showDeleteConfirmModal.value = false
+
+    // Use new bulk delete endpoint
+    const response = await axios.delete('/api/companies/bulk', {
+      data: { company_ids: selectedCompanies.value }
+    })
+
     // Remove deleted companies from local state
     companiesInfinite.value = companiesInfinite.value.filter(company =>
       !selectedCompanies.value.includes(company.id)
     )
-    
+
     selectedCompanies.value = []
     isSelectAll.value = false
-    
+    deletionImpact.value = null
+
+    // Show success message
+    const message = response.data.message || `Successfully deleted ${response.data.deleted_count} companies`
+    alert(message)
+
   } catch (error) {
     console.error('Error deleting companies:', error)
     alert('An error occurred while deleting companies. Please try again.')
   } finally {
     bulkDeleting.value = false
   }
+}
+
+// Cancel bulk deletion
+const cancelBulkDelete = () => {
+  showDeleteConfirmModal.value = false
+  deletionImpact.value = null
 }
 
 // Company Edit Functions
@@ -3382,9 +3631,25 @@ const nextCompaniesPage = () => {
 }
 
 const viewCompanyResearch = (company) => {
-  // This could open a modal or navigate to research items for this company
-  // Future implementation: Could switch to research tab with company filter
+  // Open company modal with research tab selected
+  modalInitialTab.value = 'research'
+  viewCompanyDetails(company)
 }
+
+
+
+const clearSelection = () => {
+  selectedCompanies.value = []
+}
+
+const isAllSelected = computed(() => {
+  return companiesInfinite.value.length > 0 && selectedCompanies.value.length === companiesInfinite.value.length
+})
+
+const isIndeterminate = computed(() => {
+  return selectedCompanies.value.length > 0 && !isAllSelected.value
+})
+
 
 // Watch for companies tab state changes
 watch([companiesSearchQuery, companiesSelectedSector, companiesSortBy], async () => {

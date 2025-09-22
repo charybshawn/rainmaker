@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Company;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
 {
@@ -73,35 +74,61 @@ class CompanyController extends Controller
 
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'ticker_symbol' => 'required|string|max:10|unique:companies',
-            'sector' => 'nullable|string|max:255',
-            'industry' => 'nullable|string|max:255',
-            'market_cap' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'reports_financial_data_in' => 'nullable|string|max:3',
-            'website_url' => 'nullable|url',
-            'headquarters' => 'nullable|string|max:255',
-            'employees' => 'nullable|integer|min:0',
-            'founded_date' => 'nullable|date',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'ticker_symbol' => [
+                    'required',
+                    'string',
+                    'max:10',
+                    Rule::unique('companies')->whereNull('deleted_at')
+                ],
+                'sector' => 'nullable|string|max:255',
+                'industry' => 'nullable|string|max:255',
+                'market_cap' => 'nullable|numeric|min:0',
+                'description' => 'nullable|string',
+                'reports_financial_data_in' => 'nullable|string|max:3',
+                'website_url' => 'nullable|url',
+                'headquarters' => 'nullable|string|max:255',
+                'employees' => 'nullable|integer|min:0',
+                'founded_date' => 'nullable|date',
+            ]);
 
-        $validated['created_by'] = auth()->id() ?? 1; // Default to user 1 for now
-        $validated['ticker_symbol'] = strtoupper($validated['ticker_symbol']);
+            $validated['created_by'] = auth()->id() ?? 1; // Default to user 1 for now
+            $validated['ticker_symbol'] = strtoupper($validated['ticker_symbol']);
 
-        $company = Company::create($validated);
+            $company = Company::create($validated);
 
-        return response()->json([
-            'id' => $company->id,
-            'name' => $company->name,
-            'ticker' => $company->ticker_symbol,
-            'sector' => $company->sector,
-            'industry' => $company->industry,
-            'marketCap' => $company->market_cap,
-            'marketCapFormatted' => $company->market_cap_formatted,
-            'reports_financial_data_in' => $company->reports_financial_data_in,
-        ], 201);
+            return response()->json([
+                'id' => $company->id,
+                'name' => $company->name,
+                'ticker' => $company->ticker_symbol,
+                'sector' => $company->sector,
+                'industry' => $company->industry,
+                'marketCap' => $company->market_cap,
+                'marketCapFormatted' => $company->market_cap_formatted,
+                'reports_financial_data_in' => $company->reports_financial_data_in,
+            ], 201);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Company creation validation failed', [
+                'errors' => $e->errors(),
+                'request' => $request->all()
+            ]);
+            throw $e; // Re-throw to let Laravel handle it properly
+
+        } catch (\Exception $e) {
+            \Log::error('Company creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to create company: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show(Company $company): JsonResponse
@@ -170,7 +197,12 @@ class CompanyController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'ticker_symbol' => 'required|string|max:10|unique:companies,ticker_symbol,' . $company->id,
+            'ticker_symbol' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('companies')->ignore($company->id)->whereNull('deleted_at')
+            ],
             'sector' => 'nullable|string|max:255',
             'industry' => 'nullable|string|max:255',
             'market_cap' => 'nullable|numeric|min:0',
@@ -200,8 +232,91 @@ class CompanyController extends Controller
 
     public function destroy(Company $company): JsonResponse
     {
-        $company->delete();
+        $company->delete(); // This will be a soft delete
         return response()->json(null, 204);
+    }
+
+    /**
+     * Get deletion impact summary for companies
+     */
+    public function deletionImpact(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'company_ids' => 'required|array',
+            'company_ids.*' => 'exists:companies,id'
+        ]);
+
+        $companyIds = $validated['company_ids'];
+        $companies = Company::whereIn('id', $companyIds)->get();
+
+        $impact = [
+            'companies' => [],
+            'totals' => [
+                'companies' => $companies->count(),
+                'research_items' => 0,
+                'documents' => 0,
+                'blog_post_associations' => 0,
+            ]
+        ];
+
+        foreach ($companies as $company) {
+            $researchCount = $company->researchItems()->count();
+            $documentsCount = $company->documents()->count();
+            $blogAssociationsCount = $company->blogPosts()->count();
+
+            $impact['companies'][] = [
+                'id' => $company->id,
+                'name' => $company->name,
+                'ticker' => $company->ticker_symbol,
+                'research_items' => $researchCount,
+                'documents' => $documentsCount,
+                'blog_associations' => $blogAssociationsCount,
+            ];
+
+            $impact['totals']['research_items'] += $researchCount;
+            $impact['totals']['documents'] += $documentsCount;
+            $impact['totals']['blog_post_associations'] += $blogAssociationsCount;
+        }
+
+        return response()->json($impact);
+    }
+
+    /**
+     * Bulk delete companies with soft delete
+     */
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'company_ids' => 'required|array',
+            'company_ids.*' => 'exists:companies,id'
+        ]);
+
+        $companyIds = $validated['company_ids'];
+        $companies = Company::whereIn('id', $companyIds)->get();
+
+        $deletedCount = 0;
+        $errors = [];
+
+        foreach ($companies as $company) {
+            try {
+                $company->delete(); // Soft delete
+                $deletedCount++;
+            } catch (\Exception $e) {
+                $errors[] = [
+                    'company_id' => $company->id,
+                    'name' => $company->name,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+
+        return response()->json([
+            'deleted_count' => $deletedCount,
+            'errors' => $errors,
+            'message' => $deletedCount === count($companyIds)
+                ? "Successfully soft-deleted {$deletedCount} companies"
+                : "Soft-deleted {$deletedCount} of " . count($companyIds) . " companies with " . count($errors) . " errors"
+        ]);
     }
 
     public function getBlogPosts(Company $company): JsonResponse

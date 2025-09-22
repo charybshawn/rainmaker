@@ -112,6 +112,8 @@ class ResearchItemController extends Controller
             'document_urls.*' => 'url',
             'document_names' => 'nullable|array',
             'document_names.*' => 'nullable|string|max:255',
+            'existing_file_ids' => 'nullable|array',
+            'existing_file_ids.*' => 'integer|exists:media,id',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -157,6 +159,26 @@ class ResearchItemController extends Controller
                         // Log the error but continue with other files
                         \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
                     }
+                }
+            }
+        }
+
+        // Handle existing file linking
+        if ($request->has('existing_file_ids') && is_array($request->existing_file_ids)) {
+            foreach ($request->existing_file_ids as $mediaId) {
+                try {
+                    // Get the original media item
+                    $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+
+                    if ($originalMedia) {
+                        // Copy the file to the new research item
+                        $researchItem->addMediaFromPath($originalMedia->getPath())
+                            ->usingName($originalMedia->name)
+                            ->usingFileName($originalMedia->file_name)
+                            ->toMediaCollection('attachments');
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to link existing file: ' . $mediaId, ['error' => $e->getMessage()]);
                 }
             }
         }
@@ -259,10 +281,17 @@ class ResearchItemController extends Controller
 
     public function update(Request $request, ResearchItem $researchItem): JsonResponse
     {
-        // Only allow updating own research items
-        if ($researchItem->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
+        try {
+            \Log::info('Update research item started', [
+                'research_item_id' => $researchItem->id,
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+
+            // Only allow updating own research items
+            if ($researchItem->user_id !== auth()->id()) {
+                return response()->json(['message' => 'Forbidden'], 403);
+            }
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -272,16 +301,94 @@ class ResearchItemController extends Controller
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
+            'ai_synopsis' => 'nullable|string',
+            'attachments' => 'nullable|array',
+            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+            'document_urls' => 'nullable|array',
+            'document_urls.*' => 'url',
+            'document_names' => 'nullable|array',
+            'document_names.*' => 'nullable|string|max:255',
+            'existing_file_ids' => 'nullable|array',
+            'existing_file_ids.*' => 'integer|exists:media,id',
         ]);
 
-        $researchItem->update($validated);
+        // Filter out non-database fields before updating
+        $updateData = collect($validated)->only([
+            'title', 'content', 'company_id', 'category_id', 'visibility', 'ai_synopsis'
+        ])->filter(function ($value, $key) {
+            // Don't include null category_id since it's not nullable in the database
+            if ($key === 'category_id' && $value === null) {
+                return false;
+            }
+            return true;
+        })->toArray();
+
+        $researchItem->update($updateData);
 
         // Sync tags if provided
         if (isset($validated['tag_ids'])) {
             $researchItem->tags()->sync($validated['tag_ids']);
         }
 
-        $researchItem->load(['company', 'category', 'tags', 'user']);
+        // Handle file uploads
+        if ($request->hasFile('attachments')) {
+            foreach ($request->file('attachments') as $file) {
+                $researchItem->addMedia($file)
+                    ->toMediaCollection('attachments');
+            }
+        }
+
+        // Handle URL downloads
+        if ($request->has('document_urls') && is_array($request->document_urls)) {
+            foreach ($request->document_urls as $index => $url) {
+                if (!empty($url)) {
+                    try {
+                        // Get the document name from the parallel array or generate one
+                        $documentName = $request->document_names[$index] ?? null;
+                        if (empty($documentName)) {
+                            $documentName = 'Document ' . ($index + 1);
+                        }
+
+                        // Download the file from URL
+                        $tempFile = $this->downloadFileFromUrl($url, $documentName);
+
+                        if ($tempFile) {
+                            $researchItem->addMedia($tempFile)
+                                ->usingName($documentName)
+                                ->toMediaCollection('attachments');
+
+                            // Clean up temp file
+                            unlink($tempFile);
+                        }
+                    } catch (\Exception $e) {
+                        // Log the error but continue with other files
+                        \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
+                    }
+                }
+            }
+        }
+
+        // Handle existing file linking
+        if ($request->has('existing_file_ids') && is_array($request->existing_file_ids)) {
+            foreach ($request->existing_file_ids as $mediaId) {
+                try {
+                    // Get the original media item
+                    $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+
+                    if ($originalMedia) {
+                        // Copy the file to the research item
+                        $researchItem->addMediaFromPath($originalMedia->getPath())
+                            ->usingName($originalMedia->name)
+                            ->usingFileName($originalMedia->file_name)
+                            ->toMediaCollection('attachments');
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Failed to link existing file: ' . $mediaId, ['error' => $e->getMessage()]);
+                }
+            }
+        }
+
+        $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
 
         return response()->json([
             'id' => $researchItem->id,
@@ -305,8 +412,30 @@ class ResearchItemController extends Controller
                     'color' => $tag->color,
                 ];
             }),
+            'attachments' => $researchItem->getMedia('attachments')->map(function ($media) {
+                return [
+                    'id' => $media->id,
+                    'name' => $media->name,
+                    'file_name' => $media->file_name,
+                    'mime_type' => $media->mime_type,
+                    'size' => $media->size,
+                    'url' => $media->getUrl(),
+                ];
+            }),
             'created_at' => $researchItem->created_at->format('Y-m-d H:i:s'),
         ]);
+        } catch (\Exception $e) {
+            \Log::error('Update research item failed', [
+                'research_item_id' => $researchItem->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to update research item: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(ResearchItem $researchItem): JsonResponse
@@ -423,5 +552,158 @@ class ResearchItemController extends Controller
 
         // Default fallback
         return 'bin';
+    }
+
+    /**
+     * Get available files that can be reused for research items
+     */
+    public function getAvailableFiles(Request $request): JsonResponse
+    {
+        \Log::info('getAvailableFiles called', [
+            'user_id' => auth()->id(),
+            'search' => $request->get('search'),
+            'limit' => $request->get('limit')
+        ]);
+
+        // Get all media files from research items and documents that the user has access to
+        $userFiles = collect();
+
+        // Get files from user's own research items
+        if (auth()->check()) {
+            $userResearchItems = ResearchItem::where('user_id', auth()->id())
+                ->with('media')
+                ->get();
+
+            foreach ($userResearchItems as $item) {
+                foreach ($item->getMedia('attachments') as $media) {
+                    $userFiles->push([
+                        'id' => $media->id,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'mime_type' => $media->mime_type,
+                        'size' => $media->size,
+                        'url' => $media->getUrl(),
+                        'source_type' => 'research_item',
+                        'source_id' => $item->id,
+                        'source_title' => $item->title,
+                        'created_at' => $media->created_at,
+                    ]);
+                }
+            }
+
+            // Get files from user's own documents
+            $userDocuments = \App\Models\Document::where('user_id', auth()->id())
+                ->with('media')
+                ->get();
+
+            foreach ($userDocuments as $document) {
+                foreach ($document->getMedia('attachments') as $media) {
+                    $userFiles->push([
+                        'id' => $media->id,
+                        'name' => $media->name,
+                        'file_name' => $media->file_name,
+                        'mime_type' => $media->mime_type,
+                        'size' => $media->size,
+                        'url' => $media->getUrl(),
+                        'source_type' => 'document',
+                        'source_id' => $document->id,
+                        'source_title' => $document->title,
+                        'created_at' => $media->created_at,
+                    ]);
+                }
+            }
+        }
+
+        // Sort by most recent first
+        $sortedFiles = $userFiles->sortByDesc('created_at')->values();
+
+        \Log::info('Files found', [
+            'total_files' => $sortedFiles->count(),
+            'user_id' => auth()->id()
+        ]);
+
+        // Apply search filter if provided
+        if ($request->has('search') && !empty($request->search)) {
+            $searchTerm = strtolower($request->search);
+            $sortedFiles = $sortedFiles->filter(function ($file) use ($searchTerm) {
+                return str_contains(strtolower($file['name']), $searchTerm) ||
+                       str_contains(strtolower($file['file_name']), $searchTerm) ||
+                       str_contains(strtolower($file['source_title']), $searchTerm);
+            })->values();
+        }
+
+        // Apply pagination
+        $perPage = $request->get('limit', 20);
+        $page = $request->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+
+        $paginatedFiles = $sortedFiles->slice($offset, $perPage)->values();
+
+        return response()->json([
+            'data' => $paginatedFiles,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total_items' => $sortedFiles->count(),
+                'total_pages' => ceil($sortedFiles->count() / $perPage),
+                'has_more_pages' => $offset + $perPage < $sortedFiles->count(),
+            ]
+        ]);
+    }
+
+    /**
+     * Link existing files to a research item
+     */
+    public function linkExistingFiles(Request $request, ResearchItem $researchItem): JsonResponse
+    {
+        $validated = $request->validate([
+            'media_ids' => 'required|array',
+            'media_ids.*' => 'integer|exists:media,id',
+        ]);
+
+        try {
+            foreach ($validated['media_ids'] as $mediaId) {
+                $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+
+                // Check if user has access to this file
+                $hasAccess = false;
+
+                if ($originalMedia->model_type === 'App\Models\ResearchItem') {
+                    $sourceItem = ResearchItem::find($originalMedia->model_id);
+                    $hasAccess = $sourceItem && $sourceItem->user_id === auth()->id();
+                } elseif ($originalMedia->model_type === 'App\Models\Document') {
+                    $sourceDocument = \App\Models\Document::find($originalMedia->model_id);
+                    $hasAccess = $sourceDocument && $sourceDocument->user_id === auth()->id();
+                }
+
+                if (!$hasAccess) {
+                    return response()->json([
+                        'message' => 'You do not have access to one or more selected files.'
+                    ], 403);
+                }
+
+                // Copy the file to this research item
+                $researchItem->addMediaFromUrl($originalMedia->getUrl())
+                    ->usingName($originalMedia->name)
+                    ->usingFileName($originalMedia->file_name)
+                    ->toMediaCollection('attachments');
+            }
+
+            return response()->json([
+                'message' => 'Files linked successfully',
+                'linked_count' => count($validated['media_ids'])
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Error linking existing files to research item', [
+                'research_item_id' => $researchItem->id,
+                'media_ids' => $validated['media_ids'],
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to link files: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

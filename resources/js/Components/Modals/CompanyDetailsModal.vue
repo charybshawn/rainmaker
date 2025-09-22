@@ -538,8 +538,8 @@
               </div>
               <div class="flex items-center space-x-2">
                 <!-- Save Button -->
-                <button 
-                  @click="$emit('save-note')"
+                <button
+                  @click="$emit('save-note', { selectedExistingFiles: selectedExistingFiles })"
                   :disabled="creatingNote"
                   class="bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
                 >
@@ -649,7 +649,51 @@
               <!-- File Attachments -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Attachments (optional)</label>
-                <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
+
+                <!-- Upload Method Selection -->
+                <div class="mb-4">
+                  <div class="flex items-center space-x-4">
+                    <button
+                      type="button"
+                      @click="noteForm.uploadType = 'file'"
+                      :class="[
+                        'px-3 py-2 text-sm rounded-lg transition-colors',
+                        (noteForm.uploadType === 'file' || !noteForm.uploadType)
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                      ]"
+                    >
+                      📁 Upload Files
+                    </button>
+                    <button
+                      type="button"
+                      @click="noteForm.uploadType = 'url'"
+                      :class="[
+                        'px-3 py-2 text-sm rounded-lg transition-colors',
+                        noteForm.uploadType === 'url'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                      ]"
+                    >
+                      🔗 Download from URL
+                    </button>
+                    <button
+                      type="button"
+                      @click="selectExistingFilesTab"
+                      :class="[
+                        'px-3 py-2 text-sm rounded-lg transition-colors',
+                        noteForm.uploadType === 'existing'
+                          ? 'bg-blue-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                      ]"
+                    >
+                      🗂️ Select Existing Files
+                    </button>
+                  </div>
+                </div>
+
+                <!-- File Upload Area -->
+                <div v-if="!noteForm.uploadType || noteForm.uploadType === 'file'" class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 dark:hover:border-gray-500 transition-colors">
                   <svg class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
@@ -662,15 +706,139 @@
                         PDF, DOC, XLS, PPT, Images, TXT, CSV (max 10MB each)
                       </span>
                     </label>
-                    <input 
-                      id="note-file-upload" 
-                      name="note-file-upload" 
-                      type="file" 
-                      multiple 
+                    <input
+                      id="note-file-upload"
+                      name="note-file-upload"
+                      type="file"
+                      multiple
                       accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg"
                       @change="$emit('note-file-upload', $event)"
-                      class="sr-only" 
+                      class="sr-only"
                     />
+                  </div>
+                </div>
+
+                <!-- URL Download Area -->
+                <div v-if="noteForm.uploadType === 'url'" class="space-y-4">
+                  <div class="flex items-center space-x-2">
+                    <input
+                      v-model="noteForm.newUrl"
+                      type="url"
+                      placeholder="https://example.com/document.pdf"
+                      class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    />
+                    <input
+                      v-model="noteForm.newUrlName"
+                      type="text"
+                      placeholder="Optional name"
+                      class="w-40 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      @click="addUrl"
+                      :disabled="!noteForm.newUrl"
+                      class="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+
+                  <!-- URL List -->
+                  <div v-if="noteForm.urls && noteForm.urls.length > 0" class="space-y-2">
+                    <div v-for="(urlData, index) in noteForm.urls" :key="index" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg">
+                      <div class="flex items-center">
+                        <svg class="w-5 h-5 text-blue-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ urlData.name || 'Downloaded File' }}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400 truncate max-w-xs">{{ urlData.url }}</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        @click="removeUrl(index)"
+                        class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors p-1"
+                      >
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Existing Files Selection Area -->
+                <div v-if="noteForm.uploadType === 'existing'" class="space-y-4">
+                  <!-- Search existing files -->
+                  <div class="flex items-center space-x-2">
+                    <input
+                      v-model="existingFilesSearch"
+                      @input="searchExistingFiles"
+                      type="text"
+                      placeholder="Search your existing files..."
+                      class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 transition-colors"
+                    />
+                    <button
+                      type="button"
+                      @click="loadExistingFiles"
+                      class="px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+
+                  <!-- Loading state -->
+                  <div v-if="loadingExistingFiles" class="text-center py-4">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading your files...</p>
+                  </div>
+
+                  <!-- Existing files list -->
+                  <div v-else-if="availableFiles.length > 0" class="max-h-64 overflow-y-auto space-y-2 border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                    <div
+                      v-for="file in availableFiles"
+                      :key="file.id"
+                      @click="toggleFileSelection(file)"
+                      :class="[
+                        'flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors',
+                        selectedExistingFiles.some(f => f.id === file.id)
+                          ? 'bg-blue-100 dark:bg-blue-900/20 border border-blue-300 dark:border-blue-600'
+                          : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
+                      ]"
+                    >
+                      <div class="flex items-center">
+                        <div class="w-5 h-5 mr-3">
+                          <svg v-if="selectedExistingFiles.some(f => f.id === file.id)" class="w-5 h-5 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                          </svg>
+                          <svg v-else class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+                          </svg>
+                        </div>
+                        <div>
+                          <p class="text-sm font-medium text-gray-900 dark:text-white">{{ file.name }}</p>
+                          <p class="text-xs text-gray-500 dark:text-gray-400">
+                            From {{ file.source_type === 'research_item' ? 'Research' : 'Document' }}: {{ file.source_title }}
+                          </p>
+                          <p class="text-xs text-gray-400">{{ formatFileSize(file.size) }} • {{ file.created_at }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- No files state -->
+                  <div v-else-if="!loadingExistingFiles" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="mt-2">No existing files found</p>
+                    <p class="text-sm">Upload some files first to use this feature</p>
+                  </div>
+
+                  <!-- Selected files count -->
+                  <div v-if="selectedExistingFiles.length > 0" class="text-sm text-blue-600 dark:text-blue-400">
+                    {{ selectedExistingFiles.length }} file(s) selected
                   </div>
                 </div>
                 
@@ -1343,7 +1511,12 @@
               </svg>
             </button>
             <div v-show="!collapsedSections.aiSynopsis" class="px-6 pb-4">
-              <p class="text-gray-200 leading-relaxed">{{ selectedDocument.ai_synopsis }}</p>
+              <div class="prose prose-invert prose-sm max-w-none">
+                <div
+                  v-html="formatAiSynopsis(selectedDocument.ai_synopsis)"
+                  class="text-gray-200 leading-relaxed space-y-3"
+                ></div>
+              </div>
             </div>
           </div>
 
@@ -1736,6 +1909,85 @@ const closeDocumentViewer = () => {
   selectedDocument.value = null
 }
 
+// Format AI synopsis with better typography and structure using marked
+const formatAiSynopsis = (synopsis) => {
+  if (!synopsis) return ''
+
+  // Simple text enhancement for better readability
+  let formatted = synopsis.trim()
+
+  // Convert markdown-like formatting to HTML
+  formatted = formatted
+    // Headers (lines starting with # or ALL CAPS ending with :)
+    .replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, content) => {
+      const level = hashes.length
+      return `<h${level} class="text-blue-300 font-semibold text-base sm:text-lg uppercase tracking-wide mb-3 mt-5 first:mt-0">${content}</h${level}>`
+    })
+    .replace(/^([A-Z\s]{3,}):?\s*$/gm, '<h4 class="text-blue-300 font-semibold text-base sm:text-lg uppercase tracking-wide mb-3 mt-5 first:mt-0">$1</h4>')
+
+    // Bold text (**text** or __text__)
+    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-blue-300 font-semibold text-base sm:text-lg">$1</strong>')
+    .replace(/__(.*?)__/g, '<strong class="text-blue-300 font-semibold text-base sm:text-lg">$1</strong>')
+
+    // Italic text (*text* or _text_)
+    .replace(/\*(.*?)\*/g, '<em class="text-blue-200 text-base sm:text-lg">$1</em>')
+    .replace(/_(.*?)_/g, '<em class="text-blue-200 text-base sm:text-lg">$1</em>')
+
+    // Code (`code`)
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-800 text-green-300 px-2 py-1 rounded text-sm sm:text-base">$1</code>')
+
+    // Line breaks
+    .replace(/\n/g, '<br>')
+
+    // Bullet points (-, *, or •)
+    .replace(/^[\s]*[-*•]\s+(.+)$/gm, '<li class="text-gray-300 text-base sm:text-lg">$1</li>')
+
+  // Wrap consecutive <li> elements in <ul>
+  formatted = formatted.replace(/(<li[^>]*>.*?<\/li>)(\s*<li[^>]*>.*?<\/li>)*/g, (match) => {
+    return `<ul class="list-disc list-inside ml-4 space-y-1 mb-4">${match}</ul>`
+  })
+
+  // Handle key-value pairs (Key: Value)
+  formatted = formatted.replace(/^([^:\n]{1,30}):\s*(.+)$/gm, (match, key, value) => {
+    return `<div class="mb-3">
+      <span class="text-blue-300 font-medium text-base sm:text-lg">${key.trim()}:</span>
+      <span class="text-gray-200 ml-2 text-base sm:text-lg">${value.trim()}</span>
+    </div>`
+  })
+
+  // Wrap remaining text in paragraphs
+  const lines = formatted.split('<br>')
+  const paragraphs = []
+  let currentParagraph = ''
+
+  lines.forEach(line => {
+    line = line.trim()
+    if (line === '') {
+      if (currentParagraph.trim()) {
+        // Don't wrap if it's already HTML
+        if (currentParagraph.includes('<')) {
+          paragraphs.push(currentParagraph)
+        } else {
+          paragraphs.push(`<p class="text-gray-200 mb-4 leading-relaxed text-base sm:text-lg">${currentParagraph}</p>`)
+        }
+        currentParagraph = ''
+      }
+    } else {
+      currentParagraph += line + ' '
+    }
+  })
+
+  if (currentParagraph.trim()) {
+    if (currentParagraph.includes('<')) {
+      paragraphs.push(currentParagraph)
+    } else {
+      paragraphs.push(`<p class="text-gray-200 mb-4 leading-relaxed text-base sm:text-lg">${currentParagraph}</p>`)
+    }
+  }
+
+  return paragraphs.join('')
+}
+
 const viewResearchItem = (item) => {
   selectedResearchItem.value = item
   showResearchModal.value = true
@@ -1744,6 +1996,92 @@ const viewResearchItem = (item) => {
 const closeResearchModal = () => {
   showResearchModal.value = false
   selectedResearchItem.value = null
+}
+
+// Functions for existing files functionality
+const selectExistingFilesTab = async () => {
+  emit('update:note-form', { ...props.noteForm, uploadType: 'existing' })
+  if (availableFiles.value.length === 0) {
+    await loadExistingFiles()
+  }
+}
+
+const loadExistingFiles = async () => {
+  loadingExistingFiles.value = true
+  try {
+    const response = await axios.get('/api/research-items/files/available', {
+      params: {
+        search: existingFilesSearch.value,
+        limit: 50
+      }
+    })
+    availableFiles.value = response.data.data || []
+  } catch (error) {
+    console.error('Error loading existing files:', error)
+    availableFiles.value = []
+  } finally {
+    loadingExistingFiles.value = false
+  }
+}
+
+const searchExistingFiles = debounce(async () => {
+  await loadExistingFiles()
+}, 300)
+
+const toggleFileSelection = (file) => {
+  const index = selectedExistingFiles.value.findIndex(f => f.id === file.id)
+  if (index > -1) {
+    selectedExistingFiles.value.splice(index, 1)
+  } else {
+    selectedExistingFiles.value.push(file)
+  }
+}
+
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// Functions for URL functionality
+const addUrl = () => {
+  if (!props.noteForm.newUrl) return
+
+  const updatedUrls = [...(props.noteForm.urls || [])]
+  updatedUrls.push({
+    url: props.noteForm.newUrl,
+    name: props.noteForm.newUrlName || 'Downloaded File'
+  })
+
+  emit('update:note-form', {
+    ...props.noteForm,
+    urls: updatedUrls,
+    newUrl: '',
+    newUrlName: ''
+  })
+}
+
+const removeUrl = (index) => {
+  if (props.noteForm.urls) {
+    const updatedUrls = [...props.noteForm.urls]
+    updatedUrls.splice(index, 1)
+    emit('update:note-form', { ...props.noteForm, urls: updatedUrls })
+  }
+}
+
+// Simple debounce function
+function debounce(func, wait) {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
 }
 
 const viewAttachment = (attachment) => {
@@ -1792,6 +2130,12 @@ const loadingInsights = ref(false)
 const showResearchModal = ref(false)
 const selectedResearchItem = ref(null)
 
+// Existing files functionality
+const availableFiles = ref([])
+const loadingExistingFiles = ref(false)
+const existingFilesSearch = ref('')
+const selectedExistingFiles = ref([])
+
 // Watch for insights prop changes
 watch(() => props.insights, (newInsights) => {
   companyInsights.value = newInsights || []
@@ -1801,6 +2145,14 @@ watch(() => props.insights, (newInsights) => {
 watch(() => props.initialTab, (newTab) => {
   activeTab.value = newTab
 }, { immediate: true })
+
+// Watch for note creation completion to reset selected existing files
+watch(() => props.creatingNote, (isCreating, wasCreating) => {
+  if (wasCreating && !isCreating) {
+    // Note was successfully created, reset the selected existing files
+    selectedExistingFiles.value = []
+  }
+})
 
 const tabs = [
   {
