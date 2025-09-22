@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Company extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, TracksActivity;
     protected $fillable = [
         'name',
         'ticker_symbol',
@@ -35,6 +36,11 @@ class Company extends Model
     public function researchItems(): HasMany
     {
         return $this->hasMany(ResearchItem::class);
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class);
     }
 
     public function creator(): BelongsTo

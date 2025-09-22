@@ -11,6 +11,10 @@ class CompanyController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        // Pagination parameters
+        $perPage = $request->get('limit', 10);
+        $page = $request->get('page', 1);
+
         $query = Company::query()->with(['researchItems', 'creator']);
 
         // Search functionality
@@ -30,7 +34,7 @@ class CompanyController extends Controller
             ->selectRaw('MAX(research_items.updated_at) as latest_research_activity')
             ->groupBy('companies.id')
             ->orderByRaw('COALESCE(MAX(research_items.updated_at), companies.updated_at) DESC')
-            ->get();
+            ->paginate($perPage, ['*'], 'page', $page);
 
         // Transform the data for the frontend
         $companiesData = $companies->map(function ($company) {
@@ -52,7 +56,19 @@ class CompanyController extends Controller
             ];
         });
 
-        return response()->json($companiesData);
+        // Return paginated response with metadata
+        return response()->json([
+            'data' => $companiesData,
+            'pagination' => [
+                'current_page' => $companies->currentPage(),
+                'total_pages' => $companies->lastPage(),
+                'has_more_pages' => $companies->hasMorePages(),
+                'total_items' => $companies->total(),
+                'per_page' => $companies->perPage(),
+                'from' => $companies->firstItem(),
+                'to' => $companies->lastItem(),
+            ]
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -90,7 +106,7 @@ class CompanyController extends Controller
 
     public function show(Company $company): JsonResponse
     {
-        $company->load(['researchItems.tags', 'researchItems.media', 'creator']);
+        $company->load(['researchItems.tags', 'researchItems.media', 'documents.tags', 'documents.media', 'creator']);
 
         return response()->json([
             'id' => $company->id,
@@ -106,6 +122,7 @@ class CompanyController extends Controller
             'employees' => $company->employees,
             'foundedDate' => $company->founded_date?->format('Y-m-d'),
             'researchItemsCount' => $company->researchItems->count(),
+            'documentsCount' => $company->documents->count(),
             'researchItems' => $company->researchItems->map(function ($item) {
                 return [
                     'id' => $item->id,
@@ -123,6 +140,26 @@ class CompanyController extends Controller
                         ];
                     }),
                     'created_at' => $item->created_at->format('Y-m-d H:i:s'),
+                ];
+            }),
+            'documents' => $company->documents->map(function ($document) {
+                return [
+                    'id' => $document->id,
+                    'title' => $document->title,
+                    'description' => $document->description,
+                    'ai_synopsis' => $document->ai_synopsis,
+                    'visibility' => $document->visibility,
+                    'attachments' => $document->getMedia('attachments')->map(function ($media) {
+                        return [
+                            'id' => $media->id,
+                            'name' => $media->name,
+                            'file_name' => $media->file_name,
+                            'mime_type' => $media->mime_type,
+                            'size' => $media->size,
+                            'url' => $media->getUrl(),
+                        ];
+                    }),
+                    'created_at' => $document->created_at->format('Y-m-d H:i:s'),
                 ];
             }),
             'createdAt' => $company->created_at->format('Y-m-d H:i:s'),
@@ -156,6 +193,7 @@ class CompanyController extends Controller
             'industry' => $company->industry,
             'marketCap' => $company->market_cap,
             'marketCapFormatted' => $company->market_cap_formatted,
+            'description' => $company->description,
             'reports_financial_data_in' => $company->reports_financial_data_in,
         ]);
     }
@@ -173,7 +211,7 @@ class CompanyController extends Controller
             ->with('user:id,name')
             ->latest('published_at')
             ->take(10)
-            ->get(['id', 'title', 'slug', 'content', 'status', 'published_at', 'created_at', 'user_id']);
+            ->get(['blog_posts.id', 'title', 'slug', 'content', 'status', 'published_at', 'blog_posts.created_at', 'user_id']);
 
         return response()->json($posts);
     }

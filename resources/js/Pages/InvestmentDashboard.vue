@@ -271,13 +271,22 @@
         <!-- Header Title (moved below tabs) -->
         <div class="flex items-start mb-6 sm:mb-8 lg:mb-12">
           <h2 class="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-white flex items-center transition-all duration-500 ease-out">
-            <svg v-if="!showSearchResults" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-            </svg>
-            <svg v-else class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg v-if="showSearchResults" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
-            {{ showSearchResults ? 'Search Results' : 'Investment Research Platform' }}
+            <svg v-else-if="activeTab === 'overview'" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            <svg v-else-if="activeTab === 'companies'" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+            <svg v-else-if="activeTab === 'research'" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <svg v-else-if="activeTab === 'insights'" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+            </svg>
+            {{ getPageTitle() }}
             <div v-if="showSearchResults && !isSearching" class="ml-6 text-sm text-gray-300 font-normal">
               for "{{ searchQuery }}"
             </div>
@@ -293,8 +302,59 @@
           <!-- Content Container -->
             <!-- Search Results Content -->
             <div v-if="showSearchResults" class="space-y-8">
-            <!-- Search Results Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <!-- Search Results View Mode Toggle -->
+              <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-400">
+                  {{ searchResults.companies.length + searchResults.blogPosts.length + searchResults.researchItems.length }} total results
+                </div>
+                <div class="flex backdrop-blur-sm bg-white/8 rounded-2xl p-2 border border-white/15 shadow-[0_4px_16px_0_rgba(31,38,135,0.08)]">
+                  <button
+                    @click="searchResultsViewMode = 'grid'"
+                    :class="[
+                      'p-3 rounded-xl transition-all duration-200 transform-gpu',
+                      searchResultsViewMode === 'grid'
+                        ? 'bg-gradient-to-br from-purple-500/50 to-purple-600/50 text-white shadow-[0_2px_4px_rgba(147,51,234,0.2)] scale-105'
+                        : 'text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105'
+                    ]"
+                    title="Grid View"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="searchResultsViewMode = 'list'"
+                    :class="[
+                      'p-3 rounded-xl transition-all duration-200 transform-gpu',
+                      searchResultsViewMode === 'list'
+                        ? 'bg-gradient-to-br from-purple-500/50 to-purple-600/50 text-white shadow-[0_2px_4px_rgba(147,51,234,0.2)] scale-105'
+                        : 'text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105'
+                    ]"
+                    title="List View"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="searchResultsViewMode = 'tree'"
+                    :class="[
+                      'p-3 rounded-xl transition-all duration-200 transform-gpu',
+                      searchResultsViewMode === 'tree'
+                        ? 'bg-gradient-to-br from-purple-500/50 to-purple-600/50 text-white shadow-[0_2px_4px_rgba(147,51,234,0.2)] scale-105'
+                        : 'text-gray-400 hover:text-white hover:bg-white/10 hover:scale-105'
+                    ]"
+                    title="Tree View"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8l4 4 4-4m0 0V4m0 4l4 4 4-4m0 0V8a2 2 0 00-2-2h-2a2 2 0 00-2 2v0"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+            <!-- Grid View -->
+            <div v-if="searchResultsViewMode === 'grid'" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <!-- Companies Results -->
               <div v-if="searchResults.companies.length > 0" class="backdrop-blur-3xl bg-gradient-to-br from-blue-500/10 via-white/5 to-blue-400/8 rounded-2xl border border-blue-400/20 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
                 <h3 class="text-lg font-semibold text-blue-200 mb-4 flex items-center justify-between">
@@ -445,6 +505,74 @@
 
             </div>
 
+            <!-- List View -->
+            <div v-else-if="searchResultsViewMode === 'list'" class="space-y-6">
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
+                <!-- Combined Results List -->
+                <div class="space-y-4">
+                  <!-- Companies -->
+                  <div v-for="company in searchResults.companies" :key="'list-company-' + company.id"
+                       @click="openCompanyDetails(company)"
+                       class="flex items-center justify-between p-4 rounded-lg bg-blue-500/10 border border-blue-400/20 hover:bg-blue-500/20 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 class="text-white font-medium">{{ company.name }}</h4>
+                        <p class="text-gray-400 text-sm">{{ company.ticker }} • {{ company.sector }}</p>
+                      </div>
+                    </div>
+                    <div class="text-blue-300 text-sm">Company</div>
+                  </div>
+
+                  <!-- Blog Posts -->
+                  <div v-for="post in searchResults.blogPosts" :key="'list-blog-' + post.id"
+                       @click="viewBlogPost(post)"
+                       class="flex items-center justify-between p-4 rounded-lg bg-purple-500/10 border border-purple-400/20 hover:bg-purple-500/20 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 class="text-white font-medium">{{ post.title }}</h4>
+                        <p class="text-gray-400 text-sm">By {{ post.user?.name }} • {{ formatDate(post.published_at) }}</p>
+                      </div>
+                    </div>
+                    <div class="text-purple-300 text-sm">Blog Post</div>
+                  </div>
+
+                  <!-- Research Items -->
+                  <div v-for="item in searchResults.researchItems" :key="'list-research-' + item.id"
+                       class="flex items-center justify-between p-4 rounded-lg bg-green-500/10 border border-green-400/20 hover:bg-green-500/20 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 class="text-white font-medium">{{ item.title }}</h4>
+                        <p class="text-gray-400 text-sm">{{ item.company?.name }} • {{ item.category?.name }}</p>
+                      </div>
+                    </div>
+                    <div class="text-green-300 text-sm">Research</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tree View -->
+            <div v-else-if="searchResultsViewMode === 'tree'" class="space-y-6">
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
+                <SearchResultsTree :searchResults="treeData" @node-click="handleTreeNodeClick" />
+              </div>
+            </div>
+
             <!-- Login Required for Search -->
             <div v-if="!$page.props.auth.user && searchQuery.length >= 2" class="text-center py-12">
               <svg class="w-16 h-16 text-blue-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -491,7 +619,7 @@
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
                     <p class="text-xs text-blue-300/80 font-medium tracking-wider uppercase mb-2">Companies</p>
-                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ companies.length }}</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ companiesInfinite.length }}</p>
                   </div>
                   <div class="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] transition-all duration-500">
                     <svg class="w-6 h-6 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -533,6 +661,149 @@
                   </div>
                 </div>
               </div>
+            </div>
+
+            <!-- Latest Additions Widgets -->
+            <div class="mt-12 grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <!-- Latest Companies -->
+              <div class="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                    Latest Companies
+                  </h3>
+                  <button
+                    @click="switchTab('companies')"
+                    class="text-blue-400 hover:text-blue-300 text-sm transition-colors"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div v-if="latestCompanies.length > 0" class="space-y-3">
+                  <div
+                    v-for="company in latestCompanies"
+                    :key="company.id"
+                    class="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+                    @click="openCompanyDetails(company)"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center space-x-2">
+                        <p class="text-white font-medium truncate">{{ company.name }}</p>
+                        <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded font-medium">{{ company.ticker_symbol }}</span>
+                      </div>
+                      <p class="text-sm text-gray-400 truncate">{{ company.sector }}</p>
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ formatTimeAgo(company.created_at) }}
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-8 text-gray-400">
+                  <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                  </svg>
+                  <p class="text-sm">No companies yet</p>
+                </div>
+              </div>
+
+              <!-- Latest Insights -->
+              <div class="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    </svg>
+                    Latest Insights
+                  </h3>
+                  <button
+                    @click="switchTab('insights')"
+                    class="text-purple-400 hover:text-purple-300 text-sm transition-colors"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div v-if="latestInsights.length > 0" class="space-y-3">
+                  <div
+                    v-for="post in latestInsights"
+                    :key="post.id"
+                    class="flex items-start justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+                    @click="openBlogPost(post)"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <p class="text-white font-medium line-clamp-2 mb-1">{{ post.title }}</p>
+                      <div class="flex items-center space-x-2 text-xs text-gray-400">
+                        <span>{{ post.user?.name || post.author_name }}</span>
+                        <span>•</span>
+                        <span>{{ formatTimeAgo(post.published_at || post.created_at) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-8 text-gray-400">
+                  <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  </svg>
+                  <p class="text-sm">No insights yet</p>
+                </div>
+              </div>
+
+              <!-- Latest Research -->
+              <div class="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h3 class="text-lg font-semibold text-white flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    Latest Research
+                  </h3>
+                  <button
+                    @click="switchTab('research')"
+                    class="text-green-400 hover:text-green-300 text-sm transition-colors"
+                  >
+                    View All
+                  </button>
+                </div>
+
+                <div v-if="latestResearch.length > 0" class="space-y-3">
+                  <div
+                    v-for="research in latestResearch"
+                    :key="research.id"
+                    class="flex items-start justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
+                    @click="openResearchItem(research)"
+                  >
+                    <div class="flex-1 min-w-0">
+                      <p class="text-white font-medium line-clamp-2 mb-1">{{ research.title }}</p>
+                      <div class="flex items-center space-x-2 text-xs text-gray-400">
+                        <span v-if="research.company">{{ research.company.name }}</span>
+                        <span v-if="research.company">•</span>
+                        <span>{{ research.user?.name }}</span>
+                        <span>•</span>
+                        <span>{{ formatTimeAgo(research.created_at) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div v-else class="text-center py-8 text-gray-400">
+                  <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                  <p class="text-sm">No research yet</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Activity Widget -->
+            <div class="mt-8">
+              <ActivityWidget
+                :show-stats="true"
+              />
             </div>
           </div>
 
@@ -917,10 +1188,11 @@
             </div>
 
             <!-- Companies Table -->
+            <div v-else data-infinite-companies>
             <!-- Mobile Simple List View -->
-            <div v-else class="sm:hidden space-y-3">
+            <div class="sm:hidden space-y-3">
               <div
-                v-for="company in companiesPaginated"
+                v-for="company in companiesInfinite"
                 :key="company.id"
                 class="p-3 rounded-xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl cursor-pointer hover:bg-black/20 transition-all duration-300"
                 style="backdrop-filter: blur(20px) saturate(180%);"
@@ -959,7 +1231,7 @@
               <!-- Table Body -->
               <div class="divide-y divide-white/20">
                 <div
-                  v-for="company in companiesPaginated"
+                  v-for="company in companiesInfinite"
                   :key="company.id"
                   class="group px-6 py-4 hover:bg-black/10 transition-all duration-300 cursor-pointer border-b border-white/10 hover:border-white/20 last:border-b-0"
                   @click="viewCompanyDetails(company)"
@@ -1036,45 +1308,30 @@
               </div>
             </div>
 
-            <!-- Pagination -->
-            <div v-if="companiesTotalPages > 1" class="flex items-center justify-center space-x-2 mt-8 pt-6 border-t border-white/10">
-              <button
-                @click="companiesCurrentPage = Math.max(1, companiesCurrentPage - 1)"
-                :disabled="companiesCurrentPage === 1"
-                class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-blue-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
-              >
-                Previous
-              </button>
+            <!-- Infinite Scroll Loading Indicator -->
+            <div v-if="companiesShowLoading" class="flex items-center justify-center space-x-3 mt-8 py-6">
+              <div class="w-6 h-6 border-2 border-blue-300/30 border-t-blue-300 rounded-full animate-spin"></div>
+              <span class="text-blue-300 text-sm font-medium">Loading more companies...</span>
+            </div>
 
-              <!-- Page Numbers -->
-              <div class="flex space-x-1">
-                <button
-                  v-for="page in companiesPageNumbers"
-                  :key="page"
-                  @click="companiesCurrentPage = page"
-                  :class="[
-                    'px-3 py-2 rounded-lg transition-all duration-200',
-                    page === companiesCurrentPage
-                      ? 'bg-blue-500/30 text-blue-200 border border-blue-400/30'
-                      : 'bg-white/10 text-gray-300 border border-white/20 hover:bg-white/20 hover:text-white'
-                  ]"
-                >
-                  {{ page }}
-                </button>
-              </div>
-
-              <button
-                @click="companiesCurrentPage = Math.min(companiesTotalPages, companiesCurrentPage + 1)"
-                :disabled="companiesCurrentPage === companiesTotalPages"
-                class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-blue-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
-              >
-                Next
-              </button>
+            <!-- Initial Loading State -->
+            <div v-if="companiesInitialLoading" class="flex items-center justify-center space-x-3 mt-8 py-12">
+              <div class="w-8 h-8 border-2 border-blue-300/30 border-t-blue-300 rounded-full animate-spin"></div>
+              <span class="text-blue-300 text-base font-medium">Loading companies...</span>
             </div>
 
             <!-- Results Summary -->
-            <div class="text-center text-gray-400 text-sm mt-4">
-              Showing {{ ((companiesCurrentPage - 1) * companiesPerPage) + 1 }} to {{ Math.min(companiesCurrentPage * companiesPerPage, companiesFiltered.length) }} of {{ companiesFiltered.length }} companies
+            <div v-if="!companiesInitialLoading && companiesInfinite.length > 0" class="text-center text-gray-400 text-sm mt-4">
+              Showing {{ companiesInfinite.length }} companies
+              <span v-if="companiesHasMore">(scroll for more)</span>
+            </div>
+
+            <!-- End of Results -->
+            <div v-if="!companiesHasMore && companiesInfinite.length > 0" class="text-center text-gray-500 text-sm mt-6 py-4">
+              <span class="inline-block px-4 py-2 rounded-full bg-gray-800/50 border border-gray-600/30">
+                ✨ You've reached the end
+              </span>
+            </div>
             </div>
           </div>
 
@@ -1259,21 +1516,6 @@
       </div> <!-- End Glass Container -->
     </div> <!-- End Lower Content Container -->
 
-    <!-- Create Company Modal -->
-    <CreateCompanyModal
-      :show="showCreateModal"
-      :form="companyForm"
-      :errors="errors"
-      :creating="creating"
-      :marketCapInput="marketCapInput"
-      :marketCapValidation="marketCapValidation"
-      :formatMarketCap="formatMarketCap"
-      @close="closeCreateModal"
-      @save="createCompany"
-      @market-cap-input="handleMarketCapInput"
-      @update:form="companyForm = $event"
-    />
-
     <!-- Company Details Modal -->
     <CompanyDetailsModal
       :show="showDetailsModal"
@@ -1287,12 +1529,15 @@
       :noteForm="noteForm"
       :noteErrors="errors"
       :creatingNote="creatingNote"
+      :isEditingResearchItem="isEditingResearchItem"
+      :editingResearchItemId="editingResearchItemId"
       :categories="categories"
       :documentForm="uploadForm"
       :documentErrors="errors"
       :uploading="uploading"
       :formatFileSize="formatFileSize"
       :insights="companyInsights"
+      :initialTab="modalInitialTab"
       @close="closeDetailsModal"
       @create-insight="handleCreateInsight"
       @save-edit="saveCompanyEdits"
@@ -1305,7 +1550,13 @@
       @save-document="uploadDocuments"
       @update:document-form="uploadForm = $event"
       @file-upload="handleDocumentUpload"
+      @edit-research="editResearchItem"
+      @delete-research="deleteResearchItem"
+      @delete-document="deleteDocument"
       @remove-file="removeUploadFile"
+      @add-url="addUrlToList"
+      @remove-url="removeUrlFromList"
+      @start-edit="startEditingCompany"
     />
 
     <!-- Note Creation Modal -->
@@ -1358,6 +1609,29 @@
       @switch-to-login="showRegisterModal = false; showLoginModal = true"
     />
 
+    <!-- Research Note Modal -->
+    <ResearchNoteModal
+      :show="showResearchNoteModal"
+      :researchNoteId="selectedResearchNoteId"
+      @close="closeResearchNoteModal"
+      @view-company="handleViewCompanyFromNote"
+    />
+
+    <!-- Create Company Modal -->
+    <CreateCompanyModal
+      :show="showCreateModal"
+      :form="companyForm"
+      :errors="errors"
+      :creating="creating"
+      :marketCapInput="marketCapInput"
+      :marketCapValidation="marketCapValidation"
+      :formatMarketCap="formatMarketCap"
+      @close="closeCreateModal"
+      @save="createCompany"
+      @market-cap-input="handleMarketCapInput"
+      @update:form="companyForm = $event"
+    />
+
   </div>
 </template>
 
@@ -1366,7 +1640,7 @@
 </style>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
@@ -1376,19 +1650,26 @@ import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import QuickBlogModal from '@/Components/Modals/QuickBlogModal.vue'
+import ActivityWidget from '@/Components/ActivityWidget.vue'
+import ActivityTimeline from '@/Components/ActivityTimeline.vue'
+import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 import LoginModal from '@/Components/Modals/LoginModal.vue'
 import RegisterModal from '@/Components/Modals/RegisterModal.vue'
 import OverflowMenu from '@/Components/Navigation/OverflowMenu.vue'
 import HamburgerMenu from '@/Components/Navigation/HamburgerMenu.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
+import SearchResultsTree from '@/Components/SearchResultsTree.vue'
 import { useDarkMode } from '@/composables/useDarkMode'
+import { useInfiniteScroll } from '@/composables/useInfiniteScroll'
 import axios from 'axios'
 
 const $page = usePage()
-const companies = ref([])
 const searchQuery = ref('')
 const showCreateModal = ref(false)
 const showDetailsModal = ref(false)
+const modalInitialTab = ref('overview')
+const showResearchNoteModal = ref(false)
+const selectedResearchNoteId = ref(null)
 const debugModalVisible = ref(false)
 const showNoteModal = ref(false)
 const showUploadModal = ref(false)
@@ -1442,6 +1723,11 @@ const editingCompany = ref(false)
 const starsCanvas = ref(null)
 const activeTab = ref('overview') // Tab navigation state
 
+// Latest data for dashboard widgets
+const latestCompanies = ref([])
+const latestResearch = ref([])
+const latestInsights = ref([])
+
 // Tab configuration for responsive navigation
 const allTabs = ref([
   {
@@ -1472,13 +1758,19 @@ const allTabs = ref([
 
 // Responsive navigation logic
 const visibleTabs = computed(() => {
-  // Show first 2 tabs on tablet (sm to lg), all on desktop (lg+)
-  return allTabs.value.slice(0, 2)
+  // Show first 2 tabs on mobile/tablet, all tabs on desktop
+  if (windowWidth.value >= 1024) {
+    return allTabs.value // Show all tabs on desktop (lg+)
+  }
+  return allTabs.value.slice(0, 2) // Show first 2 tabs on mobile/tablet
 })
 
 const hiddenTabs = computed(() => {
-  // Show remaining tabs in overflow menu on tablet
-  return allTabs.value.slice(2)
+  // Show remaining tabs in overflow menu on mobile/tablet
+  if (windowWidth.value >= 1024) {
+    return [] // No hidden tabs on desktop
+  }
+  return allTabs.value.slice(2) // Show remaining tabs in overflow menu on mobile/tablet
 })
 
 // Blog post viewing state
@@ -1501,6 +1793,10 @@ const searchResults = ref({
 const isSearching = ref(false)
 const showSearchResults = ref(false)
 const showHeaderSearch = ref(false)
+const searchResultsViewMode = ref('grid') // 'grid', 'list', 'tree'
+
+// Window width tracking for responsive navigation
+const windowWidth = ref(typeof window !== 'undefined' ? window.innerWidth : 1024)
 
 // Companies Tab State
 const companiesLoading = ref(false)
@@ -1509,6 +1805,55 @@ const companiesSelectedSector = ref('')
 const companiesSortBy = ref('name')
 const companiesCurrentPage = ref(1)
 const companiesPerPage = ref(10)
+
+// Infinite Scroll for Companies
+const fetchCompaniesPage = async ({ page, limit }) => {
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    })
+
+    // Add search filter
+    if (companiesSearchQuery.value) {
+      params.append('search', companiesSearchQuery.value)
+    }
+
+    const response = await axios.get(`/api/companies?${params.toString()}`)
+
+    // Filter by sector client-side since API doesn't support it yet
+    let filteredData = response.data.data
+    if (companiesSelectedSector.value && companiesSelectedSector.value !== 'all') {
+      filteredData = filteredData.filter(company =>
+        company.sector === companiesSelectedSector.value
+      )
+    }
+
+    return {
+      data: filteredData,
+      pagination: response.data.pagination
+    }
+  } catch (error) {
+    console.error('Error fetching companies page:', error)
+    throw error
+  }
+}
+
+const {
+  items: companiesInfinite,
+  isLoading: companiesInfiniteLoading,
+  isInitialLoading: companiesInitialLoading,
+  hasMorePages: companiesHasMore,
+  isEmpty: companiesIsEmpty,
+  showLoadingIndicator: companiesShowLoading,
+  initialize: initializeCompanies,
+  reset: resetCompanies,
+  refresh: refreshCompanies,
+  setupObserver: setupCompaniesObserver,
+} = useInfiniteScroll(fetchCompaniesPage, {
+  initialLimit: 10,
+  threshold: 200,
+})
 
 // Pagination State
 const pagination = ref({
@@ -1536,13 +1881,22 @@ const noteForm = ref({
   files: []
 })
 
+// Edit mode state for research items
+const isEditingResearchItem = ref(false)
+const editingResearchItemId = ref(null)
+
 const uploadForm = ref({
   title: '',
   description: '',
+  ai_synopsis: '',
   company_id: '',
   category_id: '',
   visibility: 'private',
-  files: []
+  files: [],
+  uploadType: 'file',
+  documentUrl: '',
+  documentName: '',
+  urls: []
 })
 
 const marketCapInput = ref('')
@@ -1550,11 +1904,11 @@ const marketCapValidation = ref({ state: '', timer: null })
 
 const filteredCompanies = computed(() => {
   if (!searchQuery.value.trim()) {
-    return companies.value
+    return companiesInfinite.value
   }
-  
+
   const query = searchQuery.value.toLowerCase().trim()
-  return companies.value.filter(company => 
+  return companiesInfinite.value.filter(company =>
     company.name.toLowerCase().includes(query) ||
     company.ticker.toLowerCase().includes(query) ||
     (company.sector && company.sector.toLowerCase().includes(query)) ||
@@ -1566,6 +1920,26 @@ const canAccessAdmin = computed(() => {
   const user = usePage().props.auth?.user
   return user && (user.roles?.some(role => role.name === 'admin') || user.permissions?.some(permission => ['manage users', 'manage roles', 'manage permissions'].includes(permission.name)))
 })
+
+// Page title computed property
+const getPageTitle = () => {
+  if (showSearchResults.value) {
+    return 'Search Results'
+  }
+
+  switch (activeTab.value) {
+    case 'overview':
+      return 'Dashboard Overview'
+    case 'companies':
+      return 'Companies'
+    case 'research':
+      return 'Research Notes'
+    case 'insights':
+      return 'Market Insights'
+    default:
+      return 'Dashboard'
+  }
+}
 
 // Pagination computed properties
 const paginatedCompanies = computed(() => {
@@ -1592,17 +1966,108 @@ const totalPages = computed(() => ({
   researchItems: Math.ceil(searchResults.value.researchItems.length / pagination.value.researchItems.perPage)
 }))
 
+// Tree data structure for tree view
+const treeData = computed(() => {
+  const tree = []
+
+  // Group by sectors first
+  const sectorGroups = new Map()
+
+  // Process companies
+  searchResults.value.companies.forEach(company => {
+    const sector = company.sector || 'Uncategorized'
+    if (!sectorGroups.has(sector)) {
+      sectorGroups.set(sector, {
+        id: `sector-${sector}`,
+        name: sector,
+        type: 'sector',
+        children: []
+      })
+    }
+
+    const companyNode = {
+      id: `company-${company.id}`,
+      name: company.name,
+      ticker: company.ticker_symbol,
+      type: 'company',
+      data: company,
+      children: []
+    }
+
+    sectorGroups.get(sector).children.push(companyNode)
+  })
+
+  // Add research items to their respective companies
+  searchResults.value.researchItems.forEach(item => {
+    if (item.company_id) {
+      // Find the company in the tree
+      for (const sector of sectorGroups.values()) {
+        const company = sector.children.find(c => c.data && c.data.id === item.company_id)
+        if (company) {
+          company.children.push({
+            id: `research-${item.id}`,
+            name: item.title || item.name,
+            type: 'research',
+            category: item.category?.name,
+            data: item
+          })
+          break
+        }
+      }
+    } else {
+      // Orphaned research items go to their own section
+      let orphanedSection = sectorGroups.get('Research Items')
+      if (!orphanedSection) {
+        orphanedSection = {
+          id: 'sector-research',
+          name: 'Research Items',
+          type: 'sector',
+          children: []
+        }
+        sectorGroups.set('Research Items', orphanedSection)
+      }
+
+      orphanedSection.children.push({
+        id: `research-${item.id}`,
+        name: item.title || item.name,
+        type: 'research',
+        category: item.category?.name,
+        data: item
+      })
+    }
+  })
+
+  // Add blog posts as their own section
+  if (searchResults.value.blogPosts.length > 0) {
+    const blogSection = {
+      id: 'sector-blog',
+      name: 'Blog Posts',
+      type: 'sector',
+      children: searchResults.value.blogPosts.map(post => ({
+        id: `blog-${post.id}`,
+        name: post.title,
+        type: 'blog',
+        excerpt: post.excerpt,
+        data: post
+      }))
+    }
+    sectorGroups.set('Blog Posts', blogSection)
+  }
+
+  return Array.from(sectorGroups.values()).filter(sector => sector.children.length > 0)
+})
+
 // Companies Tab Computed Properties
 const companiesSectors = computed(() => {
   const sectors = new Set()
-  companies.value.forEach(company => {
+  companiesInfinite.value.forEach(company => {
     if (company.sector) sectors.add(company.sector)
   })
   return Array.from(sectors).sort()
 })
 
 const companiesFiltered = computed(() => {
-  let filtered = companies.value
+  let filtered = companiesInfinite.value
 
   // Search filter
   if (companiesSearchQuery.value.trim()) {
@@ -1667,7 +2132,7 @@ const companiesPageNumbers = computed(() => {
 })
 
 const totalCompanyResearchItems = computed(() =>
-  companies.value.reduce((total, company) => total + (company.researchItemsCount || 0), 0)
+  companiesInfinite.value.reduce((total, company) => total + (company.researchItemsCount || 0), 0)
 )
 
 const fetchCompanies = async (search = '') => {
@@ -1675,7 +2140,7 @@ const fetchCompanies = async (search = '') => {
     loading.value = true
     const params = search ? { search } : {}
     const response = await axios.get('/api/companies', { params })
-    companies.value = response.data
+    companiesInfinite.value = response.data.data || response.data
   } catch (error) {
     console.error('Error fetching companies:', error)
   } finally {
@@ -1736,9 +2201,9 @@ const performUniversalSearch = async (query) => {
     })
 
     searchResults.value = {
-      companies: companiesRes.data, // Remove slicing - pagination will handle display
-      blogPosts: blogPostsRes.data,
-      researchItems: researchItemsRes.data
+      companies: companiesRes.data.data || [], // Extract the data array from the API response
+      blogPosts: blogPostsRes.data.data || [],
+      researchItems: researchItemsRes.data.data || []
     }
 
     // Reset pagination when new search results arrive
@@ -1815,74 +2280,11 @@ const handleMobileSearch = (query) => {
   }
 }
 
-// Perform search across all content types
-const performSearch = async () => {
-  if (!searchQuery.value.trim() || searchQuery.value.length < 2) {
-    showSearchResults.value = false
-    return
-  }
-
-  isSearching.value = true
-  showSearchResults.value = true
-
-  try {
-    const query = searchQuery.value.trim()
-
-    // Reset search results
-    searchResults.value = {
-      companies: [],
-      blogPosts: [],
-      researchItems: []
-    }
-
-    // Search companies (public endpoint)
-    try {
-      const companiesResponse = await axios.get('/api/companies', {
-        params: { search: query }
-      })
-      searchResults.value.companies = companiesResponse.data || []
-    } catch (error) {
-      console.error('Error searching companies:', error)
-      searchResults.value.companies = []
-    }
-
-    // Search blog posts and research items (requires authentication)
-    if ($page.props.auth.user) {
-      try {
-        // Search blog posts
-        const blogResponse = await axios.get('/api/blog-posts/search', {
-          params: { q: query }
-        })
-        searchResults.value.blogPosts = blogResponse.data || []
-      } catch (error) {
-        console.error('Error searching blog posts:', error)
-        searchResults.value.blogPosts = []
-      }
-
-      try {
-        // Search research items
-        const researchResponse = await axios.get('/api/research-items', {
-          params: { search: query }
-        })
-        searchResults.value.researchItems = researchResponse.data || []
-      } catch (error) {
-        console.error('Error searching research items:', error)
-        searchResults.value.researchItems = []
-      }
-    }
-
-  } catch (error) {
-    console.error('Search error:', error)
-  } finally {
-    isSearching.value = false
-  }
-}
 
 // Search result click handlers
-const openCompanyDetails = (company) => {
-  selectedCompany.value = company
-  showDetailsModal.value = true
+const openCompanyDetails = async (company) => {
   closeSearch()
+  await viewCompanyDetails(company)
 }
 
 const openBlogPost = (post) => {
@@ -1946,12 +2348,24 @@ const insightsCategoryOptions = computed(() => {
 })
 
 const openResearchItem = (item) => {
-  // Navigate to research item or open modal - implement based on your research item structure
-  console.log('Opening research item:', item)
+  // Close the search modal
   closeSearch()
+
+  // Open the research note modal with the item ID
+  selectedResearchNoteId.value = item.id
+  showResearchNoteModal.value = true
 }
 
-
+const handleTreeNodeClick = (node) => {
+  // Handle tree node clicks based on the node type
+  if (node.type === 'company' && node.data) {
+    openCompanyDetails(node.data)
+  } else if (node.type === 'blog' && node.data) {
+    openBlogPost(node.data)
+  } else if (node.type === 'research' && node.data) {
+    openResearchItem(node.data)
+  }
+}
 
 const formatMarketCap = (value) => {
   if (!value) return 'N/A'
@@ -2191,7 +2605,7 @@ const createCompany = async () => {
     }
     
     const response = await axios.post('/api/companies', formData)
-    companies.value.unshift(response.data)
+    companiesInfinite.value.unshift(response.data)
     
     // Reset form and close modal
     companyForm.value = {
@@ -2222,13 +2636,11 @@ const createCompany = async () => {
 }
 
 const viewCompanyDetails = async (company) => {
-  console.log('viewCompanyDetails called with:', company)
   try {
     // Close create modal if open
     showCreateModal.value = false
     
     // Fetch detailed company information from API
-    console.log('Fetching company details for ID:', company.id)
     const response = await axios.get(`/api/companies/${company.id}`)
     
     // Set both values in sequence
@@ -2265,22 +2677,23 @@ const viewCompanyDetails = async (company) => {
     uploadForm.value.company_id = selectedCompany.value.id
     uploadForm.value.title = ''
     uploadForm.value.description = ''
+    uploadForm.value.ai_synopsis = ''
     uploadForm.value.category_id = ''
     uploadForm.value.visibility = 'private'
     uploadForm.value.files = []
+    uploadForm.value.uploadType = 'file'
+    uploadForm.value.documentUrl = ''
+    uploadForm.value.documentName = ''
+    uploadForm.value.urls = []
     
     // Load company insights
     await loadCompanyInsights(selectedCompany.value.id)
 
     showDetailsModal.value = true
 
-    console.log('selectedCompany set to:', selectedCompany.value)
-    console.log('showDetailsModal set to:', showDetailsModal.value)
-    console.log('Both values:', !!selectedCompany.value, showDetailsModal.value)
 
     // Force Vue to detect changes
     await nextTick()
-    console.log('After nextTick - values:', !!selectedCompany.value, showDetailsModal.value)
   } catch (error) {
     console.error('Error fetching company details:', error)
     // Fallback to basic company data if API call fails
@@ -2316,9 +2729,9 @@ const deleteCompany = async (company) => {
     await axios.delete(`/api/companies/${company.id}`)
     
     // Remove company from the list
-    const index = companies.value.findIndex(c => c.id === company.id)
+    const index = companiesInfinite.value.findIndex(c => c.id === company.id)
     if (index !== -1) {
-      companies.value.splice(index, 1)
+      companiesInfinite.value.splice(index, 1)
     }
     
     // Close modal
@@ -2369,9 +2782,14 @@ const openUploadModal = (company) => {
   uploadForm.value.company_id = company.id
   uploadForm.value.title = ''
   uploadForm.value.description = ''
+  uploadForm.value.ai_synopsis = ''
   uploadForm.value.category_id = ''
   uploadForm.value.visibility = 'private'
   uploadForm.value.files = []
+  uploadForm.value.uploadType = 'file'
+  uploadForm.value.documentUrl = ''
+  uploadForm.value.documentName = ''
+  uploadForm.value.urls = []
   errors.value = {}
   showUploadModal.value = true
 }
@@ -2380,11 +2798,18 @@ const createNote = async () => {
   try {
     creatingNote.value = true
     errors.value = {}
-    
+
+    // Determine if we're editing or creating
+    const isEditing = isEditingResearchItem.value && editingResearchItemId.value
+    const url = isEditing
+      ? `/api/research-items/${editingResearchItemId.value}`
+      : '/api/research-items'
+    const method = isEditing ? 'put' : 'post'
+
     // Use FormData if files are attached, otherwise use regular JSON
     let requestData
     let requestConfig = {}
-    
+
     if (noteForm.value.files && noteForm.value.files.length > 0) {
       // Use FormData for file uploads
       const formData = new FormData()
@@ -2392,16 +2817,21 @@ const createNote = async () => {
       formData.append('content', noteForm.value.content)
       formData.append('company_id', noteForm.value.company_id)
       formData.append('visibility', noteForm.value.visibility)
-      
+
       if (noteForm.value.category_id) {
         formData.append('category_id', noteForm.value.category_id)
       }
-      
+
+      // For PUT requests with FormData, we need to add _method
+      if (isEditing) {
+        formData.append('_method', 'PUT')
+      }
+
       // Append files
       noteForm.value.files.forEach((file, index) => {
         formData.append(`attachments[${index}]`, file)
       })
-      
+
       requestData = formData
       requestConfig = {
         headers: {
@@ -2418,8 +2848,8 @@ const createNote = async () => {
         visibility: noteForm.value.visibility
       }
     }
-    
-    const response = await axios.post('/api/research-items', requestData, requestConfig)
+
+    const response = await axios[method](url, requestData, requestConfig)
     
     // Reset form and close modal
     noteForm.value = {
@@ -2430,6 +2860,11 @@ const createNote = async () => {
       visibility: 'private',
       files: []
     }
+
+    // Reset edit mode
+    isEditingResearchItem.value = false
+    editingResearchItemId.value = null
+
     showNoteModal.value = false
     
     // Refresh company details if modal is open
@@ -2456,20 +2891,32 @@ const uploadDocuments = async () => {
     
     const formData = new FormData()
     formData.append('title', uploadForm.value.title)
-    formData.append('content', uploadForm.value.description)
+    formData.append('description', uploadForm.value.description)
     formData.append('company_id', uploadForm.value.company_id)
     formData.append('visibility', uploadForm.value.visibility)
+
+    formData.append('ai_synopsis', uploadForm.value.ai_synopsis || '')
     
     if (uploadForm.value.category_id) {
       formData.append('category_id', uploadForm.value.category_id)
     }
     
-    // Append files
-    uploadForm.value.files.forEach((file, index) => {
-      formData.append(`attachments[${index}]`, file)
-    })
+    // Append files or URLs based on upload type
+    if (uploadForm.value.uploadType === 'file') {
+      uploadForm.value.files.forEach((file, index) => {
+        formData.append(`attachments[${index}]`, file)
+      })
+    } else if (uploadForm.value.uploadType === 'url') {
+      // Handle URL uploads
+      if (uploadForm.value.urls && uploadForm.value.urls.length > 0) {
+        uploadForm.value.urls.forEach((urlItem, index) => {
+          formData.append(`document_urls[${index}]`, urlItem.url)
+          formData.append(`document_names[${index}]`, urlItem.name || '')
+        })
+      }
+    }
     
-    const response = await axios.post('/api/research-items', formData, {
+    const response = await axios.post('/api/documents', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
@@ -2479,10 +2926,15 @@ const uploadDocuments = async () => {
     uploadForm.value = {
       title: '',
       description: '',
+      ai_synopsis: '',
       company_id: '',
       category_id: '',
       visibility: 'private',
-      files: []
+      files: [],
+      uploadType: 'file',
+      documentUrl: '',
+      documentName: '',
+      urls: []
     }
     showUploadModal.value = false
     
@@ -2510,6 +2962,125 @@ const handleDocumentUpload = (event) => {
 
 const removeUploadFile = (index) => {
   uploadForm.value.files.splice(index, 1)
+}
+
+const addUrlToList = (urlData) => {
+  if (urlData.url) {
+    uploadForm.value.urls.push(urlData)
+    // Clear the form fields
+    uploadForm.value.documentUrl = ''
+    uploadForm.value.documentName = ''
+  }
+}
+
+const removeUrlFromList = (index) => {
+  uploadForm.value.urls.splice(index, 1)
+}
+
+const editResearchItem = (item) => {
+  // Populate the note form with existing research item data
+  noteForm.value = {
+    id: item.id,
+    title: item.title || '',
+    content: item.content || '',
+    company_id: item.company_id || selectedCompany.value?.id,
+    category_id: item.category_id || '',
+    visibility: item.visibility || 'private',
+    files: [] // Files will be handled separately as they're already uploaded
+  }
+
+  // Set edit mode
+  isEditingResearchItem.value = true
+  editingResearchItemId.value = item.id
+
+  // Switch to the research-new tab to show the form
+  if (selectedCompany.value) {
+    // Set the initial tab for the modal
+    modalInitialTab.value = 'research-new'
+
+    // If modal is already open, we need to manually set the active tab
+    // This will be handled by watching the edit mode state in the modal
+  }
+}
+
+const deleteResearchItem = async (item) => {
+  if (!confirm(`Are you sure you want to delete: ${item.title}?`)) {
+    return
+  }
+
+  try {
+    const response = await axios.delete(`/api/research-items/${item.id}`)
+
+    // Check if deletion was successful (status 200-299)
+    if (response.status >= 200 && response.status < 300) {
+      // Remove from local data
+      if (selectedCompany.value?.researchItems) {
+        const index = selectedCompany.value.researchItems.findIndex(r => r.id === item.id)
+        if (index !== -1) {
+          selectedCompany.value.researchItems.splice(index, 1)
+        }
+      }
+
+      // Refresh company data to ensure consistency
+      if (selectedCompany.value) {
+        await viewCompanyDetails(selectedCompany.value)
+      }
+
+      successMessage.value = 'Research item deleted successfully'
+      setTimeout(() => {
+        successMessage.value = ''
+      }, 3000)
+    }
+  } catch (error) {
+    console.error('Error deleting research item:', error)
+    if (error.response?.status === 403) {
+      alert('You can only delete research items that you created.')
+    } else if (error.response?.status === 404) {
+      alert('Research item not found.')
+    } else {
+      alert('Failed to delete research item. Please try again.')
+    }
+  }
+}
+
+const deleteDocument = async (document) => {
+  if (!confirm(`Are you sure you want to delete: ${document.title}?`)) {
+    return
+  }
+
+  try {
+    const response = await axios.delete(`/api/documents/${document.id}`)
+
+    // Check if deletion was successful (status 200-299)
+    if (response.status >= 200 && response.status < 300) {
+      // Remove from local data
+      if (selectedCompany.value?.documents) {
+        const index = selectedCompany.value.documents.findIndex(d => d.id === document.id)
+        if (index !== -1) {
+          selectedCompany.value.documents.splice(index, 1)
+        }
+      }
+
+      // Refresh company data to ensure consistency
+      if (selectedCompany.value) {
+        await viewCompanyDetails(selectedCompany.value)
+      }
+
+      successMessage.value = 'Document deleted successfully'
+      setTimeout(() => {
+        successMessage.value = ''
+      }, 3000)
+    }
+  } catch (error) {
+    console.error('Error deleting document:', error)
+    if (error.response?.status === 403) {
+      alert('You can only delete documents that you created.')
+    } else if (error.response?.status === 404) {
+      alert('Document not found.')
+    } else {
+      alert('Failed to delete document. Please try again.')
+    }
+  }
 }
 
 const handleNoteFileUpload = (event) => {
@@ -2546,14 +3117,14 @@ const getExcerpt = (content) => {
 
 // New dashboard utility functions
 const formatTotalMarketCap = () => {
-  const total = companies.value.reduce((sum, company) => {
+  const total = companiesInfinite.value.reduce((sum, company) => {
     return sum + (company.marketCap || 0)
   }, 0)
   return formatMarketCap(total)
 }
 
 const getTotalResearchItems = () => {
-  return companies.value.reduce((sum, company) => {
+  return companiesInfinite.value.reduce((sum, company) => {
     return sum + (company.researchItemsCount || 0)
   }, 0)
 }
@@ -2561,7 +3132,7 @@ const getTotalResearchItems = () => {
 const getTopSectors = () => {
   const sectorCounts = {}
 
-  companies.value.forEach(company => {
+  companiesInfinite.value.forEach(company => {
     const sector = company.sector || 'Other'
     sectorCounts[sector] = (sectorCounts[sector] || 0) + 1
   })
@@ -2573,11 +3144,11 @@ const getTopSectors = () => {
 }
 
 const getLargeCapCount = () => {
-  return companies.value.filter(company => (company.marketCap || 0) > 10000000000).length
+  return companiesInfinite.value.filter(company => (company.marketCap || 0) > 10000000000).length
 }
 
 const getMidCapCount = () => {
-  return companies.value.filter(company => {
+  return companiesInfinite.value.filter(company => {
     const marketCap = company.marketCap || 0
     return marketCap >= 2000000000 && marketCap <= 10000000000
   }).length
@@ -2629,7 +3200,7 @@ const bulkDeleteCompanies = async () => {
     await Promise.all(deletePromises)
     
     // Remove deleted companies from local state
-    companies.value = companies.value.filter(company => 
+    companiesInfinite.value = companiesInfinite.value.filter(company =>
       !selectedCompanies.value.includes(company.id)
     )
     
@@ -2655,7 +3226,7 @@ const editCompany = (company) => {
 
 const startEditingCompany = () => {
   if (!selectedCompany.value) return
-  
+
   // Populate form with current company data
   companyForm.value = {
     name: selectedCompany.value.name || '',
@@ -2663,7 +3234,8 @@ const startEditingCompany = () => {
     sector: selectedCompany.value.sector || '',
     industry: selectedCompany.value.industry || '',
     market_cap: selectedCompany.value.marketCap || '',
-    description: selectedCompany.value.description || ''
+    description: selectedCompany.value.description || '',
+    reports_financial_data_in: selectedCompany.value.reports_financial_data_in ?? ''
   }
   
   // Populate edit market cap input if there's a value
@@ -2691,28 +3263,51 @@ const saveCompanyEdits = async () => {
       sector: companyForm.value.sector,
       industry: companyForm.value.industry,
       market_cap: parseMarketCap(companyForm.value.market_cap),
-      description: companyForm.value.description
+      description: companyForm.value.description,
+      reports_financial_data_in: companyForm.value.reports_financial_data_in
     })
     
     // Update the company in the list
-    const index = companies.value.findIndex(c => c.id === selectedCompany.value.id)
+    const index = companiesInfinite.value.findIndex(c => c.id === selectedCompany.value.id)
     if (index !== -1) {
-      companies.value[index] = { ...companies.value[index], ...response.data }
+      companiesInfinite.value[index] = { ...companiesInfinite.value[index], ...response.data }
     }
     
-    // Update selectedCompany
+    // Update selectedCompany with the saved data
     selectedCompany.value = { ...selectedCompany.value, ...response.data }
-    
-    // Reset form and exit edit mode
+
+    // Update the form with the saved data so fields show current values
     companyForm.value = {
-      name: '',
-      ticker_symbol: '',
-      sector: '',
-      industry: '',
-      market_cap: '',
-      description: ''
+      name: response.data.name || '',
+      ticker_symbol: response.data.ticker || '',
+      sector: response.data.sector || '',
+      industry: response.data.industry || '',
+      market_cap: response.data.marketCap || '',
+      description: response.data.description || '',
+      reports_financial_data_in: response.data.reports_financial_data_in ?? ''
     }
+
+    // Show success message
+    errors.value = { success: 'Company information updated successfully!' }
+
+    // Update edit market cap input with saved value
+    if (response.data.marketCap) {
+      editMarketCapInput.value = formatMarketCapInput(response.data.marketCap)
+      editMarketCapValidation.value.state = 'valid'
+    } else {
+      editMarketCapInput.value = ''
+      editMarketCapValidation.value.state = ''
+    }
+
+    // Exit edit mode but keep the field values populated
     isEditingCompany.value = false
+
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      if (errors.value.success) {
+        delete errors.value.success
+      }
+    }, 3000)
     
   } catch (error) {
     if (error.response && error.response.status === 422) {
@@ -2730,7 +3325,22 @@ const closeDetailsModal = () => {
   showDetailsModal.value = false
   isEditingCompany.value = false
   selectedCompany.value = null
+  modalInitialTab.value = 'overview' // Reset to default tab
   errors.value = {}
+}
+
+// Research Note Modal Methods
+const closeResearchNoteModal = () => {
+  showResearchNoteModal.value = false
+  selectedResearchNoteId.value = null
+}
+
+const handleViewCompanyFromNote = async (company) => {
+  // Close the research note modal first
+  closeResearchNoteModal()
+
+  // Open the company details modal
+  await viewCompanyDetails(company)
 }
 
 // Companies Tab Methods
@@ -2738,7 +3348,7 @@ const fetchCompaniesWithResearch = async () => {
   try {
     companiesLoading.value = true
     const response = await axios.get('/api/companies')
-    companies.value = response.data
+    companiesInfinite.value = response.data.data || response.data
   } catch (error) {
     console.error('Error fetching companies with research:', error)
   } finally {
@@ -2773,26 +3383,108 @@ const nextCompaniesPage = () => {
 
 const viewCompanyResearch = (company) => {
   // This could open a modal or navigate to research items for this company
-  console.log('Viewing research for company:', company.name)
   // Future implementation: Could switch to research tab with company filter
 }
 
 // Watch for companies tab state changes
-watch([companiesSearchQuery, companiesSelectedSector, companiesSortBy], () => {
+watch([companiesSearchQuery, companiesSelectedSector, companiesSortBy], async () => {
   companiesCurrentPage.value = 1 // Reset to first page when filters change
+
+  // Reset infinite scroll when filters change
+  const container = document.querySelector('[data-infinite-companies]')
+  if (container) {
+    await resetCompanies(container)
+    await initializeCompanies(container)
+  }
 })
 
-onMounted(() => {
+// Latest additions methods
+const fetchLatestCompanies = async () => {
+  try {
+    const response = await axios.get('/api/activities/latest/companies?limit=5')
+    latestCompanies.value = response.data || []
+  } catch (error) {
+    console.error('Error fetching latest companies:', error)
+  }
+}
+
+const fetchLatestResearch = async () => {
+  try {
+    const response = await axios.get('/api/activities/latest/research?limit=5')
+    latestResearch.value = response.data || []
+  } catch (error) {
+    console.error('Error fetching latest research:', error)
+  }
+}
+
+const fetchLatestInsights = async () => {
+  try {
+    const response = await axios.get('/api/activities/latest/insights?limit=5')
+    latestInsights.value = response.data || []
+  } catch (error) {
+    console.error('Error fetching latest insights:', error)
+  }
+}
+
+const formatTimeAgo = (dateString) => {
+  if (!dateString) return ''
+
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffInSeconds = Math.floor((now - date) / 1000)
+
+  if (diffInSeconds < 60) return 'just now'
+  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`
+  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`
+  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`
+
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  })
+}
+
+onMounted(async () => {
   fetchCompanies()
   fetchCompaniesWithResearch() // Fetch companies with research counts for companies tab
   fetchCategoriesAndTags()
   fetchGitInfo() // Fetch current git information for footer
+
+  // Fetch latest data for dashboard widgets
+  fetchLatestCompanies()
+  fetchLatestResearch()
+  fetchLatestInsights()
 
   // Initialize dark mode using the composable
   initializeDarkMode()
 
   // Initialize shooting stars animation
   initStarsAnimation()
+
+  // Initialize infinite scroll for companies when component mounts
+  await nextTick()
+  const companiesContainer = document.querySelector('[data-infinite-companies]')
+  if (companiesContainer) {
+    await initializeCompanies(companiesContainer)
+  }
+
+  // Add window resize listener for responsive navigation
+  const handleResize = () => {
+    windowWidth.value = window.innerWidth
+  }
+  window.addEventListener('resize', handleResize)
+
+  // Store the function reference for cleanup
+  window.__resizeHandler = handleResize
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (window.__resizeHandler) {
+    window.removeEventListener('resize', window.__resizeHandler)
+    delete window.__resizeHandler
+  }
 })
 
 // Canvas stars animation
@@ -3050,3 +3742,12 @@ const initStarsAnimation = () => {
   }, 200)
 }
 </script>
+
+<style scoped>
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>

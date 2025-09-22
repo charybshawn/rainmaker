@@ -10,28 +10,22 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class ResearchItem extends Model implements HasMedia
+class Document extends Model implements HasMedia
 {
     use InteractsWithMedia, TracksActivity;
+
     protected $fillable = [
         'title',
-        'content',
-        'summary',
+        'description',
         'ai_synopsis',
-        'visibility',
-        'status',
-        'rating',
-        'metadata',
-        'published_at',
         'company_id',
         'category_id',
         'user_id',
+        'visibility',
     ];
 
     protected $casts = [
-        'metadata' => 'array',
-        'published_at' => 'datetime',
-        'rating' => 'decimal:1',
+        'visibility' => 'string',
     ];
 
     public function company(): BelongsTo
@@ -83,5 +77,13 @@ class ResearchItem extends Model implements HasMedia
             ->sharpen(10)
             ->performOnCollections('attachments')
             ->nonQueued();
+    }
+
+    /**
+     * Get the title/name of this model for activity descriptions.
+     */
+    public function getActivityTitle(): string
+    {
+        return $this->title;
     }
 }

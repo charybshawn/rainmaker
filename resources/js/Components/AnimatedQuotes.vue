@@ -135,7 +135,7 @@ const fetchQuotes = async () => {
       startQuoteCycling()
     }
   } catch (error) {
-    console.error('Error fetching quotes:', error)
+    // Error fetching quotes, falling back to default
     // Fallback to a default quote if API fails
     quotes.value = [{
       id: 'fallback',
@@ -152,11 +152,11 @@ const fetchQuotes = async () => {
 const startQuoteCycling = () => {
   if (quotes.value.length <= 1) return
 
-  console.log(`Starting quote cycling with ${quotes.value.length} quotes, ${QUOTE_DURATION}ms interval`)
+  // Starting quote cycling
 
   intervalId.value = setInterval(() => {
     const nextIndex = (currentQuoteIndex.value + 1) % quotes.value.length
-    console.log(`Cycling from quote ${currentQuoteIndex.value} to ${nextIndex}`)
+    // Cycling to next quote
     currentQuoteIndex.value = nextIndex
   }, QUOTE_DURATION)
 }

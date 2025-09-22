@@ -1,5 +1,6 @@
 <template>
-  <div v-show="show && company" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
+  <Teleport to="body">
+    <div v-show="show && company" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50" @click.self="$emit('close')">
     <div class="bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 max-w-6xl w-full max-h-[90vh] overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] flex flex-col transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
       <!-- Modal Header -->
       <div class="sticky top-0 bg-black/10 backdrop-blur-xl border-b border-white/20 px-8 py-6 rounded-t-2xl" style="backdrop-filter: blur(20px) saturate(180%);">
@@ -35,7 +36,7 @@
           <button
             v-for="tab in tabs"
             :key="tab.id"
-            @click="activeTab = tab.id"
+            @click="handleTabClick(tab.id)"
             :class="[
               'py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300',
               activeTab === tab.id
@@ -172,6 +173,14 @@
               <div v-if="editErrors.general" class="bg-gradient-to-br from-red-500/20 via-red-400/10 to-transparent backdrop-blur-xl border border-red-400/30 text-red-200 px-4 py-3 rounded-xl mb-4" style="backdrop-filter: blur(20px) saturate(180%);">
                 {{ editErrors.general }}
               </div>
+
+              <!-- Success Message -->
+              <div v-if="editErrors.success" class="bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent backdrop-blur-xl border border-green-400/30 text-green-200 px-4 py-3 rounded-xl mb-4 flex items-center space-x-2" style="backdrop-filter: blur(20px) saturate(180%);">
+                <svg class="w-5 h-5 text-green-400 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>{{ editErrors.success }}</span>
+              </div>
               
               <!-- Two Column Grid -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -305,8 +314,8 @@
                     <label for="edit_reports_financial_data_in" class="block text-sm font-medium text-white mb-2">Reports Financial Data In</label>
                     <select
                       id="edit_reports_financial_data_in"
-                      :value="editForm.reports_financial_data_in"
-                      @input="$emit('update:edit-form', { ...editForm, reports_financial_data_in: $event.target.value })"
+                      :key="`currency-${editForm.reports_financial_data_in || 'empty'}`"
+                      v-model="currencyModel"
                       class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
                       style="backdrop-filter: blur(20px) saturate(180%);"
                     >
@@ -368,43 +377,8 @@
             <div class="absolute -top-8 right-12 w-2 h-2 bg-purple-400/40 rounded-full blur-sm animate-pulse delay-1000"></div>
             <div class="absolute -bottom-6 left-8 w-1.5 h-1.5 bg-green-400/30 rounded-full blur-sm animate-pulse delay-500"></div>
 
-            <div class="flex items-center justify-between mb-8">
-              <div class="flex items-center space-x-6">
-                <h3 class="text-2xl font-bold text-white/90">📚 Research & Notes</h3>
-
-                <!-- View Toggle -->
-                <div class="backdrop-blur-3xl bg-gradient-to-r from-white/5 via-white/10 to-white/5 rounded-full p-1 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] border border-white/10">
-                  <button
-                    @click="researchViewMode = 'cards'"
-                    :class="[
-                      'flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-500 hover:scale-105',
-                      researchViewMode === 'cards'
-                        ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
-                        : 'text-white/60 hover:text-white hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                    ]"
-                  >
-                    <svg class="w-4 h-4" :class="researchViewMode === 'cards' ? 'shadow-[0_0_5px_rgba(59,130,246,0.3)]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                    </svg>
-                    <span class="text-sm font-medium">Cards</span>
-                  </button>
-                  <button
-                    @click="researchViewMode = 'list'"
-                    :class="[
-                      'flex items-center space-x-2 px-4 py-2 rounded-full transition-all duration-500 hover:scale-105',
-                      researchViewMode === 'list'
-                        ? 'bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent text-blue-200 scale-105 shadow-[0_0_8px_rgba(59,130,246,0.2)]'
-                        : 'text-white/60 hover:text-white hover:shadow-[0_0_6px_rgba(255,255,255,0.1)]'
-                    ]"
-                  >
-                    <svg class="w-4 h-4" :class="researchViewMode === 'list' ? 'shadow-[0_0_5px_rgba(59,130,246,0.3)]' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                    </svg>
-                    <span class="text-sm font-medium">List</span>
-                  </button>
-                </div>
-              </div>
-
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="text-2xl font-bold text-white/90">📚 Research & Notes</h3>
               <button
                 @click="activeTab = 'research-new'"
                 class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-3 px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10"
@@ -417,139 +391,109 @@
               </button>
             </div>
             
-            <!-- Research Items Display -->
+            <!-- Research Items Data Table -->
             <div v-if="company?.researchItems && company.researchItems.length > 0">
-              
-              <!-- List View -->
-              <div v-if="researchViewMode === 'list'" class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10" style="backdrop-filter: blur(20px) saturate(180%);">
-                <div class="divide-y divide-white/10">
-                  <div
-                    v-for="item in company.researchItems"
-                    :key="item.id"
-                    class="group px-6 py-6 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/10 transition-all duration-500 hover:scale-[1.02] rounded-3xl"
-                  >
-                    <div class="flex items-center">
-                      <!-- Research Item Info -->
-                      <div class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 items-center">
-                        <div class="lg:col-span-2">
-                          <h3 class="text-lg font-medium text-white/90">{{ item.title }}</h3>
-                          <p class="text-sm text-blue-200/70">{{ item.category?.name || 'Uncategorized' }}</p>
-                        </div>
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 overflow-hidden" style="backdrop-filter: blur(20px) saturate(180%);">
 
-                        <div class="text-center lg:text-left">
-                          <p class="text-sm text-white/60">Visibility</p>
-                          <div class="flex items-center justify-center lg:justify-start">
-                            <svg v-if="item.visibility === 'public'" class="w-4 h-4 mr-2 text-green-400 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Table Header -->
+                <div class="bg-gradient-to-r from-white/5 to-white/2 px-6 py-4 border-b border-white/10">
+                  <div class="grid grid-cols-12 gap-4 text-sm font-semibold text-white/80">
+                    <div class="col-span-1 text-center">#</div>
+                    <div class="col-span-4">Research Title</div>
+                    <div class="col-span-2">Category</div>
+                    <div class="col-span-2">Created</div>
+                    <div class="col-span-1 text-center">Files</div>
+                    <div class="col-span-1 text-center">Status</div>
+                    <div class="col-span-1 text-center">Actions</div>
+                  </div>
+                </div>
+
+                <!-- Table Body -->
+                <div class="divide-y divide-white/5">
+                  <div
+                    v-for="(item, index) in company.researchItems"
+                    :key="item.id"
+                    class="group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300 cursor-pointer"
+                    @click="viewResearchItem(item)"
+                  >
+                    <div class="grid grid-cols-12 gap-4 items-center text-sm">
+
+                      <!-- Index -->
+                      <div class="col-span-1 text-center">
+                        <span class="text-white/60 font-medium">{{ index + 1 }}</span>
+                      </div>
+
+                      <!-- Title -->
+                      <div class="col-span-4">
+                        <h3 class="text-base font-medium text-white/90 line-clamp-1 mb-1">{{ item.title }}</h3>
+                        <p class="text-xs text-blue-200/60 line-clamp-1">{{ item.content ? item.content.substring(0, 80) + '...' : 'No content preview' }}</p>
+                      </div>
+
+                      <!-- Category -->
+                      <div class="col-span-2">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-500/30">
+                          {{ item.category?.name || 'Uncategorized' }}
+                        </span>
+                      </div>
+
+                      <!-- Created Date -->
+                      <div class="col-span-2">
+                        <div class="text-white/70">
+                          <div class="font-medium">{{ formatDate(item.created_at) }}</div>
+                          <div class="text-xs text-white/50">{{ new Date(item.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}</div>
+                        </div>
+                      </div>
+
+                      <!-- Files Count -->
+                      <div class="col-span-1 text-center">
+                        <div class="flex items-center justify-center">
+                          <svg class="w-4 h-4 mr-1 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                          <span class="text-white/70 font-medium">{{ item.attachments?.length || 0 }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Status -->
+                      <div class="col-span-1 text-center">
+                        <div class="flex items-center justify-center">
+                          <div v-if="item.visibility === 'public'" class="flex items-center text-green-400">
+                            <svg class="w-4 h-4 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
-                            <svg v-else class="w-4 h-4 mr-2 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          </div>
+                          <div v-else class="flex items-center text-white/40">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
                             </svg>
-                            <span class="font-medium text-white/90">
-                              {{ item.visibility === 'public' ? 'Visible' : 'Hidden' }}
-                            </span>
                           </div>
                         </div>
-
-                        <div class="text-center lg:text-left">
-                          <p class="text-sm text-white/60">Created</p>
-                          <p class="font-medium text-white/90">{{ item.created_at }}</p>
-                        </div>
-
-                        <div class="text-center lg:text-right">
-                          <p class="text-sm text-white/60">Attachments</p>
-                          <p class="font-medium text-white/90">{{ item.attachments?.length || 0 }}</p>
-                        </div>
                       </div>
-                      
+
                       <!-- Actions -->
-                      <div class="ml-6 flex items-center space-x-3">
-                        <button
-                          class="group w-10 h-10 rounded-full backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(59,130,246,0.15)] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-white/10"
-                          title="Edit Research Note"
-                        >
-                          <svg class="w-4 h-4 text-blue-200 group-hover:text-white shadow-[0_0_5px_rgba(59,130,246,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                          </svg>
-                        </button>
-                        <button
-                          class="group w-10 h-10 rounded-full backdrop-blur-3xl bg-gradient-to-br from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] border border-white/10"
-                          title="Delete Research Note"
-                        >
-                          <svg class="w-4 h-4 text-red-200 group-hover:text-white shadow-[0_0_5px_rgba(239,68,68,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                        </button>
+                      <div class="col-span-1">
+                        <div class="flex items-center justify-center space-x-2">
+                          <button
+                            @click.stop="$emit('edit-research', item)"
+                            class="group w-8 h-8 rounded-lg backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-[0_0_10px_rgba(59,130,246,0.15)] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-white/10 cursor-pointer pointer-events-auto"
+                            title="Edit Research Note"
+                          >
+                            <svg class="w-3.5 h-3.5 text-blue-200 group-hover:text-white shadow-[0_0_5px_rgba(59,130,246,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                          </button>
+                          <button
+                            @click.stop="$emit('delete-research', item)"
+                            class="group w-8 h-8 rounded-lg backdrop-blur-3xl bg-gradient-to-br from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] border border-white/10 cursor-pointer pointer-events-auto"
+                            title="Delete Research Note"
+                          >
+                            <svg class="w-3.5 h-3.5 text-red-200 group-hover:text-white shadow-[0_0_5px_rgba(239,68,68,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Cards View -->
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <div
-                  v-for="item in company.researchItems"
-                  :key="item.id"
-                  class="group relative p-6 transition-all duration-500 hover:scale-105 backdrop-blur-3xl bg-gradient-to-br from-blue-500/5 via-transparent to-blue-400/10 rounded-2xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 hover:shadow-[0_8px_20px_0_rgba(31,38,135,0.3)]"
-                  style="backdrop-filter: blur(20px) saturate(180%);"
-                >
-                  <!-- Floating particle decoration -->
-                  <div class="absolute top-2 right-2 w-2 h-2 bg-blue-400/30 rounded-full blur-sm animate-pulse"></div>
-
-                  <div class="flex items-start justify-between mb-4">
-                    <h3 class="text-lg font-semibold text-white/90 line-clamp-2">{{ item.title }}</h3>
-                    <div class="ml-4 flex items-center space-x-2 flex-shrink-0">
-                      <button
-                        class="group w-8 h-8 rounded-full backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(59,130,246,0.15)] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-white/10"
-                        title="Edit Research Note"
-                      >
-                        <svg class="w-3 h-3 text-blue-200 group-hover:text-white shadow-[0_0_5px_rgba(59,130,246,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        class="group w-8 h-8 rounded-full backdrop-blur-3xl bg-gradient-to-br from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 flex items-center justify-center transition-all duration-500 hover:scale-105 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] border border-white/10"
-                        title="Delete Research Note"
-                      >
-                        <svg class="w-3 h-3 text-red-200 group-hover:text-white shadow-[0_0_5px_rgba(239,68,68,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                    
-                  <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-white/60">Category</span>
-                      <span class="text-sm font-medium text-blue-200">{{ item.category?.name || 'Uncategorized' }}</span>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-white/60">Visibility</span>
-                      <div class="flex items-center">
-                        <svg v-if="item.visibility === 'public'" class="w-4 h-4 mr-1 text-green-400 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                        <svg v-else class="w-4 h-4 mr-1 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
-                        </svg>
-                        <span class="text-sm font-medium text-white/90">
-                          {{ item.visibility === 'public' ? 'Visible' : 'Hidden' }}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-white/60">Created</span>
-                      <span class="text-sm font-medium text-white/90">{{ item.created_at }}</span>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                      <span class="text-sm text-white/60">Attachments</span>
-                      <span class="text-sm font-medium text-white/90">{{ item.attachments?.length || 0 }}</span>
                     </div>
                   </div>
                 </div>
@@ -585,7 +529,9 @@
           <div class="max-w-4xl mx-auto">
             <div class="flex items-center justify-between mb-6">
               <div>
-                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">📝 Add Research Note</h3>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">
+                  {{ isEditingResearchItem ? '✏️ Edit Research Note' : '📝 Add Research Note' }}
+                </h3>
                 <p class="text-lg text-gray-600 dark:text-gray-300 mt-1" v-if="company">
                   for {{ company.name }} ({{ company.ticker }})
                 </p>
@@ -604,7 +550,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  <span>{{ creatingNote ? 'Saving...' : 'Save Note' }}</span>
+                  <span>{{ creatingNote ? 'Saving...' : (isEditingResearchItem ? 'Update Note' : 'Save Note') }}</span>
                 </button>
                 <!-- Cancel Button -->
                 <button 
@@ -762,207 +708,131 @@
         <div v-show="activeTab === 'documents'" class="p-6">
           <div class="max-w-6xl mx-auto">
             <div class="flex items-center justify-between mb-6">
-              <div class="flex items-center space-x-6">
-                <h3 class="text-2xl font-bold text-gray-900 dark:text-white">Documents & Files</h3>
-                
-                <!-- View Toggle -->
-                <div class="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-                  <button
-                    @click="documentsViewMode = 'cards'"
-                    :class="[
-                      'flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200',
-                      documentsViewMode === 'cards' 
-                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm' 
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                    ]"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                    </svg>
-                    <span class="text-sm font-medium">Cards</span>
-                  </button>
-                  <button
-                    @click="documentsViewMode = 'list'"
-                    :class="[
-                      'flex items-center space-x-2 px-3 py-2 rounded-md transition-all duration-200',
-                      documentsViewMode === 'list' 
-                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm' 
-                        : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
-                    ]"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                    </svg>
-                    <span class="text-sm font-medium">List</span>
-                  </button>
-                </div>
+              <div class="flex items-center justify-between">
+                <h3 class="text-2xl font-bold text-white/90">Documents & Files</h3>
               </div>
               
-              <button 
+              <button
                 @click="activeTab = 'documents-upload'"
-                class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
+                class="backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-white font-medium py-3 px-6 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 flex items-center space-x-2"
+                style="backdrop-filter: blur(20px) saturate(180%);"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
-                <span>Upload Document</span>
+                <span class="shadow-[0_0_5px_rgba(34,197,94,0.3)]">Upload Document</span>
               </button>
             </div>
             
-            <!-- Documents Content -->
-            <div v-if="company && company.documents && company.documents.length > 0">
-              <!-- List View -->
-              <div v-if="documentsViewMode === 'list'" class="space-y-3">
-                <div 
-                  v-for="document in company.documents" 
-                  :key="document.id"
-                  class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500 transition-all duration-200 overflow-hidden"
-                >
-                  <div class="p-6">
-                    <div class="flex items-center justify-between">
-                      <div class="flex-1 min-w-0">
-                        <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 truncate">{{ document.title }}</h4>
-                        <p v-if="document.description" class="text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">{{ document.description }}</p>
+            <!-- Documents Data Table -->
+            <div v-if="documentsWithAttachments && documentsWithAttachments.length > 0">
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 overflow-hidden" style="backdrop-filter: blur(20px) saturate(180%);">
+
+                <!-- Table Header -->
+                <div class="bg-gradient-to-r from-white/5 to-white/2 px-6 py-4 border-b border-white/10">
+                  <div class="grid grid-cols-12 gap-4 text-sm font-semibold text-white/80">
+                    <div class="col-span-1 text-center">#</div>
+                    <div class="col-span-4">Document Title</div>
+                    <div class="col-span-2">Type</div>
+                    <div class="col-span-2">Created</div>
+                    <div class="col-span-1 text-center">Files</div>
+                    <div class="col-span-1 text-center">Status</div>
+                    <div class="col-span-1 text-center">Actions</div>
+                  </div>
+                </div>
+
+                <!-- Table Body -->
+                <div class="divide-y divide-white/5">
+                  <div
+                    v-for="(document, index) in documentsWithAttachments"
+                    :key="document.id"
+                    class="group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300 cursor-pointer"
+                    @click="viewDocument(document)"
+                  >
+                    <div class="grid grid-cols-12 gap-4 items-center text-sm">
+
+                      <!-- Index -->
+                      <div class="col-span-1 text-center">
+                        <span class="text-white/60 font-medium">{{ index + 1 }}</span>
                       </div>
-                      
-                      <!-- Document metadata in a grid -->
-                      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 text-sm ml-8">
-                        <div class="text-center lg:text-left">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Category</p>
-                          <p class="font-medium text-gray-900 dark:text-white">{{ document.category?.name || 'Uncategorized' }}</p>
+
+                      <!-- Title -->
+                      <div class="col-span-4">
+                        <h3 class="text-base font-medium text-white/90 line-clamp-1 mb-1 hover:text-blue-300 transition-colors">{{ document.title }}</h3>
+                        <p class="text-xs text-blue-200/60 line-clamp-1">{{ document.description ? document.description.substring(0, 80) + '...' : 'No description available' }}</p>
+                      </div>
+
+                      <!-- Type -->
+                      <div class="col-span-2">
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-500/20 text-purple-200 border border-purple-500/30">
+                          {{ document.type === 'document' ? 'Document' : 'Research Item' }}
+                        </span>
+                      </div>
+
+                      <!-- Created Date -->
+                      <div class="col-span-2">
+                        <div class="text-white/70">
+                          <div class="font-medium">{{ formatDate(document.created_at) }}</div>
+                          <div class="text-xs text-white/50">{{ new Date(document.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}</div>
                         </div>
-                        
-                        <div class="text-center lg:text-left">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Visibility</p>
-                          <div class="flex items-center justify-center lg:justify-start">
-                            <svg v-if="document.visibility === 'public'" class="w-4 h-4 mr-1 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      </div>
+
+                      <!-- Files Count -->
+                      <div class="col-span-1 text-center">
+                        <div class="flex items-center justify-center">
+                          <svg class="w-4 h-4 mr-1 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                          </svg>
+                          <span class="text-white/70 font-medium">{{ document.attachments?.length || 0 }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Status -->
+                      <div class="col-span-1 text-center">
+                        <div class="flex items-center justify-center">
+                          <div v-if="document.visibility === 'public'" class="flex items-center text-green-400">
+                            <svg class="w-4 h-4 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                             </svg>
-                            <svg v-else class="w-4 h-4 mr-1 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          </div>
+                          <div v-else class="flex items-center text-white/40">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
                             </svg>
-                            <span class="font-medium text-gray-900 dark:text-white">
-                              {{ document.visibility === 'public' ? 'Visible' : 'Hidden' }}
-                            </span>
                           </div>
                         </div>
-                        
-                        <div class="text-center lg:text-left">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Created</p>
-                          <p class="font-medium text-gray-900 dark:text-white">{{ document.created_at }}</p>
-                        </div>
-                        
-                        <div class="text-center lg:text-right">
-                          <p class="text-sm text-gray-500 dark:text-gray-400">Files</p>
-                          <p class="font-medium text-gray-900 dark:text-white">{{ document.files?.length || 0 }}</p>
-                        </div>
                       </div>
-                      
-                      <!-- Actions -->
-                      <div class="ml-6 flex items-center space-x-2">
-                        <button 
-                          class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-700 hover:bg-green-200 dark:hover:bg-green-600 flex items-center justify-center transition-colors"
-                          title="Download Document"
-                        >
-                          <svg class="w-4 h-4 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                          </svg>
-                        </button>
-                        <button 
-                          class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 flex items-center justify-center transition-colors"
-                          title="Edit Document"
-                        >
-                          <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                          </svg>
-                        </button>
-                        <button 
-                          class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-700 hover:bg-red-200 dark:hover:bg-red-600 flex items-center justify-center transition-colors"
-                          title="Delete Document"
-                        >
-                          <svg class="w-4 h-4 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              <!-- Cards View -->
-              <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div 
-                  v-for="document in company.documents" 
-                  :key="document.id"
-                  class="bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all duration-200"
-                >
-                  <div class="p-6">
-                    <div class="flex items-start justify-between mb-4">
-                      <h3 class="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">{{ document.title }}</h3>
-                      <div class="ml-4 flex items-center space-x-2 flex-shrink-0">
-                        <button 
-                          class="w-8 h-8 rounded-full bg-green-100 dark:bg-green-700 hover:bg-green-200 dark:hover:bg-green-600 flex items-center justify-center transition-colors"
-                          title="Download Document"
-                        >
-                          <svg class="w-4 h-4 text-green-600 dark:text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                          </svg>
-                        </button>
-                        <button 
-                          class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-700 hover:bg-blue-200 dark:hover:bg-blue-600 flex items-center justify-center transition-colors"
-                          title="Edit Document"
-                        >
-                          <svg class="w-4 h-4 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                          </svg>
-                        </button>
-                        <button 
-                          class="w-8 h-8 rounded-full bg-red-100 dark:bg-red-700 hover:bg-red-200 dark:hover:bg-red-600 flex items-center justify-center transition-colors"
-                          title="Delete Document"
-                        >
-                          <svg class="w-4 h-4 text-red-600 dark:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div v-if="document.description" class="mb-4">
-                      <p class="text-gray-600 dark:text-gray-300 text-sm line-clamp-3">{{ document.description }}</p>
-                    </div>
-                    
-                    <div class="space-y-3">
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Category</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ document.category?.name || 'Uncategorized' }}</span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Visibility</span>
-                        <div class="flex items-center">
-                          <svg v-if="document.visibility === 'public'" class="w-4 h-4 mr-1 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                          </svg>
-                          <svg v-else class="w-4 h-4 mr-1 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
-                          </svg>
-                          <span class="text-sm font-medium text-gray-900 dark:text-white">
-                            {{ document.visibility === 'public' ? 'Visible' : 'Hidden' }}
-                          </span>
+                      <!-- Actions -->
+                      <div class="col-span-1">
+                        <div class="flex items-center justify-center space-x-2" @click.stop>
+                          <button
+                            class="group w-8 h-8 rounded-lg backdrop-blur-3xl bg-gradient-to-br from-green-500/20 to-green-600/30 hover:from-green-500/30 hover:to-green-600/40 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-[0_0_10px_rgba(34,197,94,0.15)] hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] border border-white/10 cursor-pointer pointer-events-auto"
+                            title="Download Document"
+                          >
+                            <svg class="w-3.5 h-3.5 text-green-200 group-hover:text-white shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          </button>
+                          <button
+                            class="group w-8 h-8 rounded-lg backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 to-blue-600/30 hover:from-blue-500/30 hover:to-blue-600/40 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-[0_0_10px_rgba(59,130,246,0.15)] hover:shadow-[0_0_15px_rgba(59,130,246,0.25)] border border-white/10 cursor-pointer pointer-events-auto"
+                            title="Edit Document"
+                          >
+                            <svg class="w-3.5 h-3.5 text-blue-200 group-hover:text-white shadow-[0_0_5px_rgba(59,130,246,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                          </button>
+                          <button
+                            @click.stop="$emit('delete-document', document)"
+                            class="group w-8 h-8 rounded-lg backdrop-blur-3xl bg-gradient-to-br from-red-500/20 to-red-600/30 hover:from-red-500/30 hover:to-red-600/40 flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-[0_0_10px_rgba(239,68,68,0.15)] hover:shadow-[0_0_15px_rgba(239,68,68,0.25)] border border-white/10 cursor-pointer pointer-events-auto"
+                            title="Delete Document"
+                          >
+                            <svg class="w-3.5 h-3.5 text-red-200 group-hover:text-white shadow-[0_0_5px_rgba(239,68,68,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                            </svg>
+                          </button>
                         </div>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Created</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ document.created_at }}</span>
-                      </div>
-                      
-                      <div class="flex items-center justify-between">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Files</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white">{{ document.files?.length || 0 }}</span>
                       </div>
                     </div>
                   </div>
@@ -971,18 +841,25 @@
             </div>
             
             <!-- No Documents -->
-            <div v-else class="text-center py-12">
-              <svg class="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-              </svg>
-              <h3 class="text-xl font-medium text-gray-900 dark:text-white mb-2">No Documents Yet</h3>
-              <p class="text-gray-600 dark:text-gray-300 mb-6">Upload documents and files related to this company.</p>
-              <button 
-                @click="activeTab = 'documents-upload'"
-                class="bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+            <div v-else class="relative text-center py-16">
+              <!-- Floating decorative elements -->
+              <div class="absolute top-8 left-12 w-2 h-2 bg-green-400/40 rounded-full blur-sm animate-pulse delay-500"></div>
+              <div class="absolute bottom-12 right-16 w-1.5 h-1.5 bg-purple-400/30 rounded-full blur-sm animate-pulse delay-1000"></div>
+
+              <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl p-12 shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 max-w-2xl mx-auto" style="backdrop-filter: blur(20px) saturate(180%);">
+                <svg class="w-20 h-20 text-white/40 mx-auto mb-6 shadow-[0_0_10px_rgba(255,255,255,0.1)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <h3 class="text-2xl font-semibold text-white/90 mb-3">📄 No Documents Yet</h3>
+                <p class="text-white/70 mb-8 leading-relaxed">Upload documents and files related to this company to build a comprehensive resource library.</p>
+                <button
+                  @click="activeTab = 'documents-upload'"
+                  class="group backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-white font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10"
+                  style="backdrop-filter: blur(20px) saturate(180%);"
               >
-                Upload First Document
+                <span class="shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]">📄 Upload First Document</span>
               </button>
+              </div>
             </div>
           </div>
         </div>
@@ -1001,7 +878,7 @@
                 <!-- Save Button -->
                 <button 
                   @click="$emit('save-document')"
-                  :disabled="uploading || !documentForm.files || documentForm.files.length === 0"
+                  :disabled="uploading || (documentForm.uploadType === 'file' && (!documentForm.files || documentForm.files.length === 0)) || (documentForm.uploadType === 'url' && (!documentForm.urls || documentForm.urls.length === 0))"
                   class="bg-green-500 hover:bg-green-600 disabled:bg-green-400 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center space-x-2"
                 >
                   <svg v-if="!uploading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1047,7 +924,7 @@
               <!-- Description -->
               <div>
                 <label for="upload_description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description (optional)</label>
-                <textarea 
+                <textarea
                   id="upload_description"
                   :value="documentForm.description"
                   @input="$emit('update:document-form', { ...documentForm, description: $event.target.value })"
@@ -1058,10 +935,54 @@
                 <div v-if="documentErrors.description" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ documentErrors.description }}</div>
               </div>
 
+              <!-- AI Synopsis -->
+              <div>
+                <label for="upload_ai_synopsis" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Provide AI Synopsis (optional)</label>
+                <textarea
+                  id="upload_ai_synopsis"
+                  :value="documentForm.ai_synopsis"
+                  @input="$emit('update:document-form', { ...documentForm, ai_synopsis: $event.target.value })"
+                  rows="4"
+                  class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors resize-none"
+                  placeholder="AI-generated synopsis or key insights from the document..."
+                ></textarea>
+                <div v-if="documentErrors.ai_synopsis" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ documentErrors.ai_synopsis }}</div>
+              </div>
+
               <!-- File Upload Area -->
               <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Documents</label>
-                <div class="border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg p-8 text-center hover:border-green-400 dark:hover:border-green-500 transition-colors">
+                <div class="flex items-center justify-between mb-4">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Documents</label>
+                  <div class="flex items-center space-x-4">
+                    <button
+                      type="button"
+                      @click="documentForm.uploadType = 'file'"
+                      :class="[
+                        'px-3 py-1 text-sm rounded-lg transition-colors',
+                        documentForm.uploadType === 'file'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                      ]"
+                    >
+                      Upload Files
+                    </button>
+                    <button
+                      type="button"
+                      @click="documentForm.uploadType = 'url'"
+                      :class="[
+                        'px-3 py-1 text-sm rounded-lg transition-colors',
+                        documentForm.uploadType === 'url'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-500'
+                      ]"
+                    >
+                      Add URL
+                    </button>
+                  </div>
+                </div>
+
+                <!-- File Upload Area -->
+                <div v-if="documentForm.uploadType === 'file'" class="border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg p-8 text-center hover:border-green-400 dark:hover:border-green-500 transition-colors">
                   <svg class="mx-auto h-16 w-16 text-green-400 dark:text-green-500" stroke="currentColor" fill="none" viewBox="0 0 48 48">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
@@ -1109,7 +1030,81 @@
                     </button>
                   </div>
                 </div>
+
+                <!-- URL Input Area -->
+                <div v-if="documentForm.uploadType === 'url'" class="space-y-4">
+                  <div class="border-2 border-dashed border-green-300 dark:border-green-600 rounded-lg p-6">
+                    <div class="text-center mb-4">
+                      <svg class="mx-auto h-12 w-12 text-green-400 dark:text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                      </svg>
+                      <p class="text-lg font-medium text-gray-900 dark:text-white">Add Document from URL</p>
+                      <p class="text-sm text-gray-500 dark:text-gray-400">The document will be downloaded and attached</p>
+                    </div>
+
+                    <div class="space-y-3">
+                      <div>
+                        <input
+                          type="url"
+                          placeholder="https://example.com/document.pdf"
+                          :value="documentForm.documentUrl"
+                          @input="$emit('update:document-form', { ...documentForm, documentUrl: $event.target.value })"
+                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors"
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Document name (optional)"
+                          :value="documentForm.documentName"
+                          @input="$emit('update:document-form', { ...documentForm, documentName: $event.target.value })"
+                          class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400 focus:border-green-500 dark:focus:border-green-400 transition-colors"
+                        />
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">If not provided, the filename will be extracted from the URL</p>
+                      </div>
+                      <div class="flex justify-end">
+                        <button
+                          type="button"
+                          @click="addUrlToList"
+                          :disabled="!documentForm.documentUrl"
+                          class="px-4 py-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white rounded-lg transition-colors flex items-center space-x-2"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                          </svg>
+                          <span>Add URL</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- URL List -->
+                  <div v-if="documentForm.urls && documentForm.urls.length > 0" class="space-y-3">
+                    <div v-for="(urlItem, index) in documentForm.urls" :key="index" class="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div class="flex items-center">
+                        <svg class="w-8 h-8 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+                        </svg>
+                        <div>
+                          <span class="text-sm font-medium text-gray-900 dark:text-white">{{ urlItem.name || 'Document from URL' }}</span>
+                          <span class="text-xs text-gray-500 dark:text-gray-400 block">{{ urlItem.url }}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        @click="$emit('remove-url', index)"
+                        class="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 p-1 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                      >
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 <div v-if="documentErrors.files" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ documentErrors.files }}</div>
+                <div v-if="documentErrors.urls" class="text-red-600 dark:text-red-400 text-sm mt-1">{{ documentErrors.urls }}</div>
               </div>
 
               <!-- Category and Visibility -->
@@ -1269,11 +1264,245 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+
+    <!-- Document Viewer Modal -->
+    <div
+      v-if="showDocumentViewer && selectedDocument"
+      class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[60]"
+      @click.self="closeDocumentViewer"
+    >
+      <div class="bg-gradient-to-br from-white/10 via-white/15 to-white/10 backdrop-blur-xl rounded-2xl border border-white/20 w-full h-full overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.25)] flex flex-col transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
+
+        <!-- Modal Header -->
+        <div class="sticky top-0 bg-black/20 backdrop-blur-xl border-b border-white/30 px-6 py-4 rounded-t-2xl" style="backdrop-filter: blur(20px) saturate(180%);">
+          <div class="flex items-center justify-between">
+            <div class="flex-1 min-w-0">
+              <h2 class="text-2xl font-bold text-white truncate">{{ selectedDocument.title }}</h2>
+              <p v-if="selectedDocument.type" class="text-sm text-gray-300 mt-1">
+                {{ selectedDocument.type === 'document' ? 'Document' : 'Research Item' }}
+              </p>
+            </div>
+            <button
+              @click="closeDocumentViewer"
+              class="ml-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            >
+              <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content -->
+        <div class="flex-1 overflow-hidden flex flex-col">
+
+          <!-- Description (if available) -->
+          <div v-if="selectedDocument.description" class="bg-gradient-to-r from-green-500/10 to-blue-500/10 border-b border-white/10">
+            <button
+              @click="toggleSection('description')"
+              class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+            >
+              <h3 class="text-lg font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Description
+              </h3>
+              <svg
+                class="w-5 h-5 text-gray-400 transition-transform"
+                :class="{ 'transform rotate-180': collapsedSections.description }"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div v-show="!collapsedSections.description" class="px-6 pb-4">
+              <p class="text-gray-200 leading-relaxed">{{ selectedDocument.description }}</p>
+            </div>
+          </div>
+
+          <!-- AI Synopsis (if available) -->
+          <div v-if="selectedDocument.ai_synopsis" class="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border-b border-white/10">
+            <button
+              @click="toggleSection('aiSynopsis')"
+              class="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+            >
+              <h3 class="text-lg font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                </svg>
+                AI Synopsis
+              </h3>
+              <svg
+                class="w-5 h-5 text-gray-400 transition-transform"
+                :class="{ 'transform rotate-180': collapsedSections.aiSynopsis }"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div v-show="!collapsedSections.aiSynopsis" class="px-6 pb-4">
+              <p class="text-gray-200 leading-relaxed">{{ selectedDocument.ai_synopsis }}</p>
+            </div>
+          </div>
+
+          <!-- File Attachments -->
+          <div v-if="selectedDocument.attachments && selectedDocument.attachments.length > 0" class="flex-1 overflow-hidden flex flex-col">
+
+            <!-- File Display Area -->
+            <div class="flex-1 overflow-auto p-6">
+              <div v-for="(attachment, index) in selectedDocument.attachments" :key="attachment.id" class="relative h-full">
+
+                <!-- File Content Preview -->
+                <div class="relative h-full">
+
+                  <!-- PDF Preview -->
+                  <div v-if="attachment.mime_type === 'application/pdf'" class="w-full h-full bg-white rounded-lg overflow-hidden">
+                    <iframe
+                      :src="attachment.url + '#toolbar=1&navpanes=1&scrollbar=1'"
+                      class="w-full h-full border-0"
+                      frameborder="0"
+                    ></iframe>
+                  </div>
+
+                  <!-- Image Preview -->
+                  <div v-else-if="attachment.mime_type.startsWith('image/')" class="relative flex justify-center">
+                    <img
+                      :src="attachment.url"
+                      :alt="attachment.name"
+                      class="max-w-full max-h-96 rounded-lg shadow-lg object-contain"
+                    />
+                    <a :href="attachment.url" target="_blank" class="absolute top-2 right-2 px-3 py-1 bg-black/70 hover:bg-black/85 text-white rounded-lg text-sm transition-colors backdrop-blur-sm">
+                      📥 Download Image
+                    </a>
+                  </div>
+
+                  <!-- Text File Preview -->
+                  <div v-else-if="attachment.mime_type === 'text/plain' || attachment.mime_type === 'text/csv'" class="relative bg-gray-900 rounded-lg p-4 max-h-96 overflow-auto">
+                    <iframe
+                      :src="attachment.url"
+                      class="w-full h-80 bg-white rounded border-0"
+                      frameborder="0"
+                    ></iframe>
+                    <a :href="attachment.url" target="_blank" class="absolute top-2 right-2 px-3 py-1 bg-black/70 hover:bg-black/85 text-white rounded-lg text-sm transition-colors backdrop-blur-sm">
+                      📥 Download Text
+                    </a>
+                  </div>
+
+                  <!-- Office Documents (Word, Excel, PowerPoint) -->
+                  <div v-else-if="attachment.mime_type.includes('word') || attachment.mime_type.includes('excel') || attachment.mime_type.includes('powerpoint') || attachment.mime_type.includes('document') || attachment.mime_type.includes('spreadsheet') || attachment.mime_type.includes('presentation')" class="relative w-full h-96 bg-white rounded-lg overflow-hidden">
+                    <iframe
+                      :src="`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(attachment.url)}`"
+                      class="w-full h-full border-0"
+                      frameborder="0"
+                    ></iframe>
+                    <a :href="attachment.url" target="_blank" class="absolute top-2 right-2 px-3 py-1 bg-black/70 hover:bg-black/85 text-white rounded-lg text-sm transition-colors backdrop-blur-sm">
+                      📥 Download Document
+                    </a>
+                  </div>
+
+                  <!-- Generic File Preview -->
+                  <div v-else class="text-center py-8">
+                    <div class="w-16 h-16 mx-auto bg-gray-500/20 rounded-full flex items-center justify-center mb-4">
+                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                    </div>
+                    <p class="text-gray-300 mb-2">{{ attachment.name || attachment.file_name }}</p>
+                    <p class="text-sm text-gray-400 mb-4">Preview not available for this file type</p>
+                    <a :href="attachment.url" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-lg transition-colors">
+                      📥 Download File
+                    </a>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- No Attachments -->
+          <div v-else class="flex-1 flex items-center justify-center py-12">
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto bg-gray-500/20 rounded-full flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <p class="text-gray-300 text-lg">No attachments found</p>
+              <p class="text-sm text-gray-400 mt-1">This document has no file attachments</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Research Item View Modal -->
+    <div v-show="showResearchModal && selectedResearchItem" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[60]" @click.self="closeResearchModal">
+      <div class="bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]" style="backdrop-filter: blur(20px) saturate(180%);">
+
+        <!-- Header matching TreeNode style -->
+        <div class="flex items-center py-4 px-6 border-b border-white/10 bg-gradient-to-r from-purple-500/10 to-transparent">
+          <div class="w-5 h-5 mr-3 text-purple-200">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-purple-200 font-medium text-lg">{{ selectedResearchItem?.title }}</h3>
+            <p v-if="selectedResearchItem?.category" class="text-purple-300/60 text-sm mt-1">{{ selectedResearchItem.category }}</p>
+          </div>
+          <button @click="closeResearchModal" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 flex items-center justify-center transition-all duration-300">
+            <svg class="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Content -->
+        <div class="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          <div class="prose prose-sm max-w-none text-white/90">
+            <div v-if="selectedResearchItem?.content" v-html="renderMarkdown(selectedResearchItem.content)"></div>
+            <div v-else class="text-white/60 italic">No content available</div>
+          </div>
+
+          <!-- Metadata -->
+          <div class="mt-6 pt-4 border-t border-white/10 grid grid-cols-2 gap-4 text-sm text-white/60">
+            <div>
+              <span class="font-medium">Created:</span> {{ selectedResearchItem?.created_at ? new Date(selectedResearchItem.created_at).toLocaleDateString() : 'Unknown' }}
+            </div>
+            <div>
+              <span class="font-medium">Visibility:</span> {{ selectedResearchItem?.visibility || 'Private' }}
+            </div>
+          </div>
+
+          <!-- Attachments if any -->
+          <div v-if="selectedResearchItem?.attachments && selectedResearchItem.attachments.length > 0" class="mt-4 pt-4 border-t border-white/10">
+            <h4 class="text-white/80 font-medium mb-2">Attachments</h4>
+            <div class="space-y-2">
+              <div v-for="attachment in selectedResearchItem.attachments" :key="attachment.id"
+                   class="flex items-center space-x-2 text-sm text-white/70 hover:text-white cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-all duration-200"
+                   @click="viewAttachment(attachment)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                </svg>
+                <span>{{ attachment.name }}</span>
+                <svg class="w-3 h-3 ml-auto opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </Teleport>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { MdEditor, MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 
@@ -1322,6 +1551,14 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  isEditingResearchItem: {
+    type: Boolean,
+    default: false
+  },
+  editingResearchItemId: {
+    type: [String, Number],
+    default: null
+  },
   categories: {
     type: Array,
     default: () => []
@@ -1346,6 +1583,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  initialTab: {
+    type: String,
+    default: 'overview'
+  }
 })
 
 const emit = defineEmits([
@@ -1364,8 +1605,78 @@ const emit = defineEmits([
   'update:document-form',
   'file-upload',
   'remove-file',
-  'create-insight'
+  'add-url',
+  'remove-url',
+  'create-insight',
+  'start-edit',
+  'edit-research',
+  'delete-research',
+  'delete-document'
 ])
+
+// Computed property for currency v-model
+const currencyModel = computed({
+  get() {
+    return props.editForm.reports_financial_data_in ?? ''
+  },
+  set(value) {
+    emit('update:edit-form', { ...props.editForm, reports_financial_data_in: value })
+  }
+})
+
+// Handle tab click and emit edit event when edit tab is clicked
+const handleTabClick = (tabId) => {
+  activeTab.value = tabId
+  if (tabId === 'edit') {
+    emit('start-edit')
+  }
+}
+
+// Add URL to the list
+const addUrlToList = () => {
+  if (props.documentForm.documentUrl) {
+    emit('add-url', {
+      url: props.documentForm.documentUrl,
+      name: props.documentForm.documentName || ''
+    })
+  }
+}
+
+// Computed property to get documents (includes both standalone documents and research items with attachments)
+const documentsWithAttachments = computed(() => {
+  if (!props.company) {
+    return []
+  }
+
+  const allDocuments = []
+
+  // Add standalone documents
+  if (props.company.documents) {
+    allDocuments.push(...props.company.documents.map(doc => ({
+      ...doc,
+      type: 'document'
+    })))
+  }
+
+  // Add research items with attachments
+  if (props.company.researchItems) {
+    const researchWithFiles = props.company.researchItems.filter(item =>
+      item.attachments && item.attachments.length > 0
+    )
+    allDocuments.push(...researchWithFiles.map(item => ({
+      id: `research-${item.id}`,
+      title: item.title,
+      description: item.content ? item.content.substring(0, 200) + '...' : 'Research item with attachments',
+      ai_synopsis: item.ai_synopsis,
+      visibility: item.visibility,
+      attachments: item.attachments,
+      created_at: item.created_at,
+      type: 'research_item'
+    })))
+  }
+
+  return allDocuments
+})
 
 // Markdown editor configuration
 const markdownToolbars = [
@@ -1414,17 +1725,81 @@ const toggleVisibility = () => {
   emit('update:note-form', { ...props.noteForm, visibility: newVisibility })
 }
 
-const activeTab = ref('overview')
-const researchViewMode = ref('list') // 'cards' or 'list'
-const documentsViewMode = ref('list') // 'cards' or 'list'
+// Document viewing functions
+const viewDocument = (document) => {
+  selectedDocument.value = document
+  showDocumentViewer.value = true
+}
+
+const closeDocumentViewer = () => {
+  showDocumentViewer.value = false
+  selectedDocument.value = null
+}
+
+const viewResearchItem = (item) => {
+  selectedResearchItem.value = item
+  showResearchModal.value = true
+}
+
+const closeResearchModal = () => {
+  showResearchModal.value = false
+  selectedResearchItem.value = null
+}
+
+const viewAttachment = (attachment) => {
+  // Create a document object that matches the expected format for the document viewer
+  const documentForViewer = {
+    id: attachment.id,
+    title: attachment.name || attachment.file_name,
+    description: `Attachment from research item: ${selectedResearchItem.value?.title}`,
+    url: attachment.url,
+    mime_type: attachment.mime_type,
+    size: attachment.size,
+    attachments: [attachment] // Include the attachment itself
+  }
+
+  // Close the research modal and open the document viewer
+  closeResearchModal()
+  viewDocument(documentForViewer)
+}
+
+const toggleSection = (section) => {
+  collapsedSections.value[section] = !collapsedSections.value[section]
+}
+
+const activeTab = ref(props.initialTab)
+
+// Watch for edit mode changes and switch to research-new tab
+watch(() => props.isEditingResearchItem, (isEditing) => {
+  if (isEditing) {
+    activeTab.value = 'research-new'
+  }
+})
+
+// Document viewer state
+const showDocumentViewer = ref(false)
+const selectedDocument = ref(null)
+const collapsedSections = ref({
+  description: false,
+  aiSynopsis: false
+})
 
 // Insights-related refs
 const companyInsights = ref([])
 const loadingInsights = ref(false)
 
+// Research item modal
+const showResearchModal = ref(false)
+const selectedResearchItem = ref(null)
+
 // Watch for insights prop changes
 watch(() => props.insights, (newInsights) => {
   companyInsights.value = newInsights || []
+}, { immediate: true })
+
+// Watch for initialTab changes to reset activeTab
+watch(() => props.initialTab, (newTab) => {
+  activeTab.value = newTab
 }, { immediate: true })
 
 const tabs = [

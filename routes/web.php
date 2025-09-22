@@ -104,6 +104,22 @@ Route::prefix('api')->group(function () {
         Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
         Route::put('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'update']);
         Route::delete('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'destroy']);
+
+        // Documents (protected operations)
+        Route::get('documents', [\App\Http\Controllers\Api\DocumentController::class, 'index']);
+        Route::post('documents', [\App\Http\Controllers\Api\DocumentController::class, 'store']);
+        Route::get('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'show']);
+        Route::put('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'update']);
+        Route::delete('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'destroy']);
+
+        // Activity Tracking (protected operations)
+        Route::get('activities', [\App\Http\Controllers\Api\ActivityController::class, 'index']);
+        Route::get('activities/stats', [\App\Http\Controllers\Api\ActivityController::class, 'stats']);
+        Route::get('activities/latest/companies', [\App\Http\Controllers\Api\ActivityController::class, 'latestCompanies']);
+        Route::get('activities/latest/research', [\App\Http\Controllers\Api\ActivityController::class, 'latestResearch']);
+        Route::get('activities/latest/insights', [\App\Http\Controllers\Api\ActivityController::class, 'latestInsights']);
+        Route::get('activities/users/{user}', [\App\Http\Controllers\Api\ActivityController::class, 'forUser']);
+        Route::get('activities/{modelType}/{modelId}', [\App\Http\Controllers\Api\ActivityController::class, 'forModel']);
     });
 });
 

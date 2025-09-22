@@ -16,9 +16,22 @@ class BlogPostController extends Controller
     {
         $query = $request->get('q', '');
         $includeCompanies = $request->boolean('include_companies', false);
+        $perPage = $request->get('limit', 5);
+        $page = $request->get('page', 1);
 
         if (strlen($query) < 2) {
-            return response()->json([]);
+            return response()->json([
+                'data' => [],
+                'pagination' => [
+                    'current_page' => 1,
+                    'total_pages' => 0,
+                    'has_more_pages' => false,
+                    'total_items' => 0,
+                    'per_page' => $perPage,
+                    'from' => null,
+                    'to' => null,
+                ]
+            ]);
         }
 
         // Start with published blog posts
@@ -31,31 +44,31 @@ class BlogPostController extends Controller
               ->orWhereRaw('LOWER(content) LIKE ?', ['%' . strtolower($query) . '%']);
         });
 
-        $blogPosts = $blogPostsQuery->get();
-
-        // If include_companies is true, also search for blog posts linked to companies that match the query
+        // If include_companies is true, also include blog posts linked to companies that match the query
         if ($includeCompanies) {
-            $matchingCompanies = Company::where(function($q) use ($query) {
+            $blogPostsQuery->orWhereHas('companies', function($q) use ($query) {
                 $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($query) . '%'])
                   ->orWhereRaw('LOWER(ticker_symbol) LIKE ?', ['%' . strtolower($query) . '%']);
-            })->get();
-
-            if ($matchingCompanies->isNotEmpty()) {
-                $companyIds = $matchingCompanies->pluck('id');
-
-                $relatedBlogPosts = BlogPost::where('status', 'published')
-                    ->with(['user:id,name', 'companies:id,name,ticker_symbol'])
-                    ->whereHas('companies', function($q) use ($companyIds) {
-                        $q->whereIn('companies.id', $companyIds);
-                    })
-                    ->get();
-
-                // Merge and remove duplicates
-                $blogPosts = $blogPosts->merge($relatedBlogPosts)->unique('id');
-            }
+            });
         }
 
-        return response()->json($blogPosts->values());
+        // Order by published date (newest first) and paginate
+        $blogPosts = $blogPostsQuery->orderBy('published_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Return paginated response with metadata
+        return response()->json([
+            'data' => $blogPosts->items(),
+            'pagination' => [
+                'current_page' => $blogPosts->currentPage(),
+                'total_pages' => $blogPosts->lastPage(),
+                'has_more_pages' => $blogPosts->hasMorePages(),
+                'total_items' => $blogPosts->total(),
+                'per_page' => $blogPosts->perPage(),
+                'from' => $blogPosts->firstItem(),
+                'to' => $blogPosts->lastItem(),
+            ]
+        ]);
     }
 
     /**

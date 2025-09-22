@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -9,6 +10,7 @@ use Illuminate\Support\Str;
 
 class BlogPost extends Model
 {
+    use TracksActivity;
     protected $fillable = [
         'title',
         'slug',

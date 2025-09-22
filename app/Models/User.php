@@ -52,4 +52,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(BlogPost::class);
     }
+
+    /**
+     * Get the title/name of this model for activity descriptions.
+     */
+    public function getActivityTitle(): string
+    {
+        return $this->name;
+    }
 }
