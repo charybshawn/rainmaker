@@ -9,7 +9,7 @@
       <div class="sticky top-0 bg-gray-900 border-b border-white/20 px-8 py-6 rounded-t-2xl z-10">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-3xl font-semibold text-white">📝 Add Research</h2>
+            <h2 class="text-3xl font-semibold text-white">{{ props.isEditing ? '✏️ Edit Research' : '📝 Add Research' }}</h2>
             <p class="text-lg text-gray-300 mt-1" v-if="selectedCompany">
               for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
             </p>
@@ -21,7 +21,7 @@
             :disabled="creatingNote"
             class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             style="backdrop-filter: blur(20px) saturate(150%);"
-            title="Save Research"
+            :title="props.isEditing ? 'Update Research' : 'Save Research'"
           >
             <svg v-if="!creatingNote" class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -30,7 +30,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            {{ creatingNote ? 'Saving...' : 'Save Research' }}
+            {{ creatingNote ? (props.isEditing ? 'Updating...' : 'Saving...') : (props.isEditing ? 'Update Research' : 'Save Research') }}
           </button>
           <!-- Close Button -->
           <button
@@ -344,7 +344,7 @@
 <script setup>
 import { ref } from 'vue'
 
-defineProps({
+const props = defineProps({
   show: {
     type: Boolean,
     default: false
@@ -374,6 +374,10 @@ defineProps({
     default: () => []
   },
   loadingExistingFiles: {
+    type: Boolean,
+    default: false
+  },
+  isEditing: {
     type: Boolean,
     default: false
   }

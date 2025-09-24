@@ -135,6 +135,13 @@ class ResearchItemController extends Controller
             $researchItem->tags()->sync($validated['tag_ids']);
         }
 
+        // Track attachment processing results
+        $attachmentResults = [
+            'files' => ['expected' => 0, 'successful' => 0, 'failed' => []],
+            'urls' => ['expected' => 0, 'successful' => 0, 'failed' => []],
+            'existing' => ['expected' => 0, 'successful' => 0, 'failed' => []]
+        ];
+
         // Handle file uploads (support both 'attachments' and 'files' parameters)
         $files = [];
         if ($request->hasFile('attachments')) {
@@ -144,9 +151,19 @@ class ResearchItemController extends Controller
             $files = array_merge($files, $request->file('files'));
         }
 
+        $attachmentResults['files']['expected'] = count($files);
         foreach ($files as $file) {
-            $researchItem->addMedia($file)
-                ->toMediaCollection('attachments');
+            try {
+                $researchItem->addMedia($file)
+                    ->toMediaCollection('attachments');
+                $attachmentResults['files']['successful']++;
+            } catch (\Exception $e) {
+                $attachmentResults['files']['failed'][] = [
+                    'filename' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage()
+                ];
+                \Log::error('Failed to upload file: ' . $file->getClientOriginalName(), ['error' => $e->getMessage()]);
+            }
         }
 
         // Handle URL downloads (support both 'document_urls' and 'urls' parameters)
@@ -157,32 +174,47 @@ class ResearchItemController extends Controller
             $urls = $request->urls;
         }
 
+        // Filter out empty URLs
+        $urls = array_filter($urls, function($url) {
+            return !empty($url);
+        });
+
+        $attachmentResults['urls']['expected'] = count($urls);
         if (!empty($urls)) {
             foreach ($urls as $index => $url) {
-                if (!empty($url)) {
-                    try {
-                        // Get the document name from the parallel array or generate one
-                        $documentName = $request->document_names[$index] ?? null;
-                        if (empty($documentName)) {
-                            $documentName = 'Document ' . ($index + 1);
-                        }
-
-                        // Download the file from URL using enhanced service
-                        $downloadService = new UrlDownloadService();
-                        $tempFile = $downloadService->downloadFile($url, $documentName);
-
-                        if ($tempFile) {
-                            $researchItem->addMedia($tempFile)
-                                ->usingName($documentName)
-                                ->toMediaCollection('attachments');
-
-                            // Clean up temp file
-                            unlink($tempFile);
-                        }
-                    } catch (\Exception $e) {
-                        // Log the error but continue with other files
-                        \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
+                try {
+                    // Get the document name from the parallel array or generate one
+                    $documentName = $request->document_names[$index] ?? null;
+                    if (empty($documentName)) {
+                        $documentName = 'Document ' . ($index + 1);
                     }
+
+                    // Download the file from URL using enhanced service
+                    $downloadService = new UrlDownloadService();
+                    $tempFile = $downloadService->downloadFile($url, $documentName);
+
+                    if ($tempFile) {
+                        $researchItem->addMedia($tempFile)
+                            ->usingName($documentName)
+                            ->toMediaCollection('attachments');
+
+                        // Clean up temp file
+                        unlink($tempFile);
+                        $attachmentResults['urls']['successful']++;
+                    } else {
+                        $attachmentResults['urls']['failed'][] = [
+                            'url' => $url,
+                            'name' => $documentName,
+                            'error' => 'Download failed - file could not be retrieved'
+                        ];
+                    }
+                } catch (\Exception $e) {
+                    $attachmentResults['urls']['failed'][] = [
+                        'url' => $url,
+                        'name' => $documentName ?? 'Unknown',
+                        'error' => $e->getMessage()
+                    ];
+                    \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
                 }
             }
         }

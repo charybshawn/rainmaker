@@ -175,11 +175,42 @@
 
           <!-- Research Items Data Table -->
           <div v-if="company?.researchItems && company.researchItems.length > 0">
+            <!-- Bulk Actions Toolbar -->
+            <div v-if="selectedResearchItems.size > 0" class="mb-4 backdrop-blur-3xl bg-gradient-to-r from-red-500/10 to-red-600/20 rounded-2xl px-6 py-4 border border-red-500/20">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <span class="text-white font-medium">{{ selectedResearchItems.size }} item{{ selectedResearchItems.size !== 1 ? 's' : '' }} selected</span>
+                  <button
+                    @click="clearSelection"
+                    class="text-gray-300 hover:text-white text-sm underline"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+                <button
+                  @click="deleteSelectedResearchItems"
+                  class="flex items-center space-x-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white rounded-lg border border-red-500/30 transition-colors"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                  <span>Delete Selected</span>
+                </button>
+              </div>
+            </div>
+
             <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 overflow-hidden" style="backdrop-filter: blur(20px) saturate(180%);">
               <!-- Table Header -->
               <div class="bg-gradient-to-r from-white/5 to-white/2 px-6 py-4 border-b border-white/10">
                 <div class="grid grid-cols-12 gap-4 text-sm font-semibold text-white/80">
-                  <div class="col-span-1 text-center">#</div>
+                  <div class="col-span-1 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      :checked="selectAll"
+                      @change="toggleSelectAll"
+                      class="w-4 h-4 text-blue-600 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                  </div>
                   <div class="col-span-4">Research Title</div>
                   <div class="col-span-2">Category</div>
                   <div class="col-span-2">Created</div>
@@ -194,14 +225,23 @@
                 <div
                   v-for="(item, index) in company.researchItems"
                   :key="item.id"
-                  class="group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300 cursor-pointer"
-                  @click="viewResearchItem(item)"
+                  :class="[
+                    'group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300',
+                    selectedResearchItems.has(item.id) ? 'bg-blue-500/10 border-l-4 border-blue-500/50' : 'cursor-pointer'
+                  ]"
+                  @click="!selectedResearchItems.has(item.id) ? viewResearchItem(item) : null"
                 >
                   <div class="grid grid-cols-12 gap-4 items-center text-sm">
 
-                    <!-- Index -->
-                    <div class="col-span-1 text-center">
-                      <span class="text-white/60 font-medium">{{ index + 1 }}</span>
+                    <!-- Checkbox -->
+                    <div class="col-span-1 flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        :checked="selectedResearchItems.has(item.id)"
+                        @change="toggleItemSelection(item.id)"
+                        @click.stop
+                        class="w-4 h-4 text-blue-600 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                      />
                     </div>
 
                     <!-- Title -->
@@ -434,6 +474,7 @@
       :categories="categories"
       :availableFiles="Array.isArray(availableFiles) ? availableFiles : []"
       :loadingExistingFiles="loadingExistingFiles"
+      :isEditing="isEditingResearch"
       @close="showCreateResearchModal = false"
       @save="handleResearchSave"
       @file-upload="handleResearchFileUpload"
@@ -471,40 +512,12 @@
     />
 
     <!-- Research Item Viewer Modal -->
-    <div v-if="showResearchViewer && selectedResearchItem" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden border border-white/20">
-        <div class="p-6 border-b border-white/20">
-          <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-bold text-white">{{ selectedResearchItem.title }}</h2>
-            <button @click="closeResearchViewer" class="text-white/60 hover:text-white">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-        <div class="p-6 overflow-y-auto max-h-[70vh]">
-          <div class="prose prose-invert max-w-none">
-            <div v-html="formatResearchContent(selectedResearchItem.content)"></div>
-          </div>
-          <div v-if="selectedResearchItem.attachments?.length" class="mt-6 pt-6 border-t border-white/20">
-            <h3 class="text-lg font-semibold text-white mb-4">Attachments</h3>
-            <div class="space-y-2">
-              <div v-for="attachment in selectedResearchItem.attachments" :key="attachment.id"
-                   class="flex items-center justify-between p-3 bg-white/5 rounded-lg">
-                <span class="text-white">{{ attachment.name }}</span>
-                <button @click="downloadAttachment(attachment)"
-                        class="text-blue-300 hover:text-blue-200">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M7 7h10a2 2 0 012 2v9a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z"></path>
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <ResearchNoteModal
+      v-if="selectedResearchItem"
+      :show="showResearchViewer"
+      :researchNote="selectedResearchItem"
+      @close="closeResearchViewer"
+    />
 
   </div>
 </template>
@@ -519,6 +532,7 @@ import LoginModal from '@/Components/Modals/LoginModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
+import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 
 const props = defineProps({
   ticker: {
@@ -544,6 +558,14 @@ const showUploadDocumentModal = ref(false)
 const showEditCompanyModal = ref(false)
 const showResearchViewer = ref(false)
 const selectedResearchItem = ref(null)
+
+// Multiselect state
+const selectedResearchItems = ref(new Set())
+const selectAll = ref(false)
+
+// Edit state
+const isEditingResearch = ref(false)
+const editingResearchId = ref(null)
 
 // Forms
 const researchForm = ref({
@@ -703,15 +725,6 @@ const closeResearchViewer = () => {
   selectedResearchItem.value = null
 }
 
-const formatResearchContent = (content) => {
-  if (!content) return ''
-  // Simple markdown-like formatting
-  return content
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-}
-
 
 const deleteResearchItem = async (item) => {
   if (!confirm('Are you sure you want to delete this research item?')) return
@@ -725,9 +738,93 @@ const deleteResearchItem = async (item) => {
         company.value.researchItems.splice(index, 1)
       }
     }
+    // Remove from selection if it was selected
+    selectedResearchItems.value.delete(item.id)
   } catch (error) {
     console.error('Error deleting research item:', error)
     alert('Failed to delete research item')
+  }
+}
+
+// Multiselect methods
+const toggleItemSelection = (itemId) => {
+  if (selectedResearchItems.value.has(itemId)) {
+    selectedResearchItems.value.delete(itemId)
+  } else {
+    selectedResearchItems.value.add(itemId)
+  }
+  updateSelectAllState()
+}
+
+const toggleSelectAll = () => {
+  if (selectAll.value) {
+    // Deselect all
+    selectedResearchItems.value.clear()
+  } else {
+    // Select all
+    if (company.value?.researchItems) {
+      company.value.researchItems.forEach(item => {
+        selectedResearchItems.value.add(item.id)
+      })
+    }
+  }
+  updateSelectAllState()
+}
+
+const updateSelectAllState = () => {
+  const totalItems = company.value?.researchItems?.length || 0
+  selectAll.value = totalItems > 0 && selectedResearchItems.value.size === totalItems
+}
+
+const clearSelection = () => {
+  selectedResearchItems.value.clear()
+  selectAll.value = false
+}
+
+const deleteSelectedResearchItems = async () => {
+  const selectedCount = selectedResearchItems.value.size
+  if (selectedCount === 0) return
+
+  const confirmMessage = `Are you sure you want to delete ${selectedCount} research item${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`
+  if (!confirm(confirmMessage)) return
+
+  const selectedIds = Array.from(selectedResearchItems.value)
+  let deletedCount = 0
+  let failedCount = 0
+
+  try {
+    // Delete items one by one to handle individual failures
+    for (const itemId of selectedIds) {
+      try {
+        await axios.delete(`/api/research-items/${itemId}`)
+
+        // Remove from company data
+        if (company.value.researchItems) {
+          const index = company.value.researchItems.findIndex(r => r.id === itemId)
+          if (index !== -1) {
+            company.value.researchItems.splice(index, 1)
+          }
+        }
+
+        selectedResearchItems.value.delete(itemId)
+        deletedCount++
+      } catch (error) {
+        console.error(`Error deleting research item ${itemId}:`, error)
+        failedCount++
+      }
+    }
+
+    // Show result message
+    if (failedCount === 0) {
+      console.log(`Successfully deleted ${deletedCount} research item${deletedCount !== 1 ? 's' : ''}`)
+    } else {
+      alert(`Deleted ${deletedCount} item${deletedCount !== 1 ? 's' : ''} successfully.\n${failedCount} item${failedCount !== 1 ? 's' : ''} could not be deleted.`)
+    }
+
+    updateSelectAllState()
+  } catch (error) {
+    console.error('Error in bulk delete operation:', error)
+    alert('An error occurred during the delete operation. Some items may not have been deleted.')
   }
 }
 
@@ -780,16 +877,6 @@ const deleteDocument = async (doc) => {
   }
 }
 
-const downloadAttachment = (attachment) => {
-  if (attachment.url) {
-    const a = document.createElement('a')
-    a.href = attachment.url
-    a.download = attachment.name
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-  }
-}
 
 const handleDocumentSuccess = () => {
   showUploadDocumentModal.value = false
@@ -845,12 +932,31 @@ const handleEditCompanySave = async () => {
 
 const openCreateResearchModal = () => {
   resetResearchForm()
+  isEditingResearch.value = false
+  editingResearchId.value = null
   showCreateResearchModal.value = true
 }
 
 const editResearchItem = (item) => {
-  // TODO: Implement edit functionality via modal
-  // For now, just open the create modal
+  // Populate form with existing data
+  researchForm.value = {
+    title: item.title || '',
+    content: item.content || '',
+    company_id: item.company_id || company.value?.id,
+    category_id: item.category_id || '',
+    visibility: item.visibility || 'private',
+    uploadType: 'file',
+    files: [],
+    urls: [],
+    newUrl: '',
+    selectedExistingFiles: []
+  }
+
+  // Set edit state
+  isEditingResearch.value = true
+  editingResearchId.value = item.id
+
+  // Open modal
   showCreateResearchModal.value = true
 }
 
@@ -876,6 +982,27 @@ const resetResearchForm = () => {
 
 const handleResearchSave = async () => {
   try {
+    // Frontend validation
+    if (!researchForm.value.title || !researchForm.value.title.trim()) {
+      alert('Please enter a title for the research note.')
+      return
+    }
+
+    if (!researchForm.value.content || !researchForm.value.content.trim()) {
+      alert('Please enter content for the research note.')
+      return
+    }
+
+    if (!researchForm.value.visibility) {
+      alert('Please select a visibility setting.')
+      return
+    }
+
+    if (!company.value?.id) {
+      alert('Company information is missing. Please refresh the page and try again.')
+      return
+    }
+
     creatingResearch.value = true
     researchErrors.value = {}
 
@@ -908,26 +1035,77 @@ const handleResearchSave = async () => {
       })
     }
 
-    // Create new research item
-    console.log('Sending FormData to server...')
-    const response = await axios.post('/api/research-items', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    // Debug: Log the form data being sent
+    console.log('Form data before sending:')
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value)
+    }
+
+    // Create or update research item
+    console.log(`${isEditingResearch.value ? 'Updating' : 'Creating'} research item...`)
+
+    let response
+    if (isEditingResearch.value && editingResearchId.value) {
+      // Update existing item
+      formData.append('_method', 'PUT')
+      response = await axios.post(`/api/research-items/${editingResearchId.value}`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+    } else {
+      // Create new item
+      response = await axios.post('/api/research-items', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+    }
 
     console.log('Server response:', response.data)
+
+    // Check if all expected attachments were successfully processed
+    const expectedAttachments = researchForm.value.files.length +
+                               researchForm.value.urls.length +
+                               researchForm.value.selectedExistingFiles.length
+    const actualAttachments = response.data.attachments ? response.data.attachments.length : 0
+
+    console.log(`Expected attachments: ${expectedAttachments}, Actual attachments: ${actualAttachments}`)
+
+    // Show appropriate success/warning message
+    const action = isEditingResearch.value ? 'updated' : 'created'
 
     // Success - refresh company data and close modal
     await fetchCompanyData()
     resetResearchForm()
+    isEditingResearch.value = false
+    editingResearchId.value = null
     showCreateResearchModal.value = false
+    if (expectedAttachments > 0 && actualAttachments < expectedAttachments) {
+      const failedCount = expectedAttachments - actualAttachments
+      console.warn(`Warning: ${failedCount} out of ${expectedAttachments} attachments failed to process`)
 
-    console.log('Research item created successfully')
+      alert(`Research item ${action} successfully!\n\nWarning: ${failedCount} out of ${expectedAttachments} file(s) could not be downloaded automatically.\n\nPlease manually download the files from the provided URLs and upload them to this research item.`)
+    } else {
+      console.log(`Research item ${action} successfully with all attachments`)
+    }
 
   } catch (error) {
     console.error('Error saving research note:', error)
+    console.error('Error response data:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+
     if (error.response?.data?.errors) {
+      console.error('Validation errors:', error.response.data.errors)
       researchErrors.value = error.response.data.errors
+
+      // Show validation errors to user
+      const errorMessages = Object.entries(error.response.data.errors)
+        .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+        .join('\n')
+      alert(`Validation Error:\n\n${errorMessages}`)
+    } else if (error.response?.data?.message) {
+      console.error('Server message:', error.response.data.message)
+      alert(`Error: ${error.response.data.message}`)
+      researchErrors.value = { general: error.response.data.message }
     } else {
+      alert('Failed to save research note. Please try again.')
       researchErrors.value = { general: 'Failed to save research note. Please try again.' }
     }
   } finally {
