@@ -112,7 +112,7 @@ const props = defineProps({
   userId: [String, Number]
 })
 
-const emit = defineEmits(['view-all'])
+const emit = defineEmits(['view-all', 'auth-required'])
 
 // Reactive data
 const activities = ref([])
@@ -170,6 +170,10 @@ const fetchActivities = async () => {
 
   } catch (error) {
     console.error('Error fetching activities:', error)
+    // If it's a 401 error, emit event to show login modal
+    if (error.response && error.response.status === 401) {
+      emit('auth-required')
+    }
   } finally {
     loading.value = false
   }

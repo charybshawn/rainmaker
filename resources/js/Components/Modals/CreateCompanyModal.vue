@@ -1,9 +1,12 @@
 <template>
   <Teleport to="body">
-    <div v-show="show" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4" @click.self="$emit('close')">
-    <div class="bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 w-full max-w-2xl lg:max-w-3xl max-h-[80vh] overflow-y-auto shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
+    <div v-show="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="$emit('close')">
+      <!-- Backdrop with Dark Mode Context -->
+      <div class="fixed inset-0 bg-black/70 backdrop-blur-md dark:bg-black/80"></div>
+      <!-- Modal Container with Dark Mode Context -->
+      <div class="relative dark bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 w-[66%] max-h-[80vh] overflow-y-auto shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
       <!-- Modal Header -->
-      <div class="sticky top-0 bg-black/10 backdrop-blur-xl border-b border-white/20 px-8 py-6 rounded-t-2xl" style="backdrop-filter: blur(20px) saturate(180%);">
+      <div class="sticky top-0 bg-gray-900/95 border-b border-white/20 px-8 py-6 rounded-t-2xl">
         <div class="flex items-center justify-between">
           <h2 class="text-3xl font-semibold text-white">Add New Company</h2>
           <div class="flex items-center space-x-3">
@@ -234,7 +237,7 @@
 
       </form>
       </div>
-    </div>
+      </div>
     </div>
   </Teleport>
 </template>

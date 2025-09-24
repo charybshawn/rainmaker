@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Document;
+use App\Services\UrlDownloadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -109,8 +110,9 @@ class DocumentController extends Controller
                             $documentName = 'Document ' . ($index + 1);
                         }
 
-                        // Download the file from URL
-                        $tempFile = $this->downloadFileFromUrl($url, $documentName);
+                        // Download the file from URL using enhanced service
+                        $downloadService = new UrlDownloadService();
+                        $tempFile = $downloadService->downloadFile($url, $documentName);
 
                         if ($tempFile) {
                             $document->addMedia($tempFile)
@@ -236,108 +238,4 @@ class DocumentController extends Controller
         ];
     }
 
-    /**
-     * Download a file from URL and return temporary file path.
-     */
-    private function downloadFileFromUrl(string $url, string $documentName): ?string
-    {
-        try {
-            // Validate URL
-            if (!filter_var($url, FILTER_VALIDATE_URL)) {
-                throw new \Exception('Invalid URL format');
-            }
-
-            // Initialize cURL
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; Rainmaker/1.0)');
-
-            // Execute request
-            $data = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-
-            if (curl_error($ch)) {
-                throw new \Exception('cURL error: ' . curl_error($ch));
-            }
-
-            curl_close($ch);
-
-            if ($httpCode !== 200) {
-                throw new \Exception('HTTP error: ' . $httpCode);
-            }
-
-            if (empty($data)) {
-                throw new \Exception('Empty response from URL');
-            }
-
-            // Determine file extension from content type or URL
-            $extension = $this->getFileExtensionFromUrl($url, $contentType);
-
-            // Create temporary file
-            $tempFilePath = tempnam(sys_get_temp_dir(), 'download_') . '.' . $extension;
-
-            if (file_put_contents($tempFilePath, $data) === false) {
-                throw new \Exception('Failed to write downloaded content to temporary file');
-            }
-
-            return $tempFilePath;
-
-        } catch (\Exception $e) {
-            \Log::error('URL download failed', [
-                'url' => $url,
-                'document_name' => $documentName,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Get file extension from URL or content type.
-     */
-    private function getFileExtensionFromUrl(string $url, ?string $contentType): string
-    {
-        // First try to get extension from content type
-        if ($contentType) {
-            $mimeToExtension = [
-                'application/pdf' => 'pdf',
-                'application/msword' => 'doc',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-                'application/vnd.ms-excel' => 'xls',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-                'application/vnd.ms-powerpoint' => 'ppt',
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-                'text/plain' => 'txt',
-                'text/csv' => 'csv',
-                'image/jpeg' => 'jpg',
-                'image/png' => 'png',
-                'image/gif' => 'gif',
-                'image/webp' => 'webp',
-                'image/svg+xml' => 'svg',
-            ];
-
-            $contentType = strtolower(trim(explode(';', $contentType)[0]));
-            if (isset($mimeToExtension[$contentType])) {
-                return $mimeToExtension[$contentType];
-            }
-        }
-
-        // Fallback to URL extension
-        $urlPath = parse_url($url, PHP_URL_PATH);
-        if ($urlPath) {
-            $extension = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
-            if (!empty($extension)) {
-                return $extension;
-            }
-        }
-
-        // Default fallback
-        return 'bin';
-    }
 }

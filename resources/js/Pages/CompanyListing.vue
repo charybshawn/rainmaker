@@ -471,9 +471,17 @@ const formatMarketCap = (marketCap) => {
   }
 }
 
+const navigateToCompany = (company) => {
+  if (company.ticker) {
+    router.visit(route('company.profile', { ticker: company.ticker }))
+  } else {
+    console.error('Company ticker not available for navigation')
+  }
+}
+
 const viewCompanyDetails = (company) => {
-  selectedCompany.value = company
-  showCompanyDetailsModal.value = true
+  // Redirect to new page instead of modal
+  navigateToCompany(company)
 }
 
 const closeCompanyDetailsModal = () => {

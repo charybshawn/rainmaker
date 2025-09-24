@@ -7,6 +7,7 @@ use App\Models\ResearchItem;
 use App\Models\Company;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Services\UrlDownloadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -106,14 +107,23 @@ class ResearchItemController extends Controller
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
             'ai_synopsis' => 'nullable|string',
+            // Support both old and new file upload formats
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+            'files' => 'nullable|array',
+            'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+            // Support both old and new URL formats
             'document_urls' => 'nullable|array',
             'document_urls.*' => 'url',
+            'urls' => 'nullable|array',
+            'urls.*' => 'url',
             'document_names' => 'nullable|array',
             'document_names.*' => 'nullable|string|max:255',
+            // Support both old and new existing file formats
             'existing_file_ids' => 'nullable|array',
             'existing_file_ids.*' => 'integer|exists:media,id',
+            'existing_files' => 'nullable|array',
+            'existing_files.*' => 'integer|exists:media,id',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -125,17 +135,30 @@ class ResearchItemController extends Controller
             $researchItem->tags()->sync($validated['tag_ids']);
         }
 
-        // Handle file uploads
+        // Handle file uploads (support both 'attachments' and 'files' parameters)
+        $files = [];
         if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $researchItem->addMedia($file)
-                    ->toMediaCollection('attachments');
-            }
+            $files = array_merge($files, $request->file('attachments'));
+        }
+        if ($request->hasFile('files')) {
+            $files = array_merge($files, $request->file('files'));
         }
 
-        // Handle URL downloads
+        foreach ($files as $file) {
+            $researchItem->addMedia($file)
+                ->toMediaCollection('attachments');
+        }
+
+        // Handle URL downloads (support both 'document_urls' and 'urls' parameters)
+        $urls = [];
         if ($request->has('document_urls') && is_array($request->document_urls)) {
-            foreach ($request->document_urls as $index => $url) {
+            $urls = $request->document_urls;
+        } elseif ($request->has('urls') && is_array($request->urls)) {
+            $urls = $request->urls;
+        }
+
+        if (!empty($urls)) {
+            foreach ($urls as $index => $url) {
                 if (!empty($url)) {
                     try {
                         // Get the document name from the parallel array or generate one
@@ -144,8 +167,9 @@ class ResearchItemController extends Controller
                             $documentName = 'Document ' . ($index + 1);
                         }
 
-                        // Download the file from URL
-                        $tempFile = $this->downloadFileFromUrl($url, $documentName);
+                        // Download the file from URL using enhanced service
+                        $downloadService = new UrlDownloadService();
+                        $tempFile = $downloadService->downloadFile($url, $documentName);
 
                         if ($tempFile) {
                             $researchItem->addMedia($tempFile)
@@ -163,9 +187,16 @@ class ResearchItemController extends Controller
             }
         }
 
-        // Handle existing file linking
+        // Handle existing file linking (support both 'existing_file_ids' and 'existing_files' parameters)
+        $existingFileIds = [];
         if ($request->has('existing_file_ids') && is_array($request->existing_file_ids)) {
-            foreach ($request->existing_file_ids as $mediaId) {
+            $existingFileIds = $request->existing_file_ids;
+        } elseif ($request->has('existing_files') && is_array($request->existing_files)) {
+            $existingFileIds = $request->existing_files;
+        }
+
+        if (!empty($existingFileIds)) {
+            foreach ($existingFileIds as $mediaId) {
                 try {
                     // Get the original media item
                     $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
@@ -302,14 +333,23 @@ class ResearchItemController extends Controller
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
             'ai_synopsis' => 'nullable|string',
+            // Support both old and new file upload formats
             'attachments' => 'nullable|array',
             'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+            'files' => 'nullable|array',
+            'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+            // Support both old and new URL formats
             'document_urls' => 'nullable|array',
             'document_urls.*' => 'url',
+            'urls' => 'nullable|array',
+            'urls.*' => 'url',
             'document_names' => 'nullable|array',
             'document_names.*' => 'nullable|string|max:255',
+            // Support both old and new existing file formats
             'existing_file_ids' => 'nullable|array',
             'existing_file_ids.*' => 'integer|exists:media,id',
+            'existing_files' => 'nullable|array',
+            'existing_files.*' => 'integer|exists:media,id',
         ]);
 
         // Filter out non-database fields before updating
@@ -330,17 +370,30 @@ class ResearchItemController extends Controller
             $researchItem->tags()->sync($validated['tag_ids']);
         }
 
-        // Handle file uploads
+        // Handle file uploads (support both 'attachments' and 'files' parameters)
+        $files = [];
         if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $researchItem->addMedia($file)
-                    ->toMediaCollection('attachments');
-            }
+            $files = array_merge($files, $request->file('attachments'));
+        }
+        if ($request->hasFile('files')) {
+            $files = array_merge($files, $request->file('files'));
         }
 
-        // Handle URL downloads
+        foreach ($files as $file) {
+            $researchItem->addMedia($file)
+                ->toMediaCollection('attachments');
+        }
+
+        // Handle URL downloads (support both 'document_urls' and 'urls' parameters)
+        $urls = [];
         if ($request->has('document_urls') && is_array($request->document_urls)) {
-            foreach ($request->document_urls as $index => $url) {
+            $urls = $request->document_urls;
+        } elseif ($request->has('urls') && is_array($request->urls)) {
+            $urls = $request->urls;
+        }
+
+        if (!empty($urls)) {
+            foreach ($urls as $index => $url) {
                 if (!empty($url)) {
                     try {
                         // Get the document name from the parallel array or generate one
@@ -349,8 +402,9 @@ class ResearchItemController extends Controller
                             $documentName = 'Document ' . ($index + 1);
                         }
 
-                        // Download the file from URL
-                        $tempFile = $this->downloadFileFromUrl($url, $documentName);
+                        // Download the file from URL using enhanced service
+                        $downloadService = new UrlDownloadService();
+                        $tempFile = $downloadService->downloadFile($url, $documentName);
 
                         if ($tempFile) {
                             $researchItem->addMedia($tempFile)
@@ -368,9 +422,16 @@ class ResearchItemController extends Controller
             }
         }
 
-        // Handle existing file linking
+        // Handle existing file linking (support both 'existing_file_ids' and 'existing_files' parameters)
+        $existingFileIds = [];
         if ($request->has('existing_file_ids') && is_array($request->existing_file_ids)) {
-            foreach ($request->existing_file_ids as $mediaId) {
+            $existingFileIds = $request->existing_file_ids;
+        } elseif ($request->has('existing_files') && is_array($request->existing_files)) {
+            $existingFileIds = $request->existing_files;
+        }
+
+        if (!empty($existingFileIds)) {
+            foreach ($existingFileIds as $mediaId) {
                 try {
                     // Get the original media item
                     $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
@@ -449,110 +510,6 @@ class ResearchItemController extends Controller
         return response()->json(null, 204);
     }
 
-    /**
-     * Download a file from URL and return temporary file path.
-     */
-    private function downloadFileFromUrl(string $url, string $documentName): ?string
-    {
-        try {
-            // Validate URL
-            if (!filter_var($url, FILTER_VALIDATE_URL)) {
-                throw new \Exception('Invalid URL format');
-            }
-
-            // Initialize cURL
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $url);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; Rainmaker/1.0)');
-
-            // Execute request
-            $data = curl_exec($ch);
-            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-
-            if (curl_error($ch)) {
-                throw new \Exception('cURL error: ' . curl_error($ch));
-            }
-
-            curl_close($ch);
-
-            if ($httpCode !== 200) {
-                throw new \Exception('HTTP error: ' . $httpCode);
-            }
-
-            if (empty($data)) {
-                throw new \Exception('Empty response from URL');
-            }
-
-            // Determine file extension from content type or URL
-            $extension = $this->getFileExtensionFromUrl($url, $contentType);
-
-            // Create temporary file
-            $tempFilePath = tempnam(sys_get_temp_dir(), 'download_') . '.' . $extension;
-
-            if (file_put_contents($tempFilePath, $data) === false) {
-                throw new \Exception('Failed to write downloaded content to temporary file');
-            }
-
-            return $tempFilePath;
-
-        } catch (\Exception $e) {
-            \Log::error('URL download failed', [
-                'url' => $url,
-                'document_name' => $documentName,
-                'error' => $e->getMessage()
-            ]);
-            return null;
-        }
-    }
-
-    /**
-     * Get file extension from URL or content type.
-     */
-    private function getFileExtensionFromUrl(string $url, ?string $contentType): string
-    {
-        // First try to get extension from content type
-        if ($contentType) {
-            $mimeToExtension = [
-                'application/pdf' => 'pdf',
-                'application/msword' => 'doc',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => 'docx',
-                'application/vnd.ms-excel' => 'xls',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' => 'xlsx',
-                'application/vnd.ms-powerpoint' => 'ppt',
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation' => 'pptx',
-                'text/plain' => 'txt',
-                'text/csv' => 'csv',
-                'image/jpeg' => 'jpg',
-                'image/png' => 'png',
-                'image/gif' => 'gif',
-                'image/webp' => 'webp',
-                'image/svg+xml' => 'svg',
-            ];
-
-            $contentType = strtolower(trim(explode(';', $contentType)[0]));
-            if (isset($mimeToExtension[$contentType])) {
-                return $mimeToExtension[$contentType];
-            }
-        }
-
-        // Fallback to URL extension
-        $urlPath = parse_url($url, PHP_URL_PATH);
-        if ($urlPath) {
-            $extension = strtolower(pathinfo($urlPath, PATHINFO_EXTENSION));
-            if (!empty($extension)) {
-                return $extension;
-            }
-        }
-
-        // Default fallback
-        return 'bin';
-    }
 
     /**
      * Get available files that can be reused for research items

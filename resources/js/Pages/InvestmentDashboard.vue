@@ -868,6 +868,7 @@
             <div class="mt-8">
               <ActivityWidget
                 :show-stats="true"
+                @auth-required="showLoginModal = true"
               />
             </div>
           </div>
@@ -1261,7 +1262,7 @@
                 :key="company.id"
                 class="p-3 rounded-xl border border-white/20 bg-gradient-to-br from-black/20 via-black/10 to-transparent backdrop-blur-xl cursor-pointer hover:bg-black/20 transition-all duration-300"
                 style="backdrop-filter: blur(20px) saturate(180%);"
-                @click="viewCompanyDetails(company)"
+                @click="navigateToCompany(company)"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2 min-w-0 flex-1">
@@ -1344,7 +1345,7 @@
                     </div>
 
                     <!-- Company Info -->
-                    <div class="col-span-3 flex items-center space-x-3 cursor-pointer" @click="viewCompanyDetails(company)">
+                    <div class="col-span-3 flex items-center space-x-3 cursor-pointer" @click="navigateToCompany(company)">
                       <!-- Stock Ticker -->
                       <div class="w-16 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-all duration-300">
                         <span class="text-blue-300 font-bold text-sm">{{ company.ticker || 'N/A' }}</span>
@@ -1388,7 +1389,7 @@
                     <!-- Actions -->
                     <div class="col-span-2 flex items-center justify-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        @click.stop="viewCompanyDetails(company)"
+                        @click.stop="navigateToCompany(company)"
                         class="w-8 h-8 rounded-lg bg-blue-500/30 hover:bg-blue-500/50 flex items-center justify-center transition-colors"
                         title="View Details"
                       >
@@ -1875,7 +1876,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
-import { Head, Link, usePage } from '@inertiajs/vue3'
+import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import AnimatedQuotes from '@/Components/AnimatedQuotes.vue'
@@ -2514,7 +2515,7 @@ const handleMobileSearch = (query) => {
 // Search result click handlers
 const openCompanyDetails = async (company) => {
   closeSearch()
-  await viewCompanyDetails(company)
+  navigateToCompany(company)
 }
 
 const openBlogPost = (post) => {
@@ -2876,6 +2877,14 @@ const createCompany = async () => {
     }
   } finally {
     creating.value = false
+  }
+}
+
+const navigateToCompany = (company) => {
+  if (company.ticker) {
+    router.visit(route('company.profile', { ticker: company.ticker }))
+  } else {
+    console.error('Company ticker not available for navigation')
   }
 }
 
@@ -3646,8 +3655,8 @@ const handleViewCompanyFromNote = async (company) => {
   // Close the research note modal first
   closeResearchNoteModal()
 
-  // Open the company details modal
-  await viewCompanyDetails(company)
+  // Navigate to company page instead of modal
+  navigateToCompany(company)
 }
 
 // Companies Tab Methods
@@ -3689,9 +3698,8 @@ const nextCompaniesPage = () => {
 }
 
 const viewCompanyResearch = (company) => {
-  // Open company modal with research tab selected
-  modalInitialTab.value = 'research'
-  viewCompanyDetails(company)
+  // Navigate to company page (research tab will be handled by URL params later)
+  navigateToCompany(company)
 }
 
 
@@ -3728,6 +3736,9 @@ const fetchLatestCompanies = async () => {
     latestCompanies.value = response.data || []
   } catch (error) {
     console.error('Error fetching latest companies:', error)
+    if (error.response && error.response.status === 401) {
+      showLoginModal.value = true
+    }
   }
 }
 
@@ -3737,6 +3748,9 @@ const fetchLatestResearch = async () => {
     latestResearch.value = response.data || []
   } catch (error) {
     console.error('Error fetching latest research:', error)
+    if (error.response && error.response.status === 401) {
+      showLoginModal.value = true
+    }
   }
 }
 
@@ -3746,6 +3760,9 @@ const fetchLatestInsights = async () => {
     latestInsights.value = response.data || []
   } catch (error) {
     console.error('Error fetching latest insights:', error)
+    if (error.response && error.response.status === 401) {
+      showLoginModal.value = true
+    }
   }
 }
 

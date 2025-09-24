@@ -131,6 +131,45 @@ Route::prefix('api')->group(function () {
         Route::get('activities/latest/insights', [\App\Http\Controllers\Api\ActivityController::class, 'latestInsights']);
         Route::get('activities/users/{user}', [\App\Http\Controllers\Api\ActivityController::class, 'forUser']);
         Route::get('activities/{modelType}/{modelId}', [\App\Http\Controllers\Api\ActivityController::class, 'forModel']);
+
+        // URL Download Testing (protected)
+        Route::get('test-download', function () {
+            $downloadService = new \App\Services\UrlDownloadService();
+            return response()->json($downloadService->testDownload());
+        });
+
+        Route::post('test-download-url', function (\Illuminate\Http\Request $request) {
+            $request->validate([
+                'url' => 'required|url',
+                'name' => 'nullable|string|max:255'
+            ]);
+
+            $downloadService = new \App\Services\UrlDownloadService();
+            $result = $downloadService->downloadFile(
+                $request->url,
+                $request->name ?? 'Test Download'
+            );
+
+            if ($result) {
+                $fileSize = filesize($result);
+                $fileInfo = pathinfo($result);
+
+                // Clean up test file
+                unlink($result);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Download successful',
+                    'file_size' => $fileSize,
+                    'extension' => $fileInfo['extension'] ?? null,
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Download failed - check logs for details'
+                ], 500);
+            }
+        });
     });
 });
 
@@ -141,6 +180,17 @@ Route::middleware('auth')->prefix('my-blog')->name('blog.')->group(function () {
     Route::put('/{blogPost}', [BlogPostController::class, 'update'])->name('update');
     Route::delete('/{blogPost}', [BlogPostController::class, 'destroy'])->name('destroy');
 });
+
+// Public Company Routes
+Route::get('/companies/{ticker}', function ($ticker) {
+    return Inertia::render('CompanyProfile', [
+        'ticker' => $ticker,
+        'tab' => request('tab', 'overview'),
+        'auth' => auth()->check() ? [
+            'user' => auth()->user()->load('roles', 'permissions')
+        ] : ['user' => null]
+    ]);
+})->name('company.profile');
 
 // Public Blog Routes
 Route::get('/users/{username}/blog', [BlogPostController::class, 'userBlog'])->name('user.blog');
