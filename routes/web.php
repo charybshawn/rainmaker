@@ -87,12 +87,16 @@ Route::prefix('api')->group(function () {
         return response()->json(\App\Models\Tag::all(['id', 'name', 'color']));
     });
 
-    Route::middleware('auth')->group(function () {
-        // Protected search endpoints (require authentication)
-        Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
-        Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
-        Route::get('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'index']);
+    // Public search endpoints (accessible to everyone, with different results based on auth status)
+    Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
+    Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
 
+    // Public research item endpoints (accessible to everyone, with different results based on auth status)
+    Route::get('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'index']);
+    Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
+
+    Route::middleware('auth')->group(function () {
+        // Protected endpoints (require authentication)
         Route::post('companies', [CompanyController::class, 'store']);
         Route::get('companies/{company}', [CompanyController::class, 'show']);
         Route::put('companies/{company}', [CompanyController::class, 'update']);
@@ -105,7 +109,6 @@ Route::prefix('api')->group(function () {
 
         // Research Items (protected operations)
         Route::post('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'store']);
-        Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
         Route::put('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'update']);
         Route::delete('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'destroy']);
 

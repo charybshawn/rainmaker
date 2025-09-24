@@ -59,11 +59,11 @@ class ResearchItemController extends Controller
                 'title' => $item->title,
                 'content' => $item->content,
                 'visibility' => $item->visibility,
-                'company' => [
+                'company' => $item->company ? [
                     'id' => $item->company->id,
                     'name' => $item->company->name,
                     'ticker' => $item->company->ticker_symbol,
-                ],
+                ] : null,
                 'category' => $item->category ? [
                     'id' => $item->category->id,
                     'name' => $item->category->name,
@@ -190,11 +190,11 @@ class ResearchItemController extends Controller
             'title' => $researchItem->title,
             'content' => $researchItem->content,
             'visibility' => $researchItem->visibility,
-            'company' => [
+            'company' => $researchItem->company ? [
                 'id' => $researchItem->company->id,
                 'name' => $researchItem->company->name,
                 'ticker' => $researchItem->company->ticker_symbol,
-            ],
+            ] : null,
             'category' => $researchItem->category ? [
                 'id' => $researchItem->category->id,
                 'name' => $researchItem->category->name,
@@ -243,11 +243,11 @@ class ResearchItemController extends Controller
             'title' => $researchItem->title,
             'content' => $researchItem->content,
             'visibility' => $researchItem->visibility,
-            'company' => [
+            'company' => $researchItem->company ? [
                 'id' => $researchItem->company->id,
                 'name' => $researchItem->company->name,
                 'ticker' => $researchItem->company->ticker_symbol,
-            ],
+            ] : null,
             'category' => $researchItem->category ? [
                 'id' => $researchItem->category->id,
                 'name' => $researchItem->category->name,
@@ -395,11 +395,11 @@ class ResearchItemController extends Controller
             'title' => $researchItem->title,
             'content' => $researchItem->content,
             'visibility' => $researchItem->visibility,
-            'company' => [
+            'company' => $researchItem->company ? [
                 'id' => $researchItem->company->id,
                 'name' => $researchItem->company->name,
                 'ticker' => $researchItem->company->ticker_symbol,
-            ],
+            ] : null,
             'category' => $researchItem->category ? [
                 'id' => $researchItem->category->id,
                 'name' => $researchItem->category->name,

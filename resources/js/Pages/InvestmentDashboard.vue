@@ -305,7 +305,7 @@
               <!-- Search Results View Mode Toggle -->
               <div class="flex justify-between items-center">
                 <div class="text-sm text-gray-400">
-                  {{ searchResults.companies.length + searchResults.blogPosts.length + searchResults.researchItems.length }} total results
+                  {{ searchResults.companies.length + searchResults.blogPosts.length + searchResults.researchItems.length + (searchResults.documents?.length || 0) }} total results
                 </div>
                 <div class="flex backdrop-blur-sm bg-white/8 rounded-2xl p-2 border border-white/15 shadow-[0_4px_16px_0_rgba(31,38,135,0.08)]">
                   <button
@@ -503,6 +503,53 @@
                 </div>
               </div>
 
+              <!-- Documents Results -->
+              <div v-if="searchResults.documents && searchResults.documents.length > 0" class="backdrop-blur-3xl bg-gradient-to-br from-orange-500/10 via-white/5 to-orange-400/8 rounded-2xl border border-orange-400/20 p-6" style="backdrop-filter: blur(20px) saturate(180%);">
+                <h3 class="text-lg font-semibold text-orange-200 mb-4 flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    Documents ({{ searchResults.documents?.length || 0 }})
+                  </div>
+                  <div class="text-sm text-orange-300/70" v-if="totalPages.documents > 1">
+                    Page {{ pagination.documents.currentPage }} of {{ totalPages.documents }}
+                  </div>
+                </h3>
+                <div class="space-y-3 mb-4">
+                  <div
+                    v-for="document in paginatedDocuments"
+                    :key="'document-' + document.id"
+                    @click="openDocument(document)"
+                    class="p-3 rounded-xl bg-white/5 hover:bg-white/10 cursor-pointer transition-all duration-300 group"
+                  >
+                    <p class="font-medium text-white group-hover:text-orange-200 line-clamp-2">{{ document.title }}</p>
+                    <p class="text-sm text-gray-400 mt-1">{{ document.description || 'No description' }}</p>
+                    <p class="text-xs text-gray-500 mt-1">{{ formatDate(document.created_at) }}</p>
+                  </div>
+                </div>
+                <!-- Pagination Controls -->
+                <div v-if="totalPages.documents > 1" class="flex items-center justify-center space-x-2 pt-4 border-t border-orange-400/20">
+                  <button
+                    @click="changePage('documents', pagination.documents.currentPage - 1)"
+                    :disabled="pagination.documents.currentPage === 1"
+                    class="px-3 py-1 rounded-lg bg-orange-500/20 text-orange-200 hover:bg-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+                  >
+                    ←
+                  </button>
+                  <span class="text-sm text-orange-300/70 px-2">
+                    {{ pagination.documents.currentPage }} / {{ totalPages.documents }}
+                  </span>
+                  <button
+                    @click="changePage('documents', pagination.documents.currentPage + 1)"
+                    :disabled="pagination.documents.currentPage === totalPages.documents"
+                    class="px-3 py-1 rounded-lg bg-orange-500/20 text-orange-200 hover:bg-orange-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+
             </div>
 
             <!-- List View -->
@@ -562,6 +609,24 @@
                     </div>
                     <div class="text-green-300 text-sm">Research</div>
                   </div>
+
+                  <!-- Documents -->
+                  <div v-for="document in (searchResults.documents || [])" :key="'list-document-' + document.id"
+                       @click="openDocument(document)"
+                       class="flex items-center justify-between p-4 rounded-lg bg-orange-500/10 border border-orange-400/20 hover:bg-orange-500/20 transition-colors cursor-pointer">
+                    <div class="flex items-center space-x-4">
+                      <div class="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 class="text-white font-medium">{{ document.title }}</h4>
+                        <p class="text-gray-400 text-sm">{{ document.description || 'No description' }} • {{ formatDate(document.created_at) }}</p>
+                      </div>
+                    </div>
+                    <div class="text-orange-300 text-sm">Document</div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -599,7 +664,7 @@
             </div>
 
             <!-- No Results -->
-            <div v-else-if="!isSearching && !searchResults.companies.length && !searchResults.blogPosts.length && !searchResults.researchItems.length && searchQuery.length >= 2" class="text-center py-12">
+            <div v-else-if="!isSearching && !searchResults.companies.length && !searchResults.blogPosts.length && !searchResults.researchItems.length && !(searchResults.documents?.length) && searchQuery.length >= 2" class="text-center py-12">
               <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
@@ -1960,7 +2025,8 @@ const insightsPerPage = ref(9)
 const searchResults = ref({
   companies: [],
   blogPosts: [],
-  researchItems: []
+  researchItems: [],
+  documents: []
 })
 const isSearching = ref(false)
 const showSearchResults = ref(false)
@@ -2031,7 +2097,8 @@ const {
 const pagination = ref({
   companies: { currentPage: 1, perPage: 5 },
   blogPosts: { currentPage: 1, perPage: 5 },
-  researchItems: { currentPage: 1, perPage: 5 }
+  researchItems: { currentPage: 1, perPage: 5 },
+  documents: { currentPage: 1, perPage: 5 }
 })
 
 const companyForm = ref({
@@ -2131,11 +2198,17 @@ const paginatedResearchItems = computed(() => {
   const end = start + pagination.value.researchItems.perPage
   return searchResults.value.researchItems.slice(start, end)
 })
+const paginatedDocuments = computed(() => {
+  const start = (pagination.value.documents.currentPage - 1) * pagination.value.documents.perPage
+  const end = start + pagination.value.documents.perPage
+  return searchResults.value.documents.slice(start, end)
+})
 
 const totalPages = computed(() => ({
   companies: Math.ceil(searchResults.value.companies.length / pagination.value.companies.perPage),
   blogPosts: Math.ceil(searchResults.value.blogPosts.length / pagination.value.blogPosts.perPage),
-  researchItems: Math.ceil(searchResults.value.researchItems.length / pagination.value.researchItems.perPage)
+  researchItems: Math.ceil(searchResults.value.researchItems.length / pagination.value.researchItems.perPage),
+  documents: Math.ceil(searchResults.value.documents.length / pagination.value.documents.perPage)
 }))
 
 // Tree data structure for tree view
@@ -2327,63 +2400,47 @@ const performUniversalSearch = async (query) => {
     return
   }
 
-  // Check if user is logged in
-  if (!$page.props.auth.user) {
-    showSearchResults.value = true
-    isSearching.value = false
-    searchResults.value = {
-      companies: [],
-      blogPosts: [],
-      researchItems: []
-    }
-    return
-  }
+  // User authentication is checked in the SearchController - we can always call the API
+  // (it returns different results based on auth status)
 
   try {
     isSearching.value = true
     showSearchResults.value = true
 
-    // API calls for actual content
-    const [companiesRes, blogPostsRes, researchItemsRes] = await Promise.all([
-      // Companies search
-      axios.get('/api/companies', { params: { search: query } }),
-      // Blog posts search - search by title, content, AND related companies
-      axios.get('/api/blog-posts/search', {
-        params: {
-          q: query,
-          include_companies: true // Include posts linked to companies that match
-        }
-      }).catch((error) => {
-        console.error('Blog posts search error:', error)
-        return { data: [] }
-      }),
-      // Research items search - search by title, content, AND related companies
-      axios.get('/api/research-items', {
-        params: {
-          search: query,
-          include_companies: true // Include research linked to companies that match
-        }
-      }).catch(() => ({ data: [] }))
-    ])
-
-    console.log('Search API responses:', {
-      companies: companiesRes.data,
-      blogPosts: blogPostsRes.data,
-      researchItems: researchItemsRes.data
+    // Use the universal search endpoint that handles all content types
+    const response = await axios.get('/api/search', {
+      params: { q: query }
     })
 
+    console.log('UPDATED Universal search API response:', response.data)
+
     searchResults.value = {
-      companies: companiesRes.data.data || [], // Extract the data array from the API response
-      blogPosts: blogPostsRes.data.data || [],
-      researchItems: researchItemsRes.data.data || []
+      companies: response.data.companies || [],
+      blogPosts: response.data.blogPosts || [],
+      researchItems: response.data.researchItems || [],
+      documents: response.data.documents || []
     }
 
     // Reset pagination when new search results arrive
     resetPagination()
   } catch (error) {
     console.error('Universal search error:', error)
+    // Set empty results on error but maintain the structure
+    searchResults.value = {
+      companies: [],
+      blogPosts: [],
+      researchItems: [],
+      documents: []
+    }
   } finally {
     isSearching.value = false
+  }
+}
+
+// Alias for performUniversalSearch to maintain compatibility
+const performSearch = () => {
+  if (searchQuery.value) {
+    performUniversalSearch(searchQuery.value)
   }
 }
 
@@ -2398,6 +2455,7 @@ const resetPagination = () => {
   pagination.value.companies.currentPage = 1
   pagination.value.blogPosts.currentPage = 1
   pagination.value.researchItems.currentPage = 1
+  pagination.value.documents.currentPage = 1
 }
 
 // Debounced universal search
@@ -4005,6 +4063,14 @@ const initStarsAnimation = () => {
     
     animate()
   }, 200)
+}
+
+const openDocument = (document) => {
+  // Close the search modal
+  closeSearch()
+  // For now, we'll log the document - in the future this could open a document viewer modal
+  console.log('Opening document:', document)
+  // You might want to implement a document viewer modal here
 }
 </script>
 
