@@ -2911,10 +2911,11 @@ const createCompany = async () => {
 }
 
 const navigateToCompany = (company) => {
-  if (company.ticker_symbol) {
-    router.visit(route('company.profile', { ticker: company.ticker_symbol }))
+  const ticker = company.ticker_symbol || company.ticker
+  if (ticker) {
+    router.visit(route('company.profile', { ticker: ticker }))
   } else {
-    console.error('Company ticker not available for navigation')
+    console.error('Company ticker not available for navigation', company)
   }
 }
 
