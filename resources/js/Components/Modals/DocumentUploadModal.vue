@@ -12,7 +12,7 @@
           <div>
             <h2 class="text-3xl font-semibold text-white">📄 Upload Document</h2>
             <p class="text-lg text-gray-300 mt-1" v-if="selectedCompany">
-              for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
+              for {{ selectedCompany.name }} ({{ selectedCompany.ticker_symbol }})
             </p>
           </div>
           <div class="flex items-center space-x-3">

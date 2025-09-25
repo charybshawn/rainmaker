@@ -564,7 +564,7 @@
                       </div>
                       <div>
                         <h4 class="text-white font-medium">{{ company.name }}</h4>
-                        <p class="text-gray-400 text-sm">{{ company.ticker }} • {{ company.sector }}</p>
+                        <p class="text-gray-400 text-sm">{{ company.ticker_symbol }} • {{ company.sector }}</p>
                       </div>
                     </div>
                     <div class="text-blue-300 text-sm">Company</div>
@@ -1266,7 +1266,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2 min-w-0 flex-1">
                     <div class="w-10 h-8 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded flex items-center justify-center flex-shrink-0">
-                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker || '').substring(0, 3) }}</span>
+                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker_symbol || '').substring(0, 3) }}</span>
                     </div>
                     <div class="min-w-0 flex-1">
                       <h4 class="text-white font-medium truncate text-sm">{{ company.name }}</h4>
@@ -1347,7 +1347,7 @@
                     <div class="col-span-3 flex items-center space-x-3 cursor-pointer" @click="navigateToCompany(company)">
                       <!-- Stock Ticker -->
                       <div class="w-16 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-all duration-300">
-                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker || 'N/A' }}</span>
+                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker_symbol || 'N/A' }}</span>
                       </div>
 
                       <!-- Company Details -->
@@ -1800,7 +1800,7 @@
                 >
                   <div>
                     <div class="font-medium text-white">{{ company.name }}</div>
-                    <div class="text-sm text-gray-400">{{ company.ticker }}</div>
+                    <div class="text-sm text-gray-400">{{ company.ticker_symbol }}</div>
                   </div>
                   <div class="text-sm text-gray-400 space-x-4">
                     <span v-if="company.research_items > 0">{{ company.research_items }} research</span>
@@ -2137,7 +2137,7 @@ const filteredCompanies = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   return companiesInfinite.value.filter(company =>
     company.name.toLowerCase().includes(query) ||
-    company.ticker.toLowerCase().includes(query) ||
+    company.ticker_symbol.toLowerCase().includes(query) ||
     (company.sector && company.sector.toLowerCase().includes(query)) ||
     (company.industry && company.industry.toLowerCase().includes(query))
   )
@@ -2307,7 +2307,7 @@ const companiesFiltered = computed(() => {
     const query = companiesSearchQuery.value.toLowerCase()
     filtered = filtered.filter(company =>
       company.name.toLowerCase().includes(query) ||
-      company.ticker?.toLowerCase().includes(query) ||
+      company.ticker_symbol?.toLowerCase().includes(query) ||
       company.sector?.toLowerCase().includes(query) ||
       company.industry?.toLowerCase().includes(query)
     )
@@ -2322,7 +2322,7 @@ const companiesFiltered = computed(() => {
   if (companiesSortBy.value === 'name') {
     filtered.sort((a, b) => a.name.localeCompare(b.name))
   } else if (companiesSortBy.value === 'ticker') {
-    filtered.sort((a, b) => (a.ticker || '').localeCompare(b.ticker || ''))
+    filtered.sort((a, b) => (a.ticker_symbol || '').localeCompare(b.ticker_symbol || ''))
   } else if (companiesSortBy.value === 'sector') {
     filtered.sort((a, b) => (a.sector || '').localeCompare(b.sector || ''))
   } else if (companiesSortBy.value === 'research_count') {
@@ -2911,8 +2911,8 @@ const createCompany = async () => {
 }
 
 const navigateToCompany = (company) => {
-  if (company.ticker) {
-    router.visit(route('company.profile', { ticker: company.ticker }))
+  if (company.ticker_symbol) {
+    router.visit(route('company.profile', { ticker: company.ticker_symbol }))
   } else {
     console.error('Company ticker not available for navigation')
   }
@@ -2987,7 +2987,7 @@ const viewCompanyDetails = async (company) => {
     // Initialize forms with fallback data
     companyForm.value = {
       name: company.name || '',
-      ticker_symbol: company.ticker || '',
+      ticker_symbol: company.ticker_symbol || '',
       sector: company.sector || '',
       industry: company.industry || '',
       market_cap: company.marketCap || '',
@@ -3665,7 +3665,7 @@ const saveCompanyEdits = async () => {
     // Update the form with the saved data so fields show current values
     companyForm.value = {
       name: response.data.name || '',
-      ticker_symbol: response.data.ticker || '',
+      ticker_symbol: response.data.ticker_symbol || '',
       sector: response.data.sector || '',
       industry: response.data.industry || '',
       market_cap: response.data.marketCap || '',

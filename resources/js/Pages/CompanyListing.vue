@@ -472,10 +472,10 @@ const formatMarketCap = (marketCap) => {
 }
 
 const navigateToCompany = (company) => {
-  if (company.ticker) {
-    router.visit(route('company.profile', { ticker: company.ticker }))
+  if (company.ticker_symbol) {
+    router.visit(route('company.profile', { ticker: company.ticker_symbol }))
   } else {
-    console.error('Company ticker not available for navigation')
+    console.error('Company ticker_symbol not available for navigation')
   }
 }
 

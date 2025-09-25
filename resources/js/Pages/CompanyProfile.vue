@@ -52,7 +52,7 @@
             </div>
             <div>
               <h1 class="text-4xl font-bold text-white mb-2">{{ company?.name || 'Loading...' }}</h1>
-              <p class="text-xl text-gray-300">{{ company?.ticker || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
+              <p class="text-xl text-gray-300">{{ company?.ticker_symbol || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
             </div>
           </div>
 
@@ -120,7 +120,7 @@
               <div class="space-y-4">
                 <div class="flex justify-between items-center">
                   <span class="text-gray-300 font-medium">Ticker Symbol</span>
-                  <span class="text-white font-bold text-lg">{{ company?.ticker || 'N/A' }}</span>
+                  <span class="text-white font-bold text-lg">{{ company?.ticker_symbol || 'N/A' }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-gray-300 font-medium">Market Cap</span>
@@ -158,7 +158,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-white mb-2">Research Notes</h2>
-              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker }})</p>
+              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker_symbol }})</p>
             </div>
             <button
               v-if="$page.props.auth.user"
@@ -440,7 +440,7 @@
                     <!-- Company -->
                     <div class="col-span-2">
                       <div class="text-white font-medium">{{ doc.company.name }}</div>
-                      <div class="text-gray-400 text-xs">{{ doc.company.ticker }}</div>
+                      <div class="text-gray-400 text-xs">{{ doc.company.ticker_symbol }}</div>
                     </div>
 
                     <!-- Created Date -->
@@ -818,7 +818,7 @@ const fetchCompanyData = async () => {
     })
 
     const foundCompany = companiesResponse.data.data.find(
-      c => c.ticker?.toLowerCase() === props.ticker.toLowerCase()
+      c => c.ticker_symbol?.toLowerCase() === props.ticker.toLowerCase()
     )
 
     if (!foundCompany) {
