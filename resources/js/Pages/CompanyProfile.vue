@@ -350,83 +350,180 @@
             <button
               v-if="$page.props.auth.user"
               @click="showUploadDocumentModal = true"
-              class="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-200 rounded-lg transition-colors border border-green-500/30 hover:border-green-500/50"
+              class="group backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-green-200 font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10"
+              style="backdrop-filter: blur(20px) saturate(180%);"
             >
-              <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              <svg class="w-5 h-5 shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
-              Upload Document
+              <span>Upload Document</span>
             </button>
           </div>
 
-          <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-            <div v-if="company?.documents?.length > 0" class="space-y-4">
-              <div
-                v-for="doc in company.documents"
-                :key="doc.id"
-                class="bg-gradient-to-r from-white/5 to-white/2 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-                @click="viewDocument(doc)"
-              >
-                <div class="flex items-start justify-between">
-                  <div class="flex-1">
-                    <h3 class="text-lg font-medium text-white mb-2">{{ doc.title }}</h3>
-                    <p class="text-gray-300 text-sm mb-3">{{ doc.description }}</p>
-                    <div class="flex items-center space-x-4 text-sm text-gray-400">
-                      <span>{{ formatDate(doc.created_at) }}</span>
-                      <span v-if="doc.file_type" class="px-2 py-1 bg-gray-500/20 text-gray-200 rounded text-xs">
-                        {{ doc.file_type }}
-                      </span>
-                      <span v-if="doc.file_size" class="text-xs">
-                        {{ formatFileSize(doc.file_size) }}
+          <!-- Documents Data Table -->
+          <div v-if="company?.documents && company.documents.length > 0">
+            <!-- Bulk Actions Toolbar -->
+            <div v-if="selectedDocuments.size > 0" class="mb-4 backdrop-blur-3xl bg-gradient-to-r from-red-500/10 to-red-600/20 rounded-2xl px-6 py-4 border border-red-500/20">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                  <span class="text-white font-medium">{{ selectedDocuments.size }} item{{ selectedDocuments.size !== 1 ? 's' : '' }} selected</span>
+                  <button
+                    @click="clearDocumentSelection"
+                    class="text-gray-300 hover:text-white text-sm underline"
+                  >
+                    Clear selection
+                  </button>
+                </div>
+                <button
+                  @click="bulkDeleteDocuments"
+                  class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-colors border border-red-500/30 hover:border-red-500/50 font-medium"
+                >
+                  Delete Selected
+                </button>
+              </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+              <!-- Table Header -->
+              <div class="bg-gradient-to-r from-gray-900/50 to-gray-800/50 px-6 py-4 border-b border-white/10">
+                <div class="grid grid-cols-12 gap-4 items-center text-sm font-medium text-gray-300 uppercase tracking-wider">
+                  <div class="col-span-1">
+                    <input
+                      type="checkbox"
+                      :checked="selectAllDocuments"
+                      @change="toggleSelectAllDocuments"
+                      class="rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/25"
+                    />
+                  </div>
+                  <div class="col-span-4">Title & Description</div>
+                  <div class="col-span-2">Company</div>
+                  <div class="col-span-2">Created</div>
+                  <div class="col-span-1 text-center">Files</div>
+                  <div class="col-span-1 text-center">Source</div>
+                  <div class="col-span-1 text-center">Actions</div>
+                </div>
+              </div>
+              <!-- Table Body -->
+              <div class="divide-y divide-white/5">
+                <div
+                  v-for="(doc, index) in company.documents"
+                  :key="doc.id"
+                  :class="[
+                    'group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300',
+                    selectedDocuments.has(doc.id) ? 'bg-blue-500/10 border-l-4 border-blue-500/50' : 'cursor-pointer'
+                  ]"
+                  @click="!selectedDocuments.has(doc.id) ? viewDocument(doc) : null"
+                >
+                  <div class="grid grid-cols-12 gap-4 items-center text-sm">
+                    <!-- Checkbox -->
+                    <div class="col-span-1">
+                      <input
+                        type="checkbox"
+                        :checked="selectedDocuments.has(doc.id)"
+                        @change="toggleDocumentSelection(doc.id)"
+                        @click.stop
+                        class="rounded border-white/30 bg-white/10 text-blue-500 focus:ring-blue-500/25"
+                      />
+                    </div>
+
+                    <!-- Title & Description -->
+                    <div class="col-span-4">
+                      <div class="font-medium text-white group-hover:text-blue-300 transition-colors mb-1 cursor-pointer" @click.stop="viewDocument(doc)">
+                        {{ doc.title }}
+                      </div>
+                      <div class="text-gray-400 text-xs line-clamp-2">
+                        {{ doc.description || 'No description provided' }}
+                      </div>
+                    </div>
+
+                    <!-- Company -->
+                    <div class="col-span-2">
+                      <div class="text-white font-medium">{{ doc.company.name }}</div>
+                      <div class="text-gray-400 text-xs">{{ doc.company.ticker }}</div>
+                    </div>
+
+                    <!-- Created Date -->
+                    <div class="col-span-2 text-gray-300">
+                      <div>{{ formatDate(doc.created_at).split(' ')[0] }}</div>
+                      <div class="text-xs text-gray-400">{{ formatDate(doc.created_at).split(' ')[1] }}</div>
+                    </div>
+
+                    <!-- Files Count -->
+                    <div class="col-span-1 text-center">
+                      <span class="inline-flex items-center justify-center w-8 h-6 text-xs font-medium bg-blue-500/20 text-blue-300 rounded-full">
+                        {{ doc.attachments?.length || 0 }}
                       </span>
                     </div>
-                  </div>
-                  <div class="flex items-center space-x-2 ml-4">
-                    <button
-                      @click.stop="downloadDocument(doc)"
-                      class="p-2 text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 rounded transition-colors"
-                      title="Download"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                    </button>
-                    <div v-if="$page.props.auth.user && doc.user_id === $page.props.auth.user.id" class="flex space-x-1">
-                      <button
-                        @click.stop="editDocument(doc)"
-                        class="p-2 text-yellow-300 hover:text-yellow-200 hover:bg-yellow-500/20 rounded transition-colors"
-                        title="Edit"
+
+                    <!-- Source -->
+                    <div class="col-span-1 text-center">
+                      <span
+                        :class="[
+                          'inline-flex items-center px-2 py-1 rounded-full text-xs font-medium',
+                          doc.source_type === 'document' ? 'bg-green-500/20 text-green-300' : 'bg-purple-500/20 text-purple-300'
+                        ]"
                       >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                        </svg>
-                      </button>
-                      <button
-                        @click.stop="deleteDocument(doc)"
-                        class="p-2 text-red-300 hover:text-red-200 hover:bg-red-500/20 rounded transition-colors"
-                        title="Delete"
-                      >
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16"></path>
-                        </svg>
-                      </button>
+                        {{ doc.source_type === 'document' ? 'Direct' : 'Research' }}
+                      </span>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="col-span-1">
+                      <div class="flex items-center justify-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          @click.stop="viewDocument(doc)"
+                          class="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/20 rounded transition-colors"
+                          title="View"
+                        >
+                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                          </svg>
+                        </button>
+                        <div v-if="(doc.source_type === 'document' || doc.is_orphaned) && $page.props.auth.user && doc.user_id === $page.props.auth.user.id" class="flex space-x-1">
+                          <button
+                            @click.stop="editDocument(doc)"
+                            class="p-1.5 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/20 rounded transition-colors"
+                            title="Edit"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                          </button>
+                          <button
+                            @click.stop="showDeleteConfirmation(doc, 'Document')"
+                            class="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded transition-colors"
+                            title="Delete"
+                          >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div v-else class="text-center py-12 text-gray-400">
-              <svg class="w-12 h-12 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-12">
+            <div class="text-center text-gray-400">
+              <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
-              <p class="text-lg mb-2">No documents yet</p>
-              <p class="text-sm mb-4">Upload documents related to this company</p>
+              <h3 class="text-xl font-medium text-white mb-2">No documents available</h3>
+              <p class="text-gray-400 mb-6">Upload documents or add research notes with attachments to see them here</p>
               <button
                 v-if="$page.props.auth.user"
                 @click="showUploadDocumentModal = true"
-                class="px-6 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-200 rounded-lg transition-colors border border-green-500/30"
+                class="group backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-green-200 font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10"
+                style="backdrop-filter: blur(20px) saturate(180%);"
               >
-                Upload First Document
+                <span class="shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]">🚀 Upload First Document</span>
               </button>
             </div>
           </div>
@@ -463,6 +560,15 @@
       @close="showLoginModal = false"
     />
 
+    <!-- Delete Confirmation Modal -->
+    <DeleteConfirmationModal
+      :show="showDeleteModal"
+      :item-name="bulkDeleteOperation ? 'selected items' : (deleteItem?.title || deleteItem?.name || '')"
+      :item-type="deleteItemType"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
+    />
+
     <!-- Research Creation Modal -->
     <NoteCreationModal
       v-if="company"
@@ -494,9 +600,28 @@
       :form="documentForm"
       :errors="documentErrors"
       :uploading="uploadingDocument"
+      :categories="categories"
       :formatFileSize="formatFileSize"
+      :availableFiles="availableFiles"
       @close="showUploadDocumentModal = false"
-      @success="handleDocumentSuccess"
+      @save="handleDocumentSave"
+      @file-upload="handleDocumentFileUpload"
+      @remove-file="handleDocumentRemoveFile"
+      @add-url="handleDocumentAddUrl"
+      @remove-url="handleDocumentRemoveUrl"
+      @load-existing-files="handleDocumentLoadExistingFiles"
+      @toggle-file-selection="handleDocumentToggleFileSelection"
+    />
+
+    <!-- Document Viewer Modal -->
+    <DocumentViewerModal
+      :show="showDocumentViewer"
+      :document="selectedDocument"
+      :canEdit="$page.props.auth.user?.id === selectedDocument?.user?.id"
+      :canDelete="$page.props.auth.user?.id === selectedDocument?.user?.id"
+      @close="showDocumentViewer = false"
+      @edit="editDocumentFromModal"
+      @delete="deleteDocumentFromModal"
     />
 
     <!-- Company Edit Modal -->
@@ -531,8 +656,10 @@ import DropdownLink from '@/Components/DropdownLink.vue'
 import LoginModal from '@/Components/Modals/LoginModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
+import DocumentViewerModal from '@/Components/Modals/DocumentViewerModal.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
+import DeleteConfirmationModal from '@/Components/Modals/DeleteConfirmationModal.vue'
 
 const props = defineProps({
   ticker: {
@@ -555,13 +682,28 @@ const activeTab = ref(props.tab)
 // Modal states
 const showCreateResearchModal = ref(false)
 const showUploadDocumentModal = ref(false)
+const showDocumentViewer = ref(false)
 const showEditCompanyModal = ref(false)
 const showResearchViewer = ref(false)
 const selectedResearchItem = ref(null)
 
+// Delete confirmation modal state
+const showDeleteModal = ref(false)
+const deleteItem = ref(null)
+const deleteItemType = ref('')
+const selectedDocument = ref(null)
+
+// Bulk delete state
+const bulkDeleteOperation = ref('')
+const bulkDeleteCount = ref(0)
+
 // Multiselect state
 const selectedResearchItems = ref(new Set())
 const selectAll = ref(false)
+
+// Document multiselect state
+const selectedDocuments = ref(new Set())
+const selectAllDocuments = ref(false)
 
 // Edit state
 const isEditingResearch = ref(false)
@@ -585,7 +727,11 @@ const documentForm = ref({
   title: '',
   description: '',
   company_id: null,
-  files: []
+  uploadType: 'file',
+  files: [],
+  urls: [],
+  newUrl: '',
+  selectedExistingFiles: []
 })
 
 const editCompanyForm = ref({
@@ -609,8 +755,6 @@ const editCompanyErrors = ref({})
 
 // Additional data
 const categories = ref([])
-
-// File management data
 const availableFiles = ref([])
 const loadingExistingFiles = ref(false)
 
@@ -670,6 +814,12 @@ const fetchCompanyData = async () => {
     const response = await axios.get(`/api/companies/${foundCompany.id}`)
     company.value = response.data
 
+    // Load unified documents list (includes both direct documents and research note attachments)
+    const documentsResponse = await axios.get('/api/documents', {
+      params: { company_id: foundCompany.id }
+    })
+    company.value.documents = documentsResponse.data.data
+
   } catch (err) {
     console.error('Error fetching company data:', err)
     if (err.response?.status === 401) {
@@ -727,8 +877,10 @@ const closeResearchViewer = () => {
 
 
 const deleteResearchItem = async (item) => {
-  if (!confirm('Are you sure you want to delete this research item?')) return
+  showDeleteConfirmation(item, 'Research Note')
+}
 
+const performDeleteResearchItem = async (item) => {
   try {
     await axios.delete(`/api/research-items/${item.id}`)
     // Remove from company data
@@ -781,13 +933,14 @@ const clearSelection = () => {
   selectAll.value = false
 }
 
-const deleteSelectedResearchItems = async () => {
+const deleteSelectedResearchItems = () => {
   const selectedCount = selectedResearchItems.value.size
   if (selectedCount === 0) return
 
-  const confirmMessage = `Are you sure you want to delete ${selectedCount} research item${selectedCount !== 1 ? 's' : ''}? This action cannot be undone.`
-  if (!confirm(confirmMessage)) return
+  showBulkDeleteConfirmation('research', selectedCount)
+}
 
+const performBulkDeleteResearchItems = async () => {
   const selectedIds = Array.from(selectedResearchItems.value)
   let deletedCount = 0
   let failedCount = 0
@@ -831,10 +984,8 @@ const deleteSelectedResearchItems = async () => {
 
 // Document Methods
 const viewDocument = (doc) => {
-  // Open document in new tab or download
-  if (doc.file_url) {
-    window.open(doc.file_url, '_blank')
-  }
+  selectedDocument.value = doc
+  showDocumentViewer.value = true
 }
 
 const downloadDocument = (doc) => {
@@ -859,11 +1010,78 @@ const editDocument = (doc) => {
   showUploadDocumentModal.value = true
 }
 
-const deleteDocument = async (doc) => {
-  if (!confirm('Are you sure you want to delete this document?')) return
+const editDocumentFromModal = (doc) => {
+  showDocumentViewer.value = false
+  editDocument(doc)
+}
 
+const deleteDocumentFromModal = async (doc) => {
+  showDocumentViewer.value = false
+  await deleteDocument(doc)
+}
+
+// Delete confirmation helpers
+const showDeleteConfirmation = (item, type) => {
+  deleteItem.value = item
+  deleteItemType.value = type
+  bulkDeleteOperation.value = ''
+  bulkDeleteCount.value = 0
+  showDeleteModal.value = true
+}
+
+const showBulkDeleteConfirmation = (operation, count) => {
+  bulkDeleteOperation.value = operation
+  bulkDeleteCount.value = count
+  deleteItem.value = null
+
+  if (operation === 'research') {
+    deleteItemType.value = `${count} Research Note${count !== 1 ? 's' : ''}`
+  } else if (operation === 'document') {
+    deleteItemType.value = `${count} Document${count !== 1 ? 's' : ''}`
+  }
+
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  deleteItem.value = null
+  deleteItemType.value = ''
+  bulkDeleteOperation.value = ''
+  bulkDeleteCount.value = 0
+}
+
+const confirmDelete = () => {
+  const item = deleteItem.value
+  const type = deleteItemType.value
+  const bulkOp = bulkDeleteOperation.value
+
+  closeDeleteModal()
+
+  // Route to appropriate delete function
+  if (bulkOp === 'research') {
+    performBulkDeleteResearchItems()
+  } else if (bulkOp === 'document') {
+    performBulkDeleteDocuments()
+  } else if (type === 'Document') {
+    performDeleteDocument(item)
+  } else if (type === 'Research Note') {
+    performDeleteResearchItem(item)
+  }
+}
+
+const deleteDocument = async (doc) => {
+  showDeleteConfirmation(doc, 'Document')
+}
+
+const performDeleteDocument = async (doc) => {
   try {
-    await axios.delete(`/api/documents/${doc.id}`)
+    // Use the appropriate endpoint based on whether it's orphaned or not
+    const endpoint = doc.is_orphaned
+      ? `/api/assets/${doc.id}`             // Direct asset deletion for orphaned files
+      : `/api/documents/${doc.source_id}`   // Original document endpoint for non-orphaned
+
+    await axios.delete(endpoint)
     // Remove from company data
     if (company.value.documents) {
       const index = company.value.documents.findIndex(d => d.id === doc.id)
@@ -878,10 +1096,229 @@ const deleteDocument = async (doc) => {
 }
 
 
+const handleDocumentAddUrl = () => {
+  if (documentForm.value.newUrl && documentForm.value.newUrl.trim()) {
+    documentForm.value.urls.push(documentForm.value.newUrl.trim())
+    documentForm.value.newUrl = ''
+  }
+}
+
+const handleDocumentRemoveUrl = (index) => {
+  documentForm.value.urls.splice(index, 1)
+}
+
+const handleDocumentLoadExistingFiles = async () => {
+  try {
+    const response = await axios.get('/api/media/available')
+    availableFiles.value = Array.isArray(response.data) ? response.data : []
+  } catch (error) {
+    console.error('Error loading existing files:', error)
+    availableFiles.value = []
+  }
+}
+
+const handleDocumentToggleFileSelection = (file) => {
+  if (!documentForm.value.selectedExistingFiles) {
+    documentForm.value.selectedExistingFiles = []
+  }
+
+  const index = documentForm.value.selectedExistingFiles.findIndex(f => f.id === file.id)
+  if (index > -1) {
+    documentForm.value.selectedExistingFiles.splice(index, 1)
+  } else {
+    documentForm.value.selectedExistingFiles.push(file)
+  }
+}
+
+const handleDocumentFileUpload = (event) => {
+  const files = Array.from(event.target.files)
+  documentForm.value.files.push(...files)
+}
+
+const handleDocumentRemoveFile = (index) => {
+  documentForm.value.files.splice(index, 1)
+}
+
+const handleDocumentSave = async () => {
+  if (!company.value) return
+
+  uploadingDocument.value = true
+  documentErrors.value = {}
+
+  try {
+    const formData = new FormData()
+
+    // Add basic fields
+    formData.append('title', documentForm.value.title)
+    formData.append('description', documentForm.value.description || '')
+    formData.append('company_id', company.value.id)
+    formData.append('visibility', documentForm.value.visibility || 'private')
+
+    const uploadType = documentForm.value.uploadType || 'file'
+
+    if (uploadType === 'file') {
+      // Handle file uploads
+      if (documentForm.value.files) {
+        documentForm.value.files.forEach((file, index) => {
+          formData.append(`attachments[${index}]`, file)
+        })
+      }
+    } else if (uploadType === 'url') {
+      // Handle URL downloads
+      if (documentForm.value.urls && documentForm.value.urls.length > 0) {
+        documentForm.value.urls.forEach((url, index) => {
+          formData.append(`document_urls[${index}]`, url)
+          formData.append(`document_names[${index}]`, `Document from ${new URL(url).hostname}`)
+        })
+      }
+    } else if (uploadType === 'existing') {
+      // Handle existing file selection
+      if (documentForm.value.selectedExistingFiles && documentForm.value.selectedExistingFiles.length > 0) {
+        documentForm.value.selectedExistingFiles.forEach((file, index) => {
+          formData.append(`existing_files[${index}]`, file.id)
+        })
+      }
+    }
+
+    const response = await axios.post('/api/documents', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+
+    // Add the new document to the company documents
+    if (!company.value.documents) {
+      company.value.documents = []
+    }
+    company.value.documents.unshift(response.data)
+
+    // Reset form
+    documentForm.value = {
+      title: '',
+      description: '',
+      company_id: company.value.id,
+      uploadType: 'file',
+      files: [],
+      urls: [],
+      newUrl: '',
+      selectedExistingFiles: []
+    }
+
+    showUploadDocumentModal.value = false
+  } catch (error) {
+    if (error.response?.status === 422) {
+      documentErrors.value = error.response.data.errors || {}
+    } else if (error.response?.status === 401) {
+      showLoginModal.value = true
+    } else {
+      documentErrors.value = { general: 'Failed to upload document. Please try again.' }
+    }
+    console.error('Error uploading document:', error)
+  } finally {
+    uploadingDocument.value = false
+  }
+}
+
 const handleDocumentSuccess = () => {
   showUploadDocumentModal.value = false
   // Refresh company data
   fetchCompanyData()
+}
+
+// Document multiselect methods
+const toggleDocumentSelection = (docId) => {
+  if (selectedDocuments.value.has(docId)) {
+    selectedDocuments.value.delete(docId)
+  } else {
+    selectedDocuments.value.add(docId)
+  }
+  updateDocumentSelectAllState()
+}
+
+const toggleSelectAllDocuments = () => {
+  if (selectAllDocuments.value) {
+    selectedDocuments.value.clear()
+  } else {
+    if (company.value?.documents) {
+      company.value.documents.forEach(doc => {
+        selectedDocuments.value.add(doc.id)
+      })
+    }
+  }
+  updateDocumentSelectAllState()
+}
+
+const updateDocumentSelectAllState = () => {
+  const totalDocs = company.value?.documents?.length || 0
+  selectAllDocuments.value = totalDocs > 0 && selectedDocuments.value.size === totalDocs
+}
+
+const clearDocumentSelection = () => {
+  selectedDocuments.value.clear()
+  selectAllDocuments.value = false
+}
+
+const bulkDeleteDocuments = () => {
+  const selectedCount = selectedDocuments.value.size
+  if (selectedCount === 0) return
+
+  showBulkDeleteConfirmation('document', selectedCount)
+}
+
+const performBulkDeleteDocuments = async () => {
+  const selectedIds = Array.from(selectedDocuments.value)
+  let deletedCount = 0
+  let skippedCount = 0
+
+  try {
+    // Process each selected document
+    for (const docId of selectedIds) {
+      const doc = company.value.documents.find(d => d.id === docId)
+
+      if (doc && (doc.source_type === 'document' || doc.is_orphaned)) {
+        try {
+          // Use the appropriate endpoint based on whether it's orphaned or not
+          const endpoint = doc.is_orphaned
+            ? `/api/assets/${doc.id}`            // Direct asset deletion for orphaned files
+            : `/api/documents/${doc.source_id}`  // Original document endpoint for non-orphaned
+
+          await axios.delete(endpoint)
+          deletedCount++
+
+          // Remove from company data
+          if (company.value.documents) {
+            const index = company.value.documents.findIndex(d => d.id === docId)
+            if (index !== -1) {
+              company.value.documents.splice(index, 1)
+            }
+          }
+        } catch (error) {
+          console.error(`Error deleting document ${docId}:`, error)
+        }
+      } else {
+        // Skip non-orphaned research note attachments
+        skippedCount++
+      }
+
+      selectedDocuments.value.delete(docId)
+    }
+
+    // Show result message
+    if (skippedCount > 0) {
+      alert(`Deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''} successfully.\n${skippedCount} research note attachment${skippedCount !== 1 ? 's' : ''} were skipped (cannot be deleted from here).`)
+    } else if (deletedCount > 0) {
+      console.log(`Successfully deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''}`)
+    }
+
+    updateDocumentSelectAllState()
+  } catch (error) {
+    console.error('Error in bulk delete operation:', error)
+    if (error.response?.status === 401) {
+      showLoginModal.value = true
+    } else {
+      alert('An error occurred during the delete operation.')
+    }
+  }
 }
 
 // Company edit methods

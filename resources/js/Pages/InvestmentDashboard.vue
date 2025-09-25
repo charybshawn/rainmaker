@@ -152,7 +152,6 @@
                     <path v-if="tab.id === 'overview'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     <path v-else-if="tab.id === 'companies'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     <path v-else-if="tab.id === 'research'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    <path v-else-if="tab.id === 'insights'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                   </svg>
                 </div>
                 <span class="font-semibold tracking-wide">{{ tab.label }}</span>
@@ -196,7 +195,6 @@
                     <path v-if="tab.id === 'overview'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     <path v-else-if="tab.id === 'companies'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
                     <path v-else-if="tab.id === 'research'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                    <path v-else-if="tab.id === 'insights'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                   </svg>
                 </div>
                 <span class="font-semibold tracking-wide">{{ tab.label }}</span>
@@ -282,9 +280,6 @@
             </svg>
             <svg v-else-if="activeTab === 'research'" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <svg v-else-if="activeTab === 'insights'" class="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 mr-2 sm:mr-3 lg:mr-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
             </svg>
             {{ getPageTitle() }}
             <div v-if="showSearchResults && !isSearching" class="ml-6 text-sm text-gray-300 font-normal">
@@ -694,18 +689,17 @@
                 </div>
               </div>
 
-
-              <!-- Insights Published -->
+              <!-- Documents -->
               <div class="group relative p-6 transition-all duration-500 hover:scale-105">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-purple-400/10 rounded-2xl"></div>
+                <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/10 rounded-2xl"></div>
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
-                    <p class="text-xs text-purple-300/80 font-medium tracking-wider uppercase mb-2">Insights</p>
-                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ $page.props.recentBlogPosts?.length || 0 }}</p>
+                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Documents</p>
+                    <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ getTotalDocuments() }}</p>
                   </div>
-                  <div class="w-12 h-12 bg-gradient-to-br from-purple-500/20 to-purple-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(147,51,234,0.15)] group-hover:shadow-[0_0_15px_rgba(147,51,234,0.25)] transition-all duration-500">
-                    <svg class="w-6 h-6 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                  <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.15)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] transition-all duration-500">
+                    <svg class="w-6 h-6 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                   </div>
                 </div>
@@ -775,46 +769,51 @@
                 </div>
               </div>
 
-              <!-- Latest Insights -->
+              <!-- Latest Documents -->
               <div class="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
                 <div class="flex items-center justify-between mb-4">
                   <h3 class="text-lg font-semibold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    Latest Insights
+                    Latest Documents
                   </h3>
                   <button
-                    @click="switchTab('insights')"
-                    class="text-purple-400 hover:text-purple-300 text-sm transition-colors"
+                    @click="switchTab('companies')"
+                    class="text-green-400 hover:text-green-300 text-sm transition-colors"
                   >
                     View All
                   </button>
                 </div>
 
-                <div v-if="latestInsights.length > 0" class="space-y-3">
+                <div v-if="latestDocuments.length > 0" class="space-y-3">
                   <div
-                    v-for="post in latestInsights"
-                    :key="post.id"
+                    v-for="doc in latestDocuments"
+                    :key="doc.id"
                     class="flex items-start justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors cursor-pointer"
-                    @click="openBlogPost(post)"
+                    @click="openDocument(doc)"
                   >
                     <div class="flex-1 min-w-0">
-                      <p class="text-white font-medium line-clamp-2 mb-1">{{ post.title }}</p>
+                      <p class="text-white font-medium line-clamp-2 mb-1">{{ doc.title || doc.file_name }}</p>
                       <div class="flex items-center space-x-2 text-xs text-gray-400">
-                        <span>{{ post.user?.name || post.author_name }}</span>
+                        <span v-if="doc.source_type">{{ doc.source_type === 'document' ? 'Direct Upload' : 'Research Attachment' }}</span>
+                        <span v-if="doc.source_type">•</span>
+                        <span>{{ formatFileSize(doc.size || 0) }}</span>
                         <span>•</span>
-                        <span>{{ formatTimeAgo(post.published_at || post.created_at) }}</span>
+                        <span>{{ formatTimeAgo(doc.created_at) }}</span>
                       </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                      <span v-if="doc.is_orphaned" class="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded">Orphaned</span>
                     </div>
                   </div>
                 </div>
 
                 <div v-else class="text-center py-8 text-gray-400">
                   <svg class="w-12 h-12 mx-auto mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                   </svg>
-                  <p class="text-sm">No insights yet</p>
+                  <p class="text-sm">No documents yet</p>
                 </div>
               </div>
 
@@ -822,14 +821,14 @@
               <div class="bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 p-6">
                 <div class="flex items-center justify-between mb-4">
                   <h3 class="text-lg font-semibold text-white flex items-center">
-                    <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 mr-2 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
                     Latest Research
                   </h3>
                   <button
                     @click="switchTab('research')"
-                    class="text-green-400 hover:text-green-300 text-sm transition-colors"
+                    class="text-orange-400 hover:text-orange-300 text-sm transition-colors"
                   >
                     View All
                   </button>
@@ -1716,6 +1715,15 @@
       @switch-to-login="showRegisterModal = false; showLoginModal = true"
     />
 
+    <!-- Delete Confirmation Modal -->
+    <DeleteConfirmationModal
+      :show="showDeleteModal"
+      :item-name="deleteItem?.title || deleteItem?.name || ''"
+      :item-type="deleteItemType"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
+    />
+
     <!-- Research Note Modal -->
     <ResearchNoteModal
       :show="showResearchNoteModal"
@@ -1890,6 +1898,7 @@ import ActivityTimeline from '@/Components/ActivityTimeline.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 import LoginModal from '@/Components/Modals/LoginModal.vue'
 import RegisterModal from '@/Components/Modals/RegisterModal.vue'
+import DeleteConfirmationModal from '@/Components/Modals/DeleteConfirmationModal.vue'
 import OverflowMenu from '@/Components/Navigation/OverflowMenu.vue'
 import HamburgerMenu from '@/Components/Navigation/HamburgerMenu.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
@@ -1941,6 +1950,11 @@ const fetchGitInfo = async () => {
 }
 const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
+
+// Delete confirmation modal state
+const showDeleteModal = ref(false)
+const deleteItem = ref(null)
+const deleteItemType = ref('')
 const selectedCompany = ref(null)
 const companyInsights = ref([])
 const loading = ref(false)
@@ -1964,6 +1978,7 @@ const activeTab = ref('overview') // Tab navigation state
 // Latest data for dashboard widgets
 const latestCompanies = ref([])
 const latestResearch = ref([])
+const latestDocuments = ref([])
 const latestInsights = ref([])
 
 // Tab configuration for responsive navigation
@@ -1984,12 +1999,6 @@ const allTabs = ref([
     id: 'research',
     label: 'Research',
     color: 'green',
-    icon: 'svg'
-  },
-  {
-    id: 'insights',
-    label: 'Insights',
-    color: 'purple',
     icon: 'svg'
   }
 ])
@@ -2587,6 +2596,16 @@ const openResearchItem = (item) => {
   showResearchNoteModal.value = true
 }
 
+const openDocument = (document) => {
+  // For now, we can download the document or show more details
+  // This could open a document viewer modal in the future
+  if (document.url || document.file_path) {
+    // Open the document in a new tab/window
+    const url = document.url || document.file_path
+    window.open(url, '_blank')
+  }
+}
+
 const handleTreeNodeClick = (node) => {
   // Handle tree node clicks based on the node type
   if (node.type === 'company' && node.data) {
@@ -2972,10 +2991,40 @@ const viewCompanyDetails = async (company) => {
   }
 }
 
-const deleteCompany = async (company) => {
-  if (!confirm(`Are you sure you want to delete ${company.name}? This action cannot be undone.`)) {
-    return
+// Delete confirmation helpers
+const showDeleteConfirmation = (item, type) => {
+  deleteItem.value = item
+  deleteItemType.value = type
+  showDeleteModal.value = true
+}
+
+const closeDeleteModal = () => {
+  showDeleteModal.value = false
+  deleteItem.value = null
+  deleteItemType.value = ''
+}
+
+const confirmDelete = () => {
+  const item = deleteItem.value
+  const type = deleteItemType.value
+
+  closeDeleteModal()
+
+  // Route to appropriate delete function
+  if (type === 'Company') {
+    performDeleteCompany(item)
+  } else if (type === 'Document') {
+    performDeleteDocument(item)
+  } else if (type === 'Research Note') {
+    performDeleteResearchItem(item)
   }
+}
+
+const deleteCompany = async (company) => {
+  showDeleteConfirmation(company, 'Company')
+}
+
+const performDeleteCompany = async (company) => {
   
   try {
     deleting.value = true
@@ -3290,10 +3339,10 @@ const editResearchItem = (item) => {
 }
 
 const deleteResearchItem = async (item) => {
-  if (!confirm(`Are you sure you want to delete: ${item.title}?`)) {
-    return
-  }
+  showDeleteConfirmation(item, 'Research Note')
+}
 
+const performDeleteResearchItem = async (item) => {
   try {
     const response = await axios.delete(`/api/research-items/${item.id}`)
 
@@ -3327,10 +3376,10 @@ const deleteResearchItem = async (item) => {
 }
 
 const deleteDocument = async (document) => {
-  if (!confirm(`Are you sure you want to delete: ${document.title}?`)) {
-    return
-  }
+  showDeleteConfirmation(document, 'Document')
+}
 
+const performDeleteDocument = async (document) => {
   try {
     const response = await axios.delete(`/api/documents/${document.id}`)
 
@@ -3406,6 +3455,13 @@ const formatTotalMarketCap = () => {
 const getTotalResearchItems = () => {
   return companiesInfinite.value.reduce((sum, company) => {
     return sum + (company.researchItemsCount || 0)
+  }, 0)
+}
+
+const getTotalDocuments = () => {
+  // Count both direct document uploads and research note attachments
+  return companiesInfinite.value.reduce((sum, company) => {
+    return sum + (company.documentsCount || 0)
   }, 0)
 }
 
@@ -3766,6 +3822,18 @@ const fetchLatestInsights = async () => {
   }
 }
 
+const fetchLatestDocuments = async () => {
+  try {
+    const response = await axios.get('/api/documents?limit=5&sort=created_at&order=desc')
+    latestDocuments.value = response.data.data || response.data || []
+  } catch (error) {
+    console.error('Error fetching latest documents:', error)
+    if (error.response && error.response.status === 401) {
+      showLoginModal.value = true
+    }
+  }
+}
+
 const formatTimeAgo = (dateString) => {
   if (!dateString) return ''
 
@@ -3794,6 +3862,7 @@ onMounted(async () => {
   // Fetch latest data for dashboard widgets
   fetchLatestCompanies()
   fetchLatestResearch()
+  fetchLatestDocuments()
   fetchLatestInsights()
 
   // Initialize dark mode using the composable
@@ -3817,6 +3886,19 @@ onMounted(async () => {
 
   // Store the function reference for cleanup
   window.__resizeHandler = handleResize
+
+  // Setup polling for real-time updates (every 45 seconds)
+  const pollingInterval = setInterval(() => {
+    // Only poll if we're still on the overview tab or if the widgets are visible
+    if (activeTab.value === 'overview' || !showSearchResults.value) {
+      fetchLatestCompanies()
+      fetchLatestResearch()
+      fetchLatestDocuments()
+    }
+  }, 45000) // 45 seconds
+
+  // Store polling interval for cleanup
+  window.__pollingInterval = pollingInterval
 })
 
 // Cleanup on unmount
@@ -3824,6 +3906,10 @@ onUnmounted(() => {
   if (window.__resizeHandler) {
     window.removeEventListener('resize', window.__resizeHandler)
     delete window.__resizeHandler
+  }
+  if (window.__pollingInterval) {
+    clearInterval(window.__pollingInterval)
+    delete window.__pollingInterval
   }
 })
 
@@ -4082,13 +4168,6 @@ const initStarsAnimation = () => {
   }, 200)
 }
 
-const openDocument = (document) => {
-  // Close the search modal
-  closeSearch()
-  // For now, we'll log the document - in the future this could open a document viewer modal
-  console.log('Opening document:', document)
-  // You might want to implement a document viewer modal here
-}
 </script>
 
 <style scoped>

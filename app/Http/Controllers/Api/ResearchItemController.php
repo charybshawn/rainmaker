@@ -7,6 +7,7 @@ use App\Models\ResearchItem;
 use App\Models\Company;
 use App\Models\Category;
 use App\Models\Tag;
+use App\Services\AssetSyncService;
 use App\Services\UrlDownloadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -248,6 +249,10 @@ class ResearchItemController extends Controller
 
         $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
 
+        // Sync assets table after successful creation
+        $assetSyncService = new \App\Services\AssetSyncService();
+        $assetSyncService->syncAssetsForModel($researchItem);
+
         return response()->json([
             'id' => $researchItem->id,
             'title' => $researchItem->title,
@@ -281,6 +286,7 @@ class ResearchItemController extends Controller
                 ];
             }),
             'created_at' => $researchItem->created_at->format('Y-m-d H:i:s'),
+            'attachment_results' => $attachmentResults,
         ], 201);
     }
 
@@ -537,6 +543,9 @@ class ResearchItemController extends Controller
         if ($researchItem->user_id !== auth()->id()) {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+
+        // Mark associated assets as orphaned before deletion
+        app(AssetSyncService::class)->removeAssetsForModel($researchItem);
 
         $researchItem->delete();
         return response()->json(null, 204);

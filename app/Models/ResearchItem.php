@@ -84,4 +84,5 @@ class ResearchItem extends Model implements HasMedia
             ->performOnCollections('attachments')
             ->nonQueued();
     }
+
 }

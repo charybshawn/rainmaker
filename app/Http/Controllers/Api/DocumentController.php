@@ -18,12 +18,24 @@ class DocumentController extends Controller
         $perPage = $request->get('limit', 15);
         $page = $request->get('page', 1);
 
-        $query = Document::query()
-            ->with(['company', 'category', 'tags', 'user', 'media']);
+        // Query all assets from the dedicated assets table
+        $query = \App\Models\Asset::query()
+            ->with(['company', 'user']);
 
         // Filter by company if provided
         if ($request->has('company_id') && !empty($request->company_id)) {
             $query->where('company_id', $request->company_id);
+        }
+
+        // Filter by source type if provided
+        if ($request->has('source_type') && !empty($request->source_type)) {
+            $query->where('source_type', $request->source_type);
+        }
+
+        // Filter by orphaned status if provided
+        if ($request->has('show_orphaned')) {
+            $showOrphaned = filter_var($request->show_orphaned, FILTER_VALIDATE_BOOLEAN);
+            $query->where('is_orphaned', $showOrphaned);
         }
 
         // Search functionality
@@ -32,6 +44,7 @@ class DocumentController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'like', '%' . $searchTerm . '%')
                   ->orWhere('description', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('file_name', 'like', '%' . $searchTerm . '%')
                   ->orWhereHas('company', function($companyQuery) use ($searchTerm) {
                       $companyQuery->where('name', 'like', '%' . $searchTerm . '%')
                                   ->orWhere('ticker_symbol', 'like', '%' . $searchTerm . '%');
@@ -39,23 +52,52 @@ class DocumentController extends Controller
             });
         }
 
-        $documents = $query->latest()->paginate($perPage, ['*'], 'page', $page);
+        $assets = $query->latest()->paginate($perPage, ['*'], 'page', $page);
 
-        // Transform the data for the frontend
-        $documentsData = $documents->map(function ($document) {
-            return $this->transformDocument($document);
+        // Transform assets to document format
+        $documentsData = $assets->map(function ($asset) {
+            return [
+                'id' => $asset->id,
+                'title' => $asset->title,
+                'description' => $asset->description,
+                'visibility' => $asset->visibility,
+                'is_orphaned' => $asset->is_orphaned,
+                'company' => $asset->company ? [
+                    'id' => $asset->company->id,
+                    'name' => $asset->company->name,
+                    'ticker' => $asset->company->ticker_symbol,
+                ] : null,
+                'category' => null, // We can add category relationship to Asset later if needed
+                'tags' => collect(), // We can add tags relationship to Asset later if needed
+                'attachments' => [[
+                    'id' => $asset->id,
+                    'name' => $asset->title,
+                    'file_name' => $asset->file_name,
+                    'mime_type' => $asset->mime_type,
+                    'size' => $asset->size,
+                    'url' => $asset->url,
+                ]],
+                'user' => $asset->user ? [
+                    'id' => $asset->user->id,
+                    'name' => $asset->user->name,
+                ] : null,
+                'created_at' => $asset->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $asset->updated_at->format('Y-m-d H:i:s'),
+                'source_type' => $asset->source_type,
+                'source_id' => $asset->source_id,
+            ];
         });
 
         return response()->json([
             'data' => $documentsData,
             'pagination' => [
-                'current_page' => $documents->currentPage(),
-                'total_pages' => $documents->lastPage(),
-                'has_more_pages' => $documents->hasMorePages(),
-                'total_items' => $documents->total(),
-                'per_page' => $documents->perPage(),
-                'from' => $documents->firstItem(),
-                'to' => $documents->lastItem(),
+                'current_page' => $assets->currentPage(),
+                'total_pages' => $assets->lastPage(),
+                'has_more_pages' => $assets->hasMorePages(),
+                'total_items' => $assets->total(),
+                'per_page' => $assets->perPage(),
+                'from' => $assets->firstItem(),
+                'to' => $assets->lastItem(),
             ]
         ]);
     }
@@ -68,7 +110,6 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'ai_synopsis' => 'nullable|string',
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'nullable|exists:categories,id',
             'tag_ids' => 'nullable|array',
@@ -132,6 +173,10 @@ class DocumentController extends Controller
 
         $document->load(['company', 'category', 'tags', 'user', 'media']);
 
+        // Sync assets table
+        $assetSyncService = new \App\Services\AssetSyncService();
+        $assetSyncService->syncAssetsForModel($document);
+
         return response()->json($this->transformDocument($document), 201);
     }
 
@@ -157,7 +202,6 @@ class DocumentController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'ai_synopsis' => 'nullable|string',
             'company_id' => 'required|exists:companies,id',
             'category_id' => 'nullable|exists:categories,id',
             'tag_ids' => 'nullable|array',
@@ -187,6 +231,10 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
+        // Remove from assets table
+        $assetSyncService = new \App\Services\AssetSyncService();
+        $assetSyncService->removeAssetsForModel($document);
+
         $document->delete();
         return response()->json(null, 204);
     }
@@ -200,7 +248,6 @@ class DocumentController extends Controller
             'id' => $document->id,
             'title' => $document->title,
             'description' => $document->description,
-            'ai_synopsis' => $document->ai_synopsis,
             'visibility' => $document->visibility,
             'company' => [
                 'id' => $document->company->id,

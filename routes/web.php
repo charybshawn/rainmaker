@@ -123,6 +123,9 @@ Route::prefix('api')->group(function () {
         Route::put('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'update']);
         Route::delete('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'destroy']);
 
+        // Assets (for direct deletion of orphaned files)
+        Route::delete('assets/{asset}', [\App\Http\Controllers\Api\AssetController::class, 'destroy']);
+
         // Activity Tracking (protected operations)
         Route::get('activities', [\App\Http\Controllers\Api\ActivityController::class, 'index']);
         Route::get('activities/stats', [\App\Http\Controllers\Api\ActivityController::class, 'stats']);

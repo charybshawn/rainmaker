@@ -17,7 +17,6 @@ class Document extends Model implements HasMedia
     protected $fillable = [
         'title',
         'description',
-        'ai_synopsis',
         'company_id',
         'category_id',
         'user_id',
@@ -86,4 +85,5 @@ class Document extends Model implements HasMedia
     {
         return $this->title;
     }
+
 }
