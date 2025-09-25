@@ -2566,21 +2566,54 @@ const insightsCategoryOptions = computed(() => {
 })
 
 const openResearchItem = (item) => {
+  console.log('🔍 Opening research item:', item)
+  console.log('🔍 Item company:', item.company)
+  console.log('🔍 Item ticker_symbol:', item.ticker_symbol)
+  console.log('🔍 Item company.ticker_symbol:', item.company?.ticker_symbol)
+
   // Close the search modal
   closeSearch()
 
-  // Open the research note modal with the item ID
-  selectedResearchNoteId.value = item.id
-  showResearchNoteModal.value = true
+  // Navigate to the company profile page with research tab
+  if (item.company && item.company.ticker_symbol) {
+    console.log('✅ Navigating via item.company.ticker_symbol:', item.company.ticker_symbol)
+    router.visit(route('company.profile', { ticker: item.company.ticker_symbol }) + '?tab=research')
+  } else if (item.ticker_symbol) {
+    // If the item directly has a ticker_symbol
+    console.log('✅ Navigating via item.ticker_symbol:', item.ticker_symbol)
+    router.visit(route('company.profile', { ticker: item.ticker_symbol }) + '?tab=research')
+  } else {
+    console.error('❌ Cannot navigate: research item missing company ticker_symbol', item)
+    window.showToast('Unable to navigate to research item - company information missing', 'warning')
+  }
 }
 
 const openDocument = (document) => {
-  // For now, we can download the document or show more details
-  // This could open a document viewer modal in the future
-  if (document.url || document.file_path) {
-    // Open the document in a new tab/window
+  console.log('📄 Opening document:', document)
+  console.log('📄 Document company:', document.company)
+  console.log('📄 Document ticker_symbol:', document.ticker_symbol)
+  console.log('📄 Document company.ticker_symbol:', document.company?.ticker_symbol)
+  console.log('📄 Document URL:', document.url)
+  console.log('📄 Document file_path:', document.file_path)
+
+  // If the document belongs to a company, navigate to the company documents tab
+  if (document.company && document.company.ticker_symbol) {
+    console.log('✅ Navigating via document.company.ticker_symbol:', document.company.ticker_symbol)
+    closeSearch()
+    router.visit(route('company.profile', { ticker: document.company.ticker_symbol }) + '?tab=documents')
+  } else if (document.ticker_symbol) {
+    // If the document directly has a ticker_symbol
+    console.log('✅ Navigating via document.ticker_symbol:', document.ticker_symbol)
+    closeSearch()
+    router.visit(route('company.profile', { ticker: document.ticker_symbol }) + '?tab=documents')
+  } else if (document.url || document.file_path) {
+    // Fallback: open the document directly in a new tab/window
     const url = document.url || document.file_path
+    console.log('✅ Opening document directly:', url)
     window.open(url, '_blank')
+  } else {
+    console.error('❌ Cannot open document: no company info or file path', document)
+    window.showToast('Unable to open document - missing file information', 'warning')
   }
 }
 
@@ -3783,7 +3816,9 @@ const fetchLatestCompanies = async () => {
 const fetchLatestResearch = async () => {
   try {
     const response = await axios.get('/api/activities/latest/research?limit=5')
+    console.log('📊 Latest research API response:', response.data)
     latestResearch.value = response.data || []
+    console.log('📊 Latest research stored:', latestResearch.value)
   } catch (error) {
     console.error('Error fetching latest research:', error)
     if (error.response && error.response.status === 401) {

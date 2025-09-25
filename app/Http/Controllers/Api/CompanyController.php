@@ -288,8 +288,35 @@ class CompanyController extends Controller
 
     public function destroy(Company $company): JsonResponse
     {
-        $company->delete(); // This will be a soft delete
-        return response()->json(null, 204);
+        try {
+            \Log::info('Company deletion started', [
+                'company_id' => $company->id,
+                'company_name' => $company->name,
+                'user_id' => auth()->id()
+            ]);
+
+            $company->delete(); // This will be a soft delete
+
+            \Log::info('Company deletion completed successfully', [
+                'company_id' => $company->id,
+                'company_name' => $company->name
+            ]);
+
+            return response()->json(null, 204);
+
+        } catch (\Exception $e) {
+            \Log::error('Company deletion failed', [
+                'company_id' => $company->id,
+                'company_name' => $company->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to delete company: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

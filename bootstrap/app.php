@@ -19,6 +19,11 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 
+        // Use custom CSRF middleware that exempts API routes
+        $middleware->validateCsrfTokens(except: [
+            'api/*',
+        ]);
+
         // Trust all proxies to handle HTTPS properly
         $middleware->trustProxies(at: '*', headers: \Illuminate\Http\Request::HEADER_X_FORWARDED_FOR |
             \Illuminate\Http\Request::HEADER_X_FORWARDED_HOST |

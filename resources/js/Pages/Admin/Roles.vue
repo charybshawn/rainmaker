@@ -178,12 +178,16 @@
         </div>
       </div>
     </div>
+
+    <!-- Toast Notifications -->
+    <ToastNotification />
   </div>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { Link, router } from '@inertiajs/vue3'
+import ToastNotification from '@/Components/ToastNotification.vue'
 
 const props = defineProps({
   roles: {
@@ -235,7 +239,7 @@ const saveRole = () => {
 
 const deleteRole = (role) => {
   if (role.name === 'admin') {
-    alert('Cannot delete admin role')
+    window.showToast('Cannot delete admin role', 'warning')
     return
   }
   
