@@ -52,7 +52,7 @@
             </div>
             <div>
               <h1 class="text-4xl font-bold text-white mb-2">{{ company?.name || 'Loading...' }}</h1>
-              <p class="text-xl text-gray-300">{{ company?.ticker || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
+              <p class="text-xl text-gray-300">{{ company?.ticker_symbol || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
             </div>
           </div>
 
@@ -120,7 +120,7 @@
               <div class="space-y-4">
                 <div class="flex justify-between items-center">
                   <span class="text-gray-300 font-medium">Ticker Symbol</span>
-                  <span class="text-white font-bold text-lg">{{ company?.ticker || 'N/A' }}</span>
+                  <span class="text-white font-bold text-lg">{{ company?.ticker_symbol || 'N/A' }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-gray-300 font-medium">Market Cap</span>
@@ -158,7 +158,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-white mb-2">Research Notes</h2>
-              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker }})</p>
+              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker_symbol }})</p>
             </div>
             <button
               v-if="$page.props.auth.user"
@@ -440,7 +440,7 @@
                     <!-- Company -->
                     <div class="col-span-2">
                       <div class="text-white font-medium">{{ doc.company.name }}</div>
-                      <div class="text-gray-400 text-xs">{{ doc.company.ticker }}</div>
+                      <div class="text-gray-400 text-xs">{{ doc.company.ticker_symbol }}</div>
                     </div>
 
                     <!-- Created Date -->
@@ -625,15 +625,20 @@
     />
 
     <!-- Company Edit Modal -->
-    <CreateCompanyModal
+    <EditCompanyModal
       v-if="company"
       :show="showEditCompanyModal"
-      :form="editCompanyForm"
-      :errors="editCompanyErrors"
-      :creating="updatingCompany"
+      :company="company"
+      :editForm="editCompanyForm"
+      :editErrors="editCompanyErrors"
+      :saving="updatingCompany"
+      :editMarketCapInput="editCompanyForm.marketCapInput"
+      :editMarketCapValidation="editCompanyForm.marketCapValidation"
       :formatMarketCap="formatMarketCap"
       @close="showEditCompanyModal = false"
-      @save="handleEditCompanySave"
+      @save-edit="handleEditCompanySave"
+      @update:edit-form="updateEditCompanyForm"
+      @edit-market-cap-input="handleMarketCapInput"
     />
 
     <!-- Research Item Viewer Modal -->
@@ -643,6 +648,9 @@
       :researchNote="selectedResearchItem"
       @close="closeResearchViewer"
     />
+
+    <!-- Toast Notifications -->
+    <ToastNotification />
 
   </div>
 </template>
@@ -657,9 +665,10 @@ import LoginModal from '@/Components/Modals/LoginModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import DocumentViewerModal from '@/Components/Modals/DocumentViewerModal.vue'
-import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
+import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 import DeleteConfirmationModal from '@/Components/Modals/DeleteConfirmationModal.vue'
+import ToastNotification from '@/Components/ToastNotification.vue'
 
 const props = defineProps({
   ticker: {
@@ -736,11 +745,18 @@ const documentForm = ref({
 
 const editCompanyForm = ref({
   name: '',
-  ticker: '',
+  ticker_symbol: '',
   sector: '',
   industry: '',
   market_cap: '',
-  description: ''
+  description: '',
+  headquarters: '',
+  employees: null,
+  founded_date: '',
+  website: '',
+  reports_financial_data_in: '',
+  marketCapInput: '',
+  marketCapValidation: { state: '', timer: null }
 })
 
 // Loading states
@@ -802,7 +818,7 @@ const fetchCompanyData = async () => {
     })
 
     const foundCompany = companiesResponse.data.data.find(
-      c => c.ticker?.toLowerCase() === props.ticker.toLowerCase()
+      c => c.ticker_symbol?.toLowerCase() === props.ticker.toLowerCase()
     )
 
     if (!foundCompany) {
@@ -864,6 +880,44 @@ const formatMarketCap = (value) => {
   }
 }
 
+const parseMarketCapInput = (input) => {
+  if (!input || input.trim() === '') return null
+
+  // Remove currency symbols and whitespace, keep only numbers, decimals, and K/M/B/T
+  const cleaned = input.toString().replace(/[\$,\s]/g, '').replace(/[^\d.kmbtKMBT]/gi, '')
+  if (!cleaned) return null
+
+  // Check if it ends with a valid shorthand letter
+  const lastChar = cleaned.slice(-1).toLowerCase()
+  const isShorthand = ['k', 'm', 'b', 't'].includes(lastChar)
+
+  let numPart
+  if (isShorthand) {
+    // Extract the numeric part before the shorthand letter
+    numPart = parseFloat(cleaned.slice(0, -1))
+  } else {
+    // No shorthand, treat entire string as number
+    numPart = parseFloat(cleaned)
+  }
+
+  // Validate the numeric part
+  if (isNaN(numPart) || numPart < 0) return null
+
+  // Apply multipliers for shorthand notation
+  if (isShorthand) {
+    switch (lastChar) {
+      case 'k': return numPart * 1e3
+      case 'm': return numPart * 1e6
+      case 'b': return numPart * 1e9
+      case 't': return numPart * 1e12
+      default: return null
+    }
+  } else {
+    // Direct number input - must be positive
+    return numPart
+  }
+}
+
 // Research Item Methods
 const viewResearchItem = (item) => {
   selectedResearchItem.value = item
@@ -894,7 +948,7 @@ const performDeleteResearchItem = async (item) => {
     selectedResearchItems.value.delete(item.id)
   } catch (error) {
     console.error('Error deleting research item:', error)
-    alert('Failed to delete research item')
+    window.showToast('Failed to delete research item', 'error')
   }
 }
 
@@ -969,15 +1023,15 @@ const performBulkDeleteResearchItems = async () => {
 
     // Show result message
     if (failedCount === 0) {
-      console.log(`Successfully deleted ${deletedCount} research item${deletedCount !== 1 ? 's' : ''}`)
+      window.showToast(`Successfully deleted ${deletedCount} research item${deletedCount !== 1 ? 's' : ''}`, 'success')
     } else {
-      alert(`Deleted ${deletedCount} item${deletedCount !== 1 ? 's' : ''} successfully.\n${failedCount} item${failedCount !== 1 ? 's' : ''} could not be deleted.`)
+      window.showToast(`Deleted ${deletedCount} item${deletedCount !== 1 ? 's' : ''} successfully.\n${failedCount} item${failedCount !== 1 ? 's' : ''} could not be deleted.`, 'warning')
     }
 
     updateSelectAllState()
   } catch (error) {
     console.error('Error in bulk delete operation:', error)
-    alert('An error occurred during the delete operation. Some items may not have been deleted.')
+    window.showToast('An error occurred during the delete operation. Some items may not have been deleted.', 'error')
   }
 }
 
@@ -1091,7 +1145,7 @@ const performDeleteDocument = async (doc) => {
     }
   } catch (error) {
     console.error('Error deleting document:', error)
-    alert('Failed to delete document')
+    window.showToast('Failed to delete document', 'error')
   }
 }
 
@@ -1305,7 +1359,7 @@ const performBulkDeleteDocuments = async () => {
 
     // Show result message
     if (skippedCount > 0) {
-      alert(`Deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''} successfully.\n${skippedCount} research note attachment${skippedCount !== 1 ? 's' : ''} were skipped (cannot be deleted from here).`)
+      window.showToast(`Deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''} successfully.\n${skippedCount} research note attachment${skippedCount !== 1 ? 's' : ''} were skipped (cannot be deleted from here).`, 'info')
     } else if (deletedCount > 0) {
       console.log(`Successfully deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''}`)
     }
@@ -1316,7 +1370,7 @@ const performBulkDeleteDocuments = async () => {
     if (error.response?.status === 401) {
       showLoginModal.value = true
     } else {
-      alert('An error occurred during the delete operation.')
+      window.showToast('An error occurred during the delete operation.', 'error')
     }
   }
 }
@@ -1326,11 +1380,18 @@ const openEditCompanyModal = () => {
   // Populate the form with current company data
   editCompanyForm.value = {
     name: company.value?.name || '',
-    ticker: company.value?.ticker || '',
+    ticker_symbol: company.value?.ticker_symbol || company.value?.ticker || '',
     sector: company.value?.sector || '',
     industry: company.value?.industry || '',
-    market_cap: company.value?.market_cap || '',
-    description: company.value?.description || ''
+    market_cap: company.value?.market_cap || company.value?.marketCap || '',
+    description: company.value?.description || '',
+    headquarters: company.value?.headquarters || '',
+    employees: company.value?.employees || null,
+    founded_date: company.value?.founded_date || company.value?.foundedDate || '',
+    website: company.value?.website || company.value?.website_url || '',
+    reports_financial_data_in: company.value?.reports_financial_data_in || '',
+    marketCapInput: formatMarketCap(company.value?.market_cap || company.value?.marketCap) || '',
+    marketCapValidation: { state: '', timer: null }
   }
 
   editCompanyErrors.value = {}
@@ -1344,25 +1405,112 @@ const handleEditCompanySave = async () => {
   editCompanyErrors.value = {}
 
   try {
-    const response = await axios.put(`/api/companies/${company.value.id}`, editCompanyForm.value)
+    // Map frontend form fields to backend expected fields
+    const requestData = {
+      ...editCompanyForm.value,
+      website_url: editCompanyForm.value.website // Map website to website_url
+    }
+
+    // Remove the frontend-only fields
+    delete requestData.website
+    delete requestData.marketCapInput
+    delete requestData.marketCapValidation
+
+    // Ensure market_cap is a number, not string
+    if (requestData.market_cap) {
+      requestData.market_cap = parseFloat(requestData.market_cap)
+      if (isNaN(requestData.market_cap)) {
+        requestData.market_cap = null
+      }
+    }
+
+    console.log('Updating company with data:', requestData)
+
+    const response = await axios.put(`/api/companies/${company.value.id}`, requestData)
+
+    console.log('Company update response:', response.data)
 
     // Update the local company data
     company.value = { ...company.value, ...response.data.company }
 
     showEditCompanyModal.value = false
 
-    // Optional: Show success message (you could emit a toast here)
+    // Show success message
+    editCompanyErrors.value = { success: 'Company updated successfully!' }
+
+    // Clear success message after 3 seconds
+    setTimeout(() => {
+      if (editCompanyErrors.value.success) {
+        delete editCompanyErrors.value.success
+      }
+    }, 3000)
+
     console.log('Company updated successfully!')
 
   } catch (error) {
-    if (error.response && error.response.data && error.response.data.errors) {
+    console.error('Company update error:', error)
+    console.error('Error response:', error.response?.data)
+    console.error('Error status:', error.response?.status)
+
+    if (error.response?.status === 422 && error.response?.data?.errors) {
+      // Validation errors
       editCompanyErrors.value = error.response.data.errors
+      console.log('Validation errors:', error.response.data.errors)
+    } else if (error.response?.status === 401) {
+      // Authentication error
+      showLoginModal.value = true
+      editCompanyErrors.value = { general: 'Please log in to update companies.' }
+    } else if (error.response?.data?.message) {
+      // Server error message
+      editCompanyErrors.value = { general: error.response.data.message }
+    } else if (error.response?.data?.error) {
+      // Alternative error format
+      editCompanyErrors.value = { general: error.response.data.error }
+    } else if (error.message) {
+      // Network or other errors
+      editCompanyErrors.value = { general: `Network error: ${error.message}` }
     } else {
+      // Generic fallback
       editCompanyErrors.value = { general: 'Failed to update company. Please try again.' }
     }
   } finally {
     updatingCompany.value = false
   }
+}
+
+// Edit form handlers
+const updateEditCompanyForm = (newForm) => {
+  editCompanyForm.value = { ...editCompanyForm.value, ...newForm }
+}
+
+const handleMarketCapInput = (event) => {
+  const input = event.target.value
+  editCompanyForm.value.marketCapInput = input
+
+  // Clear existing timer
+  if (editCompanyForm.value.marketCapValidation.timer) {
+    clearTimeout(editCompanyForm.value.marketCapValidation.timer)
+  }
+
+  if (!input) {
+    editCompanyForm.value.market_cap = ''
+    editCompanyForm.value.marketCapValidation.state = ''
+    return
+  }
+
+  // Parse and store numeric value
+  const numericValue = parseMarketCapInput(input)
+  editCompanyForm.value.market_cap = numericValue
+
+  // Set validation state with debounce
+  editCompanyForm.value.marketCapValidation.state = 'validating'
+  editCompanyForm.value.marketCapValidation.timer = setTimeout(() => {
+    if (numericValue > 0) {
+      editCompanyForm.value.marketCapValidation.state = 'valid'
+    } else {
+      editCompanyForm.value.marketCapValidation.state = 'invalid'
+    }
+  }, 500)
 }
 
 // Modal control methods
@@ -1421,22 +1569,22 @@ const handleResearchSave = async () => {
   try {
     // Frontend validation
     if (!researchForm.value.title || !researchForm.value.title.trim()) {
-      alert('Please enter a title for the research note.')
+      window.showToast('Please enter a title for the research note.', 'warning')
       return
     }
 
     if (!researchForm.value.content || !researchForm.value.content.trim()) {
-      alert('Please enter content for the research note.')
+      window.showToast('Please enter content for the research note.', 'warning')
       return
     }
 
     if (!researchForm.value.visibility) {
-      alert('Please select a visibility setting.')
+      window.showToast('Please select a visibility setting.', 'warning')
       return
     }
 
     if (!company.value?.id) {
-      alert('Company information is missing. Please refresh the page and try again.')
+      window.showToast('Company information is missing. Please refresh the page and try again.', 'error')
       return
     }
 
@@ -1497,13 +1645,13 @@ const handleResearchSave = async () => {
 
     console.log('Server response:', response.data)
 
-    // Check if all expected attachments were successfully processed
-    const expectedAttachments = researchForm.value.files.length +
-                               researchForm.value.urls.length +
-                               researchForm.value.selectedExistingFiles.length
+    // Check if URL downloads failed (only show warning for URL download failures)
+    const expectedUrlDownloads = researchForm.value.urls?.length || 0
+    const expectedLocalFiles = (researchForm.value.files?.length || 0) + (researchForm.value.selectedExistingFiles?.length || 0)
+    const expectedTotalAttachments = expectedUrlDownloads + expectedLocalFiles
     const actualAttachments = response.data.attachments ? response.data.attachments.length : 0
 
-    console.log(`Expected attachments: ${expectedAttachments}, Actual attachments: ${actualAttachments}`)
+    console.log(`Expected URL downloads: ${expectedUrlDownloads}, Expected local files: ${expectedLocalFiles}, Total expected: ${expectedTotalAttachments}, Actual: ${actualAttachments}`)
 
     // Show appropriate success/warning message
     const action = isEditingResearch.value ? 'updated' : 'created'
@@ -1514,11 +1662,20 @@ const handleResearchSave = async () => {
     isEditingResearch.value = false
     editingResearchId.value = null
     showCreateResearchModal.value = false
-    if (expectedAttachments > 0 && actualAttachments < expectedAttachments) {
-      const failedCount = expectedAttachments - actualAttachments
-      console.warn(`Warning: ${failedCount} out of ${expectedAttachments} attachments failed to process`)
 
-      alert(`Research item ${action} successfully!\n\nWarning: ${failedCount} out of ${expectedAttachments} file(s) could not be downloaded automatically.\n\nPlease manually download the files from the provided URLs and upload them to this research item.`)
+    // Only show download warning if there were URLs that failed to download
+    if (expectedUrlDownloads > 0 && actualAttachments < expectedTotalAttachments) {
+      // Calculate how many URLs failed (assuming local files always succeed)
+      const successfulAttachments = actualAttachments
+      const successfulUrls = Math.max(0, successfulAttachments - expectedLocalFiles)
+      const failedUrls = expectedUrlDownloads - successfulUrls
+
+      if (failedUrls > 0) {
+        console.warn(`Warning: ${failedUrls} out of ${expectedUrlDownloads} URL downloads failed`)
+        window.showToast(`Research item ${action} successfully!\n\nWarning: ${failedUrls} out of ${expectedUrlDownloads} file(s) could not be downloaded automatically from URLs.\n\nPlease manually download the files from the provided URLs and upload them to this research item.`, 'warning')
+      } else {
+        console.log(`Research item ${action} successfully with all attachments`)
+      }
     } else {
       console.log(`Research item ${action} successfully with all attachments`)
     }
@@ -1536,13 +1693,13 @@ const handleResearchSave = async () => {
       const errorMessages = Object.entries(error.response.data.errors)
         .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
         .join('\n')
-      alert(`Validation Error:\n\n${errorMessages}`)
+      window.showToast(`Validation Error:\n\n${errorMessages}`, 'error')
     } else if (error.response?.data?.message) {
       console.error('Server message:', error.response.data.message)
-      alert(`Error: ${error.response.data.message}`)
+      window.showToast(`Error: ${error.response.data.message}`, 'error')
       researchErrors.value = { general: error.response.data.message }
     } else {
-      alert('Failed to save research note. Please try again.')
+      window.showToast('Failed to save research note. Please try again.', 'error')
       researchErrors.value = { general: 'Failed to save research note. Please try again.' }
     }
   } finally {
@@ -1638,7 +1795,7 @@ const handleSearchExistingFiles = async (searchTerm) => {
     const response = await axios.get('/api/research-items/files/available', {
       params: { search: searchTerm }
     })
-    availableFiles.value = Array.isArray(response.data) ? response.data : []
+    availableFiles.value = Array.isArray(response.data?.data) ? response.data.data : []
   } catch (error) {
     console.error('Error searching files:', error)
     availableFiles.value = []
@@ -1651,7 +1808,7 @@ const handleLoadExistingFiles = async () => {
   try {
     loadingExistingFiles.value = true
     const response = await axios.get('/api/research-items/files/available')
-    availableFiles.value = Array.isArray(response.data) ? response.data : []
+    availableFiles.value = Array.isArray(response.data?.data) ? response.data.data : []
   } catch (error) {
     console.error('Error loading files:', error)
     availableFiles.value = []

@@ -56,7 +56,7 @@ class Company extends Model
     public function getMarketCapFormattedAttribute(): string
     {
         if (!$this->market_cap) return 'N/A';
-        
+
         $value = $this->market_cap;
         if ($value >= 1000000000000) {
             return '$' . number_format($value / 1000000000000, 1) . 'T';

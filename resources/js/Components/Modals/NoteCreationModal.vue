@@ -11,7 +11,7 @@
           <div>
             <h2 class="text-3xl font-semibold text-white">{{ props.isEditing ? '✏️ Edit Research' : '📝 Add Research' }}</h2>
             <p class="text-lg text-gray-300 mt-1" v-if="selectedCompany">
-              for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
+              for {{ selectedCompany.name }} ({{ selectedCompany.ticker_symbol }})
             </p>
           </div>
           <div class="flex items-center space-x-3">
@@ -152,7 +152,7 @@
             </button>
             <button
               type="button"
-              @click="form.uploadType = 'existing'"
+              @click="form.uploadType = 'existing'; $emit('load-existing-files')"
               :class="[
                 'px-4 py-2 text-sm rounded-lg font-medium transition-all duration-300',
                 form.uploadType === 'existing'
@@ -246,13 +246,6 @@
                 class="flex-1 px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
                 style="backdrop-filter: blur(20px) saturate(180%);"
               />
-              <button
-                type="button"
-                @click="$emit('load-existing-files')"
-                class="px-4 py-3 bg-green-500/20 text-green-300 border border-green-400/30 rounded-xl hover:bg-green-500/30 transition-all duration-300 font-medium"
-              >
-                Load Files
-              </button>
             </div>
 
             <!-- Loading existing files -->
@@ -263,33 +256,55 @@
 
             <!-- Existing files list -->
             <div v-else-if="availableFiles.length > 0"
-                 class="max-h-64 overflow-y-auto space-y-2 border border-white/10 rounded-xl p-3 bg-white/5 backdrop-blur-xl">
-              <div
-                v-for="file in availableFiles"
-                :key="file.id"
-                @click="$emit('toggle-file-selection', file)"
-                class="flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-300 hover:bg-white/10 border border-white/10"
-                :class="{
-                  'bg-blue-500/20 border-blue-400/30': form.selectedExistingFiles?.some(f => f.id === file.id),
-                  'bg-white/5': !form.selectedExistingFiles?.some(f => f.id === file.id)
-                }"
-              >
-                <div class="flex-shrink-0">
-                  <svg class="w-6 h-6 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                  </svg>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-white font-medium truncate">{{ file.name || file.original_name }}</p>
-                  <p class="text-sm text-gray-400">{{ formatFileSize(file.size) }}</p>
-                </div>
-                <div v-if="form.selectedExistingFiles?.some(f => f.id === file.id)"
-                     class="flex-shrink-0">
-                  <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                </div>
-              </div>
+                 class="max-h-64 overflow-y-auto border border-white/10 rounded-xl bg-white/5 backdrop-blur-xl">
+              <table class="min-w-full">
+                <thead class="border-b border-white/10">
+                  <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                      <input
+                        type="checkbox"
+                        @change="toggleAllFiles($event)"
+                        class="rounded bg-white/10 border-white/20 text-blue-400 focus:ring-blue-400/20"
+                      />
+                    </th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Name</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Size</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Source</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                  <tr
+                    v-for="file in availableFiles"
+                    :key="file.id"
+                    @click="$emit('toggle-file-selection', file)"
+                    class="cursor-pointer transition-all duration-300 hover:bg-white/10"
+                    :class="{
+                      'bg-blue-500/20': form.selectedExistingFiles?.some(f => f.id === file.id),
+                      'bg-transparent': !form.selectedExistingFiles?.some(f => f.id === file.id)
+                    }"
+                  >
+                    <td class="px-4 py-3">
+                      <input
+                        type="checkbox"
+                        :checked="form.selectedExistingFiles?.some(f => f.id === file.id)"
+                        @click.stop
+                        @change="$emit('toggle-file-selection', file)"
+                        class="rounded bg-white/10 border-white/20 text-blue-400 focus:ring-blue-400/20"
+                      />
+                    </td>
+                    <td class="px-4 py-3">
+                      <div class="flex items-center">
+                        <svg class="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span class="text-white text-sm truncate">{{ file.name || file.original_name }}</span>
+                      </div>
+                    </td>
+                    <td class="px-4 py-3 text-sm text-gray-400">{{ formatFileSize(file.size) }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-400 capitalize">{{ file.source_type?.replace('_', ' ') }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
             <!-- No files state -->
@@ -405,5 +420,15 @@ const formatFileSize = (bytes) => {
   const sizes = ['B', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+const toggleAllFiles = (event) => {
+  if (event.target.checked) {
+    // Select all files
+    props.form.selectedExistingFiles = [...props.availableFiles]
+  } else {
+    // Deselect all files
+    props.form.selectedExistingFiles = []
+  }
 }
 </script>

@@ -564,7 +564,7 @@
                       </div>
                       <div>
                         <h4 class="text-white font-medium">{{ company.name }}</h4>
-                        <p class="text-gray-400 text-sm">{{ company.ticker }} • {{ company.sector }}</p>
+                        <p class="text-gray-400 text-sm">{{ company.ticker_symbol }} • {{ company.sector }}</p>
                       </div>
                     </div>
                     <div class="text-blue-300 text-sm">Company</div>
@@ -1266,7 +1266,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2 min-w-0 flex-1">
                     <div class="w-10 h-8 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded flex items-center justify-center flex-shrink-0">
-                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker || '').substring(0, 3) }}</span>
+                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker_symbol || '').substring(0, 3) }}</span>
                     </div>
                     <div class="min-w-0 flex-1">
                       <h4 class="text-white font-medium truncate text-sm">{{ company.name }}</h4>
@@ -1347,7 +1347,7 @@
                     <div class="col-span-3 flex items-center space-x-3 cursor-pointer" @click="navigateToCompany(company)">
                       <!-- Stock Ticker -->
                       <div class="w-16 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-all duration-300">
-                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker || 'N/A' }}</span>
+                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker_symbol || 'N/A' }}</span>
                       </div>
 
                       <!-- Company Details -->
@@ -1622,8 +1622,8 @@
       </div> <!-- End Glass Container -->
     </div> <!-- End Lower Content Container -->
 
-    <!-- Company Details Modal -->
-    <CompanyDetailsModal
+    <!-- Edit Company Modal -->
+    <EditCompanyModal
       :show="showDetailsModal"
       :company="selectedCompany"
       :editForm="companyForm"
@@ -1632,37 +1632,10 @@
       :editMarketCapInput="editMarketCapInput"
       :editMarketCapValidation="editMarketCapValidation"
       :formatMarketCap="formatMarketCap"
-      :noteForm="noteForm"
-      :noteErrors="errors"
-      :creatingNote="creatingNote"
-      :isEditingResearchItem="isEditingResearchItem"
-      :editingResearchItemId="editingResearchItemId"
-      :categories="categories"
-      :documentForm="uploadForm"
-      :documentErrors="errors"
-      :uploading="uploading"
-      :formatFileSize="formatFileSize"
-      :insights="companyInsights"
-      :initialTab="modalInitialTab"
       @close="closeDetailsModal"
-      @create-insight="handleCreateInsight"
       @save-edit="saveCompanyEdits"
       @update:edit-form="companyForm = $event"
       @edit-market-cap-input="handleEditMarketCapInput"
-      @save-note="createNote"
-      @update:note-form="noteForm = $event"
-      @note-file-upload="handleNoteFileUpload"
-      @remove-note-file="removeNoteFile"
-      @save-document="uploadDocuments"
-      @update:document-form="uploadForm = $event"
-      @file-upload="handleDocumentUpload"
-      @edit-research="editResearchItem"
-      @delete-research="deleteResearchItem"
-      @delete-document="deleteDocument"
-      @remove-file="removeUploadFile"
-      @add-url="addUrlToList"
-      @remove-url="removeUrlFromList"
-      @start-edit="startEditingCompany"
     />
 
     <!-- Note Creation Modal -->
@@ -1727,7 +1700,7 @@
     <!-- Research Note Modal -->
     <ResearchNoteModal
       :show="showResearchNoteModal"
-      :researchNoteId="selectedResearchNoteId"
+      :researchNote="selectedResearchNote"
       @close="closeResearchNoteModal"
       @view-company="handleViewCompanyFromNote"
     />
@@ -1827,7 +1800,7 @@
                 >
                   <div>
                     <div class="font-medium text-white">{{ company.name }}</div>
-                    <div class="text-sm text-gray-400">{{ company.ticker }}</div>
+                    <div class="text-sm text-gray-400">{{ company.ticker_symbol }}</div>
                   </div>
                   <div class="text-sm text-gray-400 space-x-4">
                     <span v-if="company.research_items > 0">{{ company.research_items }} research</span>
@@ -1875,6 +1848,9 @@
       </div>
     </div>
 
+    <!-- Toast Notifications -->
+    <ToastNotification />
+
   </div>
 </template>
 
@@ -1888,7 +1864,7 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import AnimatedQuotes from '@/Components/AnimatedQuotes.vue'
-import CompanyDetailsModal from '@/Components/Modals/CompanyDetailsModal.vue'
+import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
@@ -1900,6 +1876,7 @@ import LoginModal from '@/Components/Modals/LoginModal.vue'
 import RegisterModal from '@/Components/Modals/RegisterModal.vue'
 import DeleteConfirmationModal from '@/Components/Modals/DeleteConfirmationModal.vue'
 import OverflowMenu from '@/Components/Navigation/OverflowMenu.vue'
+import ToastNotification from '@/Components/ToastNotification.vue'
 import HamburgerMenu from '@/Components/Navigation/HamburgerMenu.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import SearchResultsTree from '@/Components/SearchResultsTree.vue'
@@ -1914,6 +1891,7 @@ const showDetailsModal = ref(false)
 const modalInitialTab = ref('overview')
 const showResearchNoteModal = ref(false)
 const selectedResearchNoteId = ref(null)
+const selectedResearchNote = ref(null)
 const debugModalVisible = ref(false)
 const showNoteModal = ref(false)
 const showUploadModal = ref(false)
@@ -2159,7 +2137,7 @@ const filteredCompanies = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   return companiesInfinite.value.filter(company =>
     company.name.toLowerCase().includes(query) ||
-    company.ticker.toLowerCase().includes(query) ||
+    company.ticker_symbol.toLowerCase().includes(query) ||
     (company.sector && company.sector.toLowerCase().includes(query)) ||
     (company.industry && company.industry.toLowerCase().includes(query))
   )
@@ -2329,7 +2307,7 @@ const companiesFiltered = computed(() => {
     const query = companiesSearchQuery.value.toLowerCase()
     filtered = filtered.filter(company =>
       company.name.toLowerCase().includes(query) ||
-      company.ticker?.toLowerCase().includes(query) ||
+      company.ticker_symbol?.toLowerCase().includes(query) ||
       company.sector?.toLowerCase().includes(query) ||
       company.industry?.toLowerCase().includes(query)
     )
@@ -2344,7 +2322,7 @@ const companiesFiltered = computed(() => {
   if (companiesSortBy.value === 'name') {
     filtered.sort((a, b) => a.name.localeCompare(b.name))
   } else if (companiesSortBy.value === 'ticker') {
-    filtered.sort((a, b) => (a.ticker || '').localeCompare(b.ticker || ''))
+    filtered.sort((a, b) => (a.ticker_symbol || '').localeCompare(b.ticker_symbol || ''))
   } else if (companiesSortBy.value === 'sector') {
     filtered.sort((a, b) => (a.sector || '').localeCompare(b.sector || ''))
   } else if (companiesSortBy.value === 'research_count') {
@@ -2588,21 +2566,54 @@ const insightsCategoryOptions = computed(() => {
 })
 
 const openResearchItem = (item) => {
+  console.log('🔍 Opening research item:', item)
+  console.log('🔍 Item company:', item.company)
+  console.log('🔍 Item ticker_symbol:', item.ticker_symbol)
+  console.log('🔍 Item company.ticker_symbol:', item.company?.ticker_symbol)
+
   // Close the search modal
   closeSearch()
 
-  // Open the research note modal with the item ID
-  selectedResearchNoteId.value = item.id
-  showResearchNoteModal.value = true
+  // Navigate to the company profile page with research tab
+  if (item.company && item.company.ticker_symbol) {
+    console.log('✅ Navigating via item.company.ticker_symbol:', item.company.ticker_symbol)
+    router.visit(route('company.profile', { ticker: item.company.ticker_symbol }) + '?tab=research')
+  } else if (item.ticker_symbol) {
+    // If the item directly has a ticker_symbol
+    console.log('✅ Navigating via item.ticker_symbol:', item.ticker_symbol)
+    router.visit(route('company.profile', { ticker: item.ticker_symbol }) + '?tab=research')
+  } else {
+    console.error('❌ Cannot navigate: research item missing company ticker_symbol', item)
+    window.showToast('Unable to navigate to research item - company information missing', 'warning')
+  }
 }
 
 const openDocument = (document) => {
-  // For now, we can download the document or show more details
-  // This could open a document viewer modal in the future
-  if (document.url || document.file_path) {
-    // Open the document in a new tab/window
+  console.log('📄 Opening document:', document)
+  console.log('📄 Document company:', document.company)
+  console.log('📄 Document ticker_symbol:', document.ticker_symbol)
+  console.log('📄 Document company.ticker_symbol:', document.company?.ticker_symbol)
+  console.log('📄 Document URL:', document.url)
+  console.log('📄 Document file_path:', document.file_path)
+
+  // If the document belongs to a company, navigate to the company documents tab
+  if (document.company && document.company.ticker_symbol) {
+    console.log('✅ Navigating via document.company.ticker_symbol:', document.company.ticker_symbol)
+    closeSearch()
+    router.visit(route('company.profile', { ticker: document.company.ticker_symbol }) + '?tab=documents')
+  } else if (document.ticker_symbol) {
+    // If the document directly has a ticker_symbol
+    console.log('✅ Navigating via document.ticker_symbol:', document.ticker_symbol)
+    closeSearch()
+    router.visit(route('company.profile', { ticker: document.ticker_symbol }) + '?tab=documents')
+  } else if (document.url || document.file_path) {
+    // Fallback: open the document directly in a new tab/window
     const url = document.url || document.file_path
+    console.log('✅ Opening document directly:', url)
     window.open(url, '_blank')
+  } else {
+    console.error('❌ Cannot open document: no company info or file path', document)
+    window.showToast('Unable to open document - missing file information', 'warning')
   }
 }
 
@@ -2900,8 +2911,8 @@ const createCompany = async () => {
 }
 
 const navigateToCompany = (company) => {
-  if (company.ticker) {
-    router.visit(route('company.profile', { ticker: company.ticker }))
+  if (company.ticker_symbol) {
+    router.visit(route('company.profile', { ticker: company.ticker_symbol }))
   } else {
     console.error('Company ticker not available for navigation')
   }
@@ -2921,16 +2932,18 @@ const viewCompanyDetails = async (company) => {
     // Initialize edit form with company data for the tabbed interface
     companyForm.value = {
       name: selectedCompany.value.name || '',
-      ticker_symbol: selectedCompany.value.ticker || '',
+      ticker_symbol: selectedCompany.value.ticker_symbol || selectedCompany.value.ticker || '',
       sector: selectedCompany.value.sector || '',
       industry: selectedCompany.value.industry || '',
-      market_cap: selectedCompany.value.marketCap || '',
-      description: selectedCompany.value.description || ''
+      market_cap: selectedCompany.value.marketCap || selectedCompany.value.market_cap || '',
+      description: selectedCompany.value.description || '',
+      reports_financial_data_in: selectedCompany.value.reports_financial_data_in || ''
     }
     
     // Initialize edit market cap input
-    if (selectedCompany.value.marketCap) {
-      editMarketCapInput.value = formatMarketCapInput(selectedCompany.value.marketCap)
+    const marketCapValue = selectedCompany.value.marketCap || selectedCompany.value.market_cap
+    if (marketCapValue) {
+      editMarketCapInput.value = formatMarketCapInput(marketCapValue)
       editMarketCapValidation.value.state = 'valid'
     } else {
       editMarketCapInput.value = ''
@@ -2974,7 +2987,7 @@ const viewCompanyDetails = async (company) => {
     // Initialize forms with fallback data
     companyForm.value = {
       name: company.name || '',
-      ticker_symbol: company.ticker || '',
+      ticker_symbol: company.ticker_symbol || '',
       sector: company.sector || '',
       industry: company.industry || '',
       market_cap: company.marketCap || '',
@@ -3042,7 +3055,7 @@ const performDeleteCompany = async (company) => {
     
   } catch (error) {
     console.error('Error deleting company:', error)
-    alert('Failed to delete company. Please try again.')
+    window.showToast('Failed to delete company. Please try again.', 'error')
   } finally {
     deleting.value = false
   }
@@ -3366,11 +3379,11 @@ const performDeleteResearchItem = async (item) => {
   } catch (error) {
     console.error('Error deleting research item:', error)
     if (error.response?.status === 403) {
-      alert('You can only delete research items that you created.')
+      window.showToast('You can only delete research items that you created.', 'warning')
     } else if (error.response?.status === 404) {
-      alert('Research item not found.')
+      window.showToast('Research item not found.', 'error')
     } else {
-      alert('Failed to delete research item. Please try again.')
+      window.showToast('Failed to delete research item. Please try again.', 'error')
     }
   }
 }
@@ -3403,11 +3416,11 @@ const performDeleteDocument = async (document) => {
   } catch (error) {
     console.error('Error deleting document:', error)
     if (error.response?.status === 403) {
-      alert('You can only delete documents that you created.')
+      window.showToast('You can only delete documents that you created.', 'warning')
     } else if (error.response?.status === 404) {
-      alert('Document not found.')
+      window.showToast('Document not found.', 'error')
     } else {
-      alert('Failed to delete document. Please try again.')
+      window.showToast('Failed to delete document. Please try again.', 'error')
     }
   }
 }
@@ -3530,7 +3543,7 @@ const fetchDeletionImpact = async () => {
     deletionImpact.value = response.data
   } catch (error) {
     console.error('Error fetching deletion impact:', error)
-    alert('Error loading deletion preview. Please try again.')
+    window.showToast('Error loading deletion preview. Please try again.', 'error')
   } finally {
     loadingDeletionImpact.value = false
   }
@@ -3571,11 +3584,11 @@ const confirmBulkDelete = async () => {
 
     // Show success message
     const message = response.data.message || `Successfully deleted ${response.data.deleted_count} companies`
-    alert(message)
+    window.showToast(message, 'success')
 
   } catch (error) {
     console.error('Error deleting companies:', error)
-    alert('An error occurred while deleting companies. Please try again.')
+    window.showToast('An error occurred while deleting companies. Please try again.', 'error')
   } finally {
     bulkDeleting.value = false
   }
@@ -3602,17 +3615,18 @@ const startEditingCompany = () => {
   // Populate form with current company data
   companyForm.value = {
     name: selectedCompany.value.name || '',
-    ticker_symbol: selectedCompany.value.ticker || '',
+    ticker_symbol: selectedCompany.value.ticker_symbol || selectedCompany.value.ticker || '',
     sector: selectedCompany.value.sector || '',
     industry: selectedCompany.value.industry || '',
-    market_cap: selectedCompany.value.marketCap || '',
+    market_cap: selectedCompany.value.marketCap || selectedCompany.value.market_cap || '',
     description: selectedCompany.value.description || '',
-    reports_financial_data_in: selectedCompany.value.reports_financial_data_in ?? ''
+    reports_financial_data_in: selectedCompany.value.reports_financial_data_in || ''
   }
   
   // Populate edit market cap input if there's a value
-  if (selectedCompany.value.marketCap) {
-    editMarketCapInput.value = formatMarketCapInput(selectedCompany.value.marketCap)
+  const marketCapValue = selectedCompany.value.marketCap || selectedCompany.value.market_cap
+  if (marketCapValue) {
+    editMarketCapInput.value = formatMarketCapInput(marketCapValue)
     editMarketCapValidation.value.state = 'valid'
   } else {
     editMarketCapInput.value = ''
@@ -3651,7 +3665,7 @@ const saveCompanyEdits = async () => {
     // Update the form with the saved data so fields show current values
     companyForm.value = {
       name: response.data.name || '',
-      ticker_symbol: response.data.ticker || '',
+      ticker_symbol: response.data.ticker_symbol || '',
       sector: response.data.sector || '',
       industry: response.data.industry || '',
       market_cap: response.data.marketCap || '',
@@ -3705,6 +3719,7 @@ const closeDetailsModal = () => {
 const closeResearchNoteModal = () => {
   showResearchNoteModal.value = false
   selectedResearchNoteId.value = null
+  selectedResearchNote.value = null
 }
 
 const handleViewCompanyFromNote = async (company) => {
@@ -3801,7 +3816,9 @@ const fetchLatestCompanies = async () => {
 const fetchLatestResearch = async () => {
   try {
     const response = await axios.get('/api/activities/latest/research?limit=5')
+    console.log('📊 Latest research API response:', response.data)
     latestResearch.value = response.data || []
+    console.log('📊 Latest research stored:', latestResearch.value)
   } catch (error) {
     console.error('Error fetching latest research:', error)
     if (error.response && error.response.status === 401) {

@@ -195,45 +195,128 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'ticker_symbol' => [
-                'required',
-                'string',
-                'max:10',
-                Rule::unique('companies')->ignore($company->id)->whereNull('deleted_at')
-            ],
-            'sector' => 'nullable|string|max:255',
-            'industry' => 'nullable|string|max:255',
-            'market_cap' => 'nullable|numeric|min:0',
-            'description' => 'nullable|string',
-            'reports_financial_data_in' => 'nullable|string|max:3',
-            'website_url' => 'nullable|url',
-            'headquarters' => 'nullable|string|max:255',
-            'employees' => 'nullable|integer|min:0',
-            'founded_date' => 'nullable|date',
-        ]);
+        try {
+            \Log::info('Company update started', [
+                'company_id' => $company->id,
+                'request_data' => $request->all(),
+                'user_id' => auth()->id()
+            ]);
 
-        $validated['ticker_symbol'] = strtoupper($validated['ticker_symbol']);
-        $company->update($validated);
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'ticker_symbol' => [
+                    'required',
+                    'string',
+                    'max:10',
+                    Rule::unique('companies')->ignore($company->id)->whereNull('deleted_at')
+                ],
+                'sector' => 'nullable|string|max:255',
+                'industry' => 'nullable|string|max:255',
+                'market_cap' => 'nullable|numeric|min:0',
+                'description' => 'nullable|string',
+                'reports_financial_data_in' => 'nullable|string|max:3',
+                'website_url' => 'nullable|url',
+                'headquarters' => 'nullable|string|max:255',
+                'employees' => 'nullable|integer|min:0',
+                'founded_date' => 'nullable|date',
+            ]);
 
-        return response()->json([
-            'id' => $company->id,
-            'name' => $company->name,
-            'ticker' => $company->ticker_symbol,
-            'sector' => $company->sector,
-            'industry' => $company->industry,
-            'marketCap' => $company->market_cap,
-            'marketCapFormatted' => $company->market_cap_formatted,
-            'description' => $company->description,
-            'reports_financial_data_in' => $company->reports_financial_data_in,
-        ]);
+            \Log::info('Company update validation passed', [
+                'company_id' => $company->id,
+                'validated_data' => $validated
+            ]);
+
+            $validated['ticker_symbol'] = strtoupper($validated['ticker_symbol']);
+
+            // Update the company
+            $company->update($validated);
+
+            // Refresh the model to get updated computed attributes
+            $company->refresh();
+
+            \Log::info('Company update completed successfully', [
+                'company_id' => $company->id,
+                'updated_data' => $company->toArray()
+            ]);
+
+            // Return data in the format expected by frontend
+            return response()->json([
+                'message' => 'Company updated successfully',
+                'company' => [
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'ticker' => $company->ticker_symbol,
+                    'ticker_symbol' => $company->ticker_symbol,
+                    'sector' => $company->sector,
+                    'industry' => $company->industry,
+                    'market_cap' => $company->market_cap,
+                    'marketCap' => $company->market_cap,
+                    'marketCapFormatted' => $company->market_cap_formatted,
+                    'description' => $company->description,
+                    'reports_financial_data_in' => $company->reports_financial_data_in,
+                    'headquarters' => $company->headquarters,
+                    'employees' => $company->employees,
+                    'founded_date' => $company->founded_date,
+                    'foundedDate' => $company->founded_date?->format('Y-m-d'),
+                    'website' => $company->website_url,
+                    'website_url' => $company->website_url,
+                ]
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Company update validation failed', [
+                'company_id' => $company->id,
+                'errors' => $e->errors(),
+                'request' => $request->all()
+            ]);
+            throw $e; // Re-throw to let Laravel handle it properly
+
+        } catch (\Exception $e) {
+            \Log::error('Company update failed', [
+                'company_id' => $company->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to update company: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function destroy(Company $company): JsonResponse
     {
-        $company->delete(); // This will be a soft delete
-        return response()->json(null, 204);
+        try {
+            \Log::info('Company deletion started', [
+                'company_id' => $company->id,
+                'company_name' => $company->name,
+                'user_id' => auth()->id()
+            ]);
+
+            $company->delete(); // This will be a soft delete
+
+            \Log::info('Company deletion completed successfully', [
+                'company_id' => $company->id,
+                'company_name' => $company->name
+            ]);
+
+            return response()->json(null, 204);
+
+        } catch (\Exception $e) {
+            \Log::error('Company deletion failed', [
+                'company_id' => $company->id,
+                'company_name' => $company->name,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to delete company: ' . $e->getMessage(),
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

@@ -220,7 +220,7 @@
       <div class="bg-gradient-to-r from-gray-900/50 to-gray-800/50 px-4 sm:px-6 lg:px-8 py-4 border-t border-white/20">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="text-sm text-gray-400">
-            <span v-if="document?.company">📈 {{ document.company.name }} ({{ document.company.ticker }})</span>
+            <span v-if="document?.company">📈 {{ document.company.name }} ({{ document.company.ticker_symbol }})</span>
           </div>
           <div class="flex items-center space-x-3">
             <button
