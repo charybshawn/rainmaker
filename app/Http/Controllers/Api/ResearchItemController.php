@@ -236,7 +236,7 @@ class ResearchItemController extends Controller
 
                     if ($originalMedia) {
                         // Copy the file to the new research item
-                        $researchItem->addMediaFromPath($originalMedia->getPath())
+                        $researchItem->addMedia($originalMedia->getPath())
                             ->usingName($originalMedia->name)
                             ->usingFileName($originalMedia->file_name)
                             ->toMediaCollection('attachments');
@@ -476,7 +476,7 @@ class ResearchItemController extends Controller
 
                     if ($originalMedia) {
                         // Copy the file to the research item
-                        $researchItem->addMediaFromPath($originalMedia->getPath())
+                        $researchItem->addMedia($originalMedia->getPath())
                             ->usingName($originalMedia->name)
                             ->usingFileName($originalMedia->file_name)
                             ->toMediaCollection('attachments');

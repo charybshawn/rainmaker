@@ -1622,8 +1622,8 @@
       </div> <!-- End Glass Container -->
     </div> <!-- End Lower Content Container -->
 
-    <!-- Company Details Modal -->
-    <CompanyDetailsModal
+    <!-- Edit Company Modal -->
+    <EditCompanyModal
       :show="showDetailsModal"
       :company="selectedCompany"
       :editForm="companyForm"
@@ -1632,37 +1632,10 @@
       :editMarketCapInput="editMarketCapInput"
       :editMarketCapValidation="editMarketCapValidation"
       :formatMarketCap="formatMarketCap"
-      :noteForm="noteForm"
-      :noteErrors="errors"
-      :creatingNote="creatingNote"
-      :isEditingResearchItem="isEditingResearchItem"
-      :editingResearchItemId="editingResearchItemId"
-      :categories="categories"
-      :documentForm="uploadForm"
-      :documentErrors="errors"
-      :uploading="uploading"
-      :formatFileSize="formatFileSize"
-      :insights="companyInsights"
-      :initialTab="modalInitialTab"
       @close="closeDetailsModal"
-      @create-insight="handleCreateInsight"
       @save-edit="saveCompanyEdits"
       @update:edit-form="companyForm = $event"
       @edit-market-cap-input="handleEditMarketCapInput"
-      @save-note="createNote"
-      @update:note-form="noteForm = $event"
-      @note-file-upload="handleNoteFileUpload"
-      @remove-note-file="removeNoteFile"
-      @save-document="uploadDocuments"
-      @update:document-form="uploadForm = $event"
-      @file-upload="handleDocumentUpload"
-      @edit-research="editResearchItem"
-      @delete-research="deleteResearchItem"
-      @delete-document="deleteDocument"
-      @remove-file="removeUploadFile"
-      @add-url="addUrlToList"
-      @remove-url="removeUrlFromList"
-      @start-edit="startEditingCompany"
     />
 
     <!-- Note Creation Modal -->
@@ -1727,7 +1700,7 @@
     <!-- Research Note Modal -->
     <ResearchNoteModal
       :show="showResearchNoteModal"
-      :researchNoteId="selectedResearchNoteId"
+      :researchNote="selectedResearchNote"
       @close="closeResearchNoteModal"
       @view-company="handleViewCompanyFromNote"
     />
@@ -1875,6 +1848,9 @@
       </div>
     </div>
 
+    <!-- Toast Notifications -->
+    <ToastNotification />
+
   </div>
 </template>
 
@@ -1888,7 +1864,7 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import AnimatedQuotes from '@/Components/AnimatedQuotes.vue'
-import CompanyDetailsModal from '@/Components/Modals/CompanyDetailsModal.vue'
+import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
@@ -1900,6 +1876,7 @@ import LoginModal from '@/Components/Modals/LoginModal.vue'
 import RegisterModal from '@/Components/Modals/RegisterModal.vue'
 import DeleteConfirmationModal from '@/Components/Modals/DeleteConfirmationModal.vue'
 import OverflowMenu from '@/Components/Navigation/OverflowMenu.vue'
+import ToastNotification from '@/Components/ToastNotification.vue'
 import HamburgerMenu from '@/Components/Navigation/HamburgerMenu.vue'
 import ApplicationLogo from '@/Components/ApplicationLogo.vue'
 import SearchResultsTree from '@/Components/SearchResultsTree.vue'
@@ -1914,6 +1891,7 @@ const showDetailsModal = ref(false)
 const modalInitialTab = ref('overview')
 const showResearchNoteModal = ref(false)
 const selectedResearchNoteId = ref(null)
+const selectedResearchNote = ref(null)
 const debugModalVisible = ref(false)
 const showNoteModal = ref(false)
 const showUploadModal = ref(false)
@@ -2921,16 +2899,18 @@ const viewCompanyDetails = async (company) => {
     // Initialize edit form with company data for the tabbed interface
     companyForm.value = {
       name: selectedCompany.value.name || '',
-      ticker_symbol: selectedCompany.value.ticker || '',
+      ticker_symbol: selectedCompany.value.ticker_symbol || selectedCompany.value.ticker || '',
       sector: selectedCompany.value.sector || '',
       industry: selectedCompany.value.industry || '',
-      market_cap: selectedCompany.value.marketCap || '',
-      description: selectedCompany.value.description || ''
+      market_cap: selectedCompany.value.marketCap || selectedCompany.value.market_cap || '',
+      description: selectedCompany.value.description || '',
+      reports_financial_data_in: selectedCompany.value.reports_financial_data_in || ''
     }
     
     // Initialize edit market cap input
-    if (selectedCompany.value.marketCap) {
-      editMarketCapInput.value = formatMarketCapInput(selectedCompany.value.marketCap)
+    const marketCapValue = selectedCompany.value.marketCap || selectedCompany.value.market_cap
+    if (marketCapValue) {
+      editMarketCapInput.value = formatMarketCapInput(marketCapValue)
       editMarketCapValidation.value.state = 'valid'
     } else {
       editMarketCapInput.value = ''
@@ -3042,7 +3022,7 @@ const performDeleteCompany = async (company) => {
     
   } catch (error) {
     console.error('Error deleting company:', error)
-    alert('Failed to delete company. Please try again.')
+    window.showToast('Failed to delete company. Please try again.', 'error')
   } finally {
     deleting.value = false
   }
@@ -3366,11 +3346,11 @@ const performDeleteResearchItem = async (item) => {
   } catch (error) {
     console.error('Error deleting research item:', error)
     if (error.response?.status === 403) {
-      alert('You can only delete research items that you created.')
+      window.showToast('You can only delete research items that you created.', 'warning')
     } else if (error.response?.status === 404) {
-      alert('Research item not found.')
+      window.showToast('Research item not found.', 'error')
     } else {
-      alert('Failed to delete research item. Please try again.')
+      window.showToast('Failed to delete research item. Please try again.', 'error')
     }
   }
 }
@@ -3403,11 +3383,11 @@ const performDeleteDocument = async (document) => {
   } catch (error) {
     console.error('Error deleting document:', error)
     if (error.response?.status === 403) {
-      alert('You can only delete documents that you created.')
+      window.showToast('You can only delete documents that you created.', 'warning')
     } else if (error.response?.status === 404) {
-      alert('Document not found.')
+      window.showToast('Document not found.', 'error')
     } else {
-      alert('Failed to delete document. Please try again.')
+      window.showToast('Failed to delete document. Please try again.', 'error')
     }
   }
 }
@@ -3530,7 +3510,7 @@ const fetchDeletionImpact = async () => {
     deletionImpact.value = response.data
   } catch (error) {
     console.error('Error fetching deletion impact:', error)
-    alert('Error loading deletion preview. Please try again.')
+    window.showToast('Error loading deletion preview. Please try again.', 'error')
   } finally {
     loadingDeletionImpact.value = false
   }
@@ -3571,11 +3551,11 @@ const confirmBulkDelete = async () => {
 
     // Show success message
     const message = response.data.message || `Successfully deleted ${response.data.deleted_count} companies`
-    alert(message)
+    window.showToast(message, 'success')
 
   } catch (error) {
     console.error('Error deleting companies:', error)
-    alert('An error occurred while deleting companies. Please try again.')
+    window.showToast('An error occurred while deleting companies. Please try again.', 'error')
   } finally {
     bulkDeleting.value = false
   }
@@ -3602,17 +3582,18 @@ const startEditingCompany = () => {
   // Populate form with current company data
   companyForm.value = {
     name: selectedCompany.value.name || '',
-    ticker_symbol: selectedCompany.value.ticker || '',
+    ticker_symbol: selectedCompany.value.ticker_symbol || selectedCompany.value.ticker || '',
     sector: selectedCompany.value.sector || '',
     industry: selectedCompany.value.industry || '',
-    market_cap: selectedCompany.value.marketCap || '',
+    market_cap: selectedCompany.value.marketCap || selectedCompany.value.market_cap || '',
     description: selectedCompany.value.description || '',
-    reports_financial_data_in: selectedCompany.value.reports_financial_data_in ?? ''
+    reports_financial_data_in: selectedCompany.value.reports_financial_data_in || ''
   }
   
   // Populate edit market cap input if there's a value
-  if (selectedCompany.value.marketCap) {
-    editMarketCapInput.value = formatMarketCapInput(selectedCompany.value.marketCap)
+  const marketCapValue = selectedCompany.value.marketCap || selectedCompany.value.market_cap
+  if (marketCapValue) {
+    editMarketCapInput.value = formatMarketCapInput(marketCapValue)
     editMarketCapValidation.value.state = 'valid'
   } else {
     editMarketCapInput.value = ''
@@ -3705,6 +3686,7 @@ const closeDetailsModal = () => {
 const closeResearchNoteModal = () => {
   showResearchNoteModal.value = false
   selectedResearchNoteId.value = null
+  selectedResearchNote.value = null
 }
 
 const handleViewCompanyFromNote = async (company) => {
