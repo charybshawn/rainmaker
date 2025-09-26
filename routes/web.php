@@ -126,6 +126,12 @@ Route::prefix('api')->group(function () {
         // Assets (for direct deletion of orphaned files)
         Route::delete('assets/{asset}', [\App\Http\Controllers\Api\AssetController::class, 'destroy']);
 
+        // Background Upload System
+        Route::post('upload/file/{token}', [\App\Http\Controllers\Api\UploadController::class, 'uploadFile']);
+        Route::post('upload/url/{token}', [\App\Http\Controllers\Api\UploadController::class, 'uploadUrl']);
+        Route::get('upload/progress/{token}', [\App\Http\Controllers\Api\UploadController::class, 'getProgress']);
+        Route::delete('upload/cancel/{token}', [\App\Http\Controllers\Api\UploadController::class, 'cancelUpload']);
+
         // Activity Tracking (protected operations)
         Route::get('activities', [\App\Http\Controllers\Api\ActivityController::class, 'index']);
         Route::get('activities/stats', [\App\Http\Controllers\Api\ActivityController::class, 'stats']);
@@ -185,6 +191,14 @@ Route::middleware('auth')->prefix('my-blog')->name('blog.')->group(function () {
 });
 
 // Public Company Routes
+Route::get('/companies', function () {
+    return Inertia::render('CompanyListing', [
+        'auth' => auth()->check() ? [
+            'user' => auth()->user()->load('roles', 'permissions')
+        ] : ['user' => null]
+    ]);
+})->name('companies.index');
+
 Route::get('/companies/{ticker}', function ($ticker) {
     return Inertia::render('CompanyProfile', [
         'ticker' => $ticker,

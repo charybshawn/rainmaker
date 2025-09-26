@@ -19,6 +19,13 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
         ]);
 
+        // Create shawn user
+        User::factory()->create([
+            'name' => 'Shawn',
+            'email' => 'shawn@roguespy',
+            'password' => bcrypt('kngfqp57'),
+        ]);
+
         // Create categories
         $categories = [
             ['name' => 'Financial Analysis', 'slug' => 'financial-analysis', 'color' => '#3B82F6'],

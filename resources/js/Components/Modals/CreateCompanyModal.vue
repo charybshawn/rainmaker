@@ -73,10 +73,10 @@
 
             <!-- Ticker Symbol -->
             <div>
-              <label for="ticker_symbol" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
+              <label for="ticker" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
               <input
-                id="ticker_symbol"
-                :value="form.ticker_symbol"
+                id="ticker"
+                :value="form.ticker"
                 @input="handleTickerInput"
                 type="text"
                 required
@@ -85,7 +85,7 @@
                 placeholder="e.g., AAPL"
                 maxlength="10"
               />
-              <div v-if="errors.ticker_symbol" class="text-red-400 text-sm mt-1">{{ errors.ticker_symbol }}</div>
+              <div v-if="errors.ticker" class="text-red-400 text-sm mt-1">{{ errors.ticker }}</div>
             </div>
 
             <!-- Sector -->
@@ -287,6 +287,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'save', 'market-cap-input', 'update:form'])
 
 const handleTickerInput = (event) => {
-  emit('update:form', { ...props.form, ticker_symbol: event.target.value.toUpperCase() })
+  emit('update:form', { ...props.form, ticker: event.target.value.toUpperCase() })
 }
 </script>

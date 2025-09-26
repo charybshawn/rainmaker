@@ -49,7 +49,7 @@
           <div class="min-w-0 flex-1">
             <p :class="nodeTitleClasses">
               {{ node.name }}
-              <span v-if="node.ticker_symbol" class="text-xs opacity-70 ml-1">({{ node.ticker_symbol }})</span>
+              <span v-if="node.ticker" class="text-xs opacity-70 ml-1">({{ node.ticker }})</span>
             </p>
             <p v-if="node.category" class="text-xs opacity-60 mt-1">
               {{ node.category }}

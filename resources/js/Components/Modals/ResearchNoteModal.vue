@@ -73,7 +73,7 @@
               </div>
               <div class="min-w-0 flex-1">
                 <h3 class="text-base sm:text-lg font-semibold text-white truncate">{{ researchNote.company.name }}</h3>
-                <p class="text-sm text-blue-300">${{ researchNote.company.ticker_symbol }}</p>
+                <p class="text-sm text-blue-300">${{ researchNote.company.ticker }}</p>
               </div>
             </div>
             <svg
@@ -279,8 +279,8 @@ import ActivityTimeline from '../ActivityTimeline.vue'
 // Props
 defineProps({
   researchNote: {
-    type: Object,
-    required: true
+    type: [Object, null],
+    default: null
   },
   show: {
     type: Boolean,

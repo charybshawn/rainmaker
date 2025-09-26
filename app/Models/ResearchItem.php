@@ -2,17 +2,17 @@
 
 namespace App\Models;
 
+use App\Traits\HasFileUploads;
 use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class ResearchItem extends Model implements HasMedia
 {
-    use InteractsWithMedia, TracksActivity;
+    use InteractsWithMedia, TracksActivity, HasFileUploads;
     protected $fillable = [
         'title',
         'content',
@@ -54,28 +54,19 @@ class ResearchItem extends Model implements HasMedia
         return $this->belongsToMany(Tag::class);
     }
 
+    /**
+     * Register media collections for file uploads.
+     */
     public function registerMediaCollections(): void
     {
         $this->addMediaCollection('attachments')
-            ->acceptsMimeTypes([
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'application/vnd.ms-excel',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'application/vnd.ms-powerpoint',
-                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'text/plain',
-                'text/csv',
-                'image/jpeg',
-                'image/png',
-                'image/gif',
-                'image/webp',
-                'image/svg+xml',
-            ]);
+            ->acceptsMimeTypes($this->getSupportedMimeTypes());
     }
 
-    public function registerMediaConversions(Media $media = null): void
+    /**
+     * Register media conversions for uploaded files.
+     */
+    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
     {
         $this->addMediaConversion('thumb')
             ->width(300)
@@ -84,5 +75,4 @@ class ResearchItem extends Model implements HasMedia
             ->performOnCollections('attachments')
             ->nonQueued();
     }
-
 }

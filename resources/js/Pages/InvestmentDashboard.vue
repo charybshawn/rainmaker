@@ -373,7 +373,7 @@
                     <div class="flex items-center justify-between">
                       <div>
                         <p class="font-medium text-white group-hover:text-blue-200">{{ company.name }}</p>
-                        <p class="text-sm text-gray-400">{{ company.ticker_symbol || company.ticker }}</p>
+                        <p class="text-sm text-gray-400">{{ company.ticker }}</p>
                       </div>
                       <div class="text-xs text-gray-500">{{ company.sector }}</div>
                     </div>
@@ -564,7 +564,7 @@
                       </div>
                       <div>
                         <h4 class="text-white font-medium">{{ company.name }}</h4>
-                        <p class="text-gray-400 text-sm">{{ company.ticker_symbol }} • {{ company.sector }}</p>
+                        <p class="text-gray-400 text-sm">{{ company.ticker }} • {{ company.sector }}</p>
                       </div>
                     </div>
                     <div class="text-blue-300 text-sm">Company</div>
@@ -751,7 +751,7 @@
                     <div class="flex-1 min-w-0">
                       <div class="flex items-center space-x-2">
                         <p class="text-white font-medium truncate">{{ company.name }}</p>
-                        <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded font-medium">{{ company.ticker_symbol }}</span>
+                        <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded font-medium">{{ company.ticker }}</span>
                       </div>
                       <p class="text-sm text-gray-400 truncate">{{ company.sector }}</p>
                     </div>
@@ -1266,7 +1266,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center space-x-2 min-w-0 flex-1">
                     <div class="w-10 h-8 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded flex items-center justify-center flex-shrink-0">
-                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker_symbol || '').substring(0, 3) }}</span>
+                      <span class="text-blue-300 font-bold text-xs">{{ (company.ticker || '').substring(0, 3) }}</span>
                     </div>
                     <div class="min-w-0 flex-1">
                       <h4 class="text-white font-medium truncate text-sm">{{ company.name }}</h4>
@@ -1318,7 +1318,7 @@
                   <div class="col-span-2">Sector</div>
                   <div class="col-span-2">Market Cap</div>
                   <div class="col-span-1 text-center">Research</div>
-                  <div class="col-span-1 text-center">Insights</div>
+                  <div class="col-span-1 text-center">Documents</div>
                   <div class="col-span-2 text-center">Actions</div>
                 </div>
               </div>
@@ -1347,7 +1347,7 @@
                     <div class="col-span-3 flex items-center space-x-3 cursor-pointer" @click="navigateToCompany(company)">
                       <!-- Stock Ticker -->
                       <div class="w-16 h-12 bg-gradient-to-br from-blue-500/20 to-blue-600/30 rounded-lg flex items-center justify-center shadow-[0_0_8px_rgba(59,130,246,0.15)] group-hover:shadow-[0_0_12px_rgba(59,130,246,0.25)] transition-all duration-300">
-                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker_symbol || 'N/A' }}</span>
+                        <span class="text-blue-300 font-bold text-sm">{{ company.ticker || 'N/A' }}</span>
                       </div>
 
                       <!-- Company Details -->
@@ -1368,7 +1368,7 @@
 
                     <!-- Market Cap -->
                     <div class="col-span-2">
-                      <span class="text-white font-medium">{{ formatMarketCap(company.market_cap) }}</span>
+                      <span class="text-white font-medium">{{ formatMarketCap(company.marketCap) }}</span>
                     </div>
 
                     <!-- Research Count -->
@@ -1381,7 +1381,7 @@
                     <!-- Insights Count -->
                     <div class="col-span-1 text-center">
                       <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 border border-purple-400/20">
-                        <span class="text-purple-300 font-bold text-sm">{{ company.blog_posts_count || 0 }}</span>
+                        <span class="text-purple-300 font-bold text-sm">{{ company.documents_count || 0 }}</span>
                       </div>
                     </div>
 
@@ -1800,7 +1800,7 @@
                 >
                   <div>
                     <div class="font-medium text-white">{{ company.name }}</div>
-                    <div class="text-sm text-gray-400">{{ company.ticker_symbol }}</div>
+                    <div class="text-sm text-gray-400">{{ company.ticker }}</div>
                   </div>
                   <div class="text-sm text-gray-400 space-x-4">
                     <span v-if="company.research_items > 0">{{ company.research_items }} research</span>
@@ -2091,7 +2091,7 @@ const pagination = ref({
 
 const companyForm = ref({
   name: '',
-  ticker_symbol: '',
+  ticker: '',
   sector: '',
   industry: '',
   market_cap: '',
@@ -2137,7 +2137,7 @@ const filteredCompanies = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   return companiesInfinite.value.filter(company =>
     company.name.toLowerCase().includes(query) ||
-    company.ticker_symbol.toLowerCase().includes(query) ||
+    company.ticker.toLowerCase().includes(query) ||
     (company.sector && company.sector.toLowerCase().includes(query)) ||
     (company.industry && company.industry.toLowerCase().includes(query))
   )
@@ -2221,7 +2221,7 @@ const treeData = computed(() => {
     const companyNode = {
       id: `company-${company.id}`,
       name: company.name,
-      ticker: company.ticker_symbol,
+      ticker: company.ticker,
       type: 'company',
       data: company,
       children: []
@@ -2307,7 +2307,7 @@ const companiesFiltered = computed(() => {
     const query = companiesSearchQuery.value.toLowerCase()
     filtered = filtered.filter(company =>
       company.name.toLowerCase().includes(query) ||
-      company.ticker_symbol?.toLowerCase().includes(query) ||
+      company.ticker?.toLowerCase().includes(query) ||
       company.sector?.toLowerCase().includes(query) ||
       company.industry?.toLowerCase().includes(query)
     )
@@ -2322,7 +2322,7 @@ const companiesFiltered = computed(() => {
   if (companiesSortBy.value === 'name') {
     filtered.sort((a, b) => a.name.localeCompare(b.name))
   } else if (companiesSortBy.value === 'ticker') {
-    filtered.sort((a, b) => (a.ticker_symbol || '').localeCompare(b.ticker_symbol || ''))
+    filtered.sort((a, b) => (a.ticker || '').localeCompare(b.ticker || ''))
   } else if (companiesSortBy.value === 'sector') {
     filtered.sort((a, b) => (a.sector || '').localeCompare(b.sector || ''))
   } else if (companiesSortBy.value === 'research_count') {
@@ -2568,22 +2568,22 @@ const insightsCategoryOptions = computed(() => {
 const openResearchItem = (item) => {
   console.log('🔍 Opening research item:', item)
   console.log('🔍 Item company:', item.company)
-  console.log('🔍 Item ticker_symbol:', item.ticker_symbol)
-  console.log('🔍 Item company.ticker_symbol:', item.company?.ticker_symbol)
+  console.log('🔍 Item ticker:', item.ticker)
+  console.log('🔍 Item company.ticker:', item.company?.ticker)
 
   // Close the search modal
   closeSearch()
 
   // Navigate to the company profile page with research tab
-  if (item.company && item.company.ticker_symbol) {
-    console.log('✅ Navigating via item.company.ticker_symbol:', item.company.ticker_symbol)
-    router.visit(route('company.profile', { ticker: item.company.ticker_symbol }) + '?tab=research')
-  } else if (item.ticker_symbol) {
-    // If the item directly has a ticker_symbol
-    console.log('✅ Navigating via item.ticker_symbol:', item.ticker_symbol)
-    router.visit(route('company.profile', { ticker: item.ticker_symbol }) + '?tab=research')
+  if (item.company && item.company.ticker) {
+    console.log('✅ Navigating via item.company.ticker:', item.company.ticker)
+    router.visit(route('company.profile', { ticker: item.company.ticker }) + '?tab=research')
+  } else if (item.ticker) {
+    // If the item directly has a ticker
+    console.log('✅ Navigating via item.ticker:', item.ticker)
+    router.visit(route('company.profile', { ticker: item.ticker }) + '?tab=research')
   } else {
-    console.error('❌ Cannot navigate: research item missing company ticker_symbol', item)
+    console.error('❌ Cannot navigate: research item missing company ticker', item)
     window.showToast('Unable to navigate to research item - company information missing', 'warning')
   }
 }
@@ -2591,21 +2591,21 @@ const openResearchItem = (item) => {
 const openDocument = (document) => {
   console.log('📄 Opening document:', document)
   console.log('📄 Document company:', document.company)
-  console.log('📄 Document ticker_symbol:', document.ticker_symbol)
-  console.log('📄 Document company.ticker_symbol:', document.company?.ticker_symbol)
+  console.log('📄 Document ticker:', document.ticker)
+  console.log('📄 Document company.ticker:', document.company?.ticker)
   console.log('📄 Document URL:', document.url)
   console.log('📄 Document file_path:', document.file_path)
 
   // If the document belongs to a company, navigate to the company documents tab
-  if (document.company && document.company.ticker_symbol) {
-    console.log('✅ Navigating via document.company.ticker_symbol:', document.company.ticker_symbol)
+  if (document.company && document.company.ticker) {
+    console.log('✅ Navigating via document.company.ticker:', document.company.ticker)
     closeSearch()
-    router.visit(route('company.profile', { ticker: document.company.ticker_symbol }) + '?tab=documents')
-  } else if (document.ticker_symbol) {
-    // If the document directly has a ticker_symbol
-    console.log('✅ Navigating via document.ticker_symbol:', document.ticker_symbol)
+    router.visit(route('company.profile', { ticker: document.company.ticker }) + '?tab=documents')
+  } else if (document.ticker) {
+    // If the document directly has a ticker
+    console.log('✅ Navigating via document.ticker:', document.ticker)
     closeSearch()
-    router.visit(route('company.profile', { ticker: document.ticker_symbol }) + '?tab=documents')
+    router.visit(route('company.profile', { ticker: document.ticker }) + '?tab=documents')
   } else if (document.url || document.file_path) {
     // Fallback: open the document directly in a new tab/window
     const url = document.url || document.file_path
@@ -2630,13 +2630,17 @@ const handleTreeNodeClick = (node) => {
 
 const formatMarketCap = (value) => {
   if (!value) return 'N/A'
-  
-  if (value >= 1000000000000) {
-    return `$${(value / 1000000000000).toFixed(1)}T`
-  } else if (value >= 1000000000) {
-    return `$${(value / 1000000000).toFixed(1)}B`
+
+  // Convert string to number
+  const numericValue = parseFloat(value)
+  if (!numericValue) return 'N/A'
+
+  if (numericValue >= 1000000000000) {
+    return `$${(numericValue / 1000000000000).toFixed(1)}T`
+  } else if (numericValue >= 1000000000) {
+    return `$${(numericValue / 1000000000).toFixed(1)}B`
   } else {
-    return `$${(value / 1000000).toFixed(1)}M`
+    return `$${(numericValue / 1000000).toFixed(1)}M`
   }
 }
 
@@ -2798,7 +2802,7 @@ const openCreateModal = () => {
 const closeCreateModal = () => {
   companyForm.value = {
     name: '',
-    ticker_symbol: '',
+    ticker: '',
     sector: '',
     industry: '',
     market_cap: '',
@@ -2871,7 +2875,7 @@ const createCompany = async () => {
     // Reset form and close modal
     companyForm.value = {
       name: '',
-      ticker_symbol: '',
+      ticker: '',
       sector: '',
       industry: '',
       market_cap: '',
@@ -2911,7 +2915,7 @@ const createCompany = async () => {
 }
 
 const navigateToCompany = (company) => {
-  const ticker = company.ticker_symbol || company.ticker
+  const ticker = company.ticker
   if (ticker) {
     router.visit(route('company.profile', { ticker: ticker }))
   } else {
@@ -2933,7 +2937,7 @@ const viewCompanyDetails = async (company) => {
     // Initialize edit form with company data for the tabbed interface
     companyForm.value = {
       name: selectedCompany.value.name || '',
-      ticker_symbol: selectedCompany.value.ticker_symbol || selectedCompany.value.ticker || '',
+      ticker: selectedCompany.value.ticker || '',
       sector: selectedCompany.value.sector || '',
       industry: selectedCompany.value.industry || '',
       market_cap: selectedCompany.value.marketCap || selectedCompany.value.market_cap || '',
@@ -2988,7 +2992,7 @@ const viewCompanyDetails = async (company) => {
     // Initialize forms with fallback data
     companyForm.value = {
       name: company.name || '',
-      ticker_symbol: company.ticker_symbol || '',
+      ticker: company.ticker || '',
       sector: company.sector || '',
       industry: company.industry || '',
       market_cap: company.marketCap || '',
@@ -3616,7 +3620,7 @@ const startEditingCompany = () => {
   // Populate form with current company data
   companyForm.value = {
     name: selectedCompany.value.name || '',
-    ticker_symbol: selectedCompany.value.ticker_symbol || selectedCompany.value.ticker || '',
+    ticker: selectedCompany.value.ticker || '',
     sector: selectedCompany.value.sector || '',
     industry: selectedCompany.value.industry || '',
     market_cap: selectedCompany.value.marketCap || selectedCompany.value.market_cap || '',
@@ -3646,7 +3650,7 @@ const saveCompanyEdits = async () => {
     
     const response = await axios.put(`/api/companies/${selectedCompany.value.id}`, {
       name: companyForm.value.name,
-      ticker_symbol: companyForm.value.ticker_symbol,
+      ticker_symbol: companyForm.value.ticker,
       sector: companyForm.value.sector,
       industry: companyForm.value.industry,
       market_cap: parseMarketCap(companyForm.value.market_cap),
@@ -3666,7 +3670,7 @@ const saveCompanyEdits = async () => {
     // Update the form with the saved data so fields show current values
     companyForm.value = {
       name: response.data.name || '',
-      ticker_symbol: response.data.ticker_symbol || '',
+      ticker: response.data.ticker || '',
       sector: response.data.sector || '',
       industry: response.data.industry || '',
       market_cap: response.data.marketCap || '',
@@ -3735,7 +3739,12 @@ const handleViewCompanyFromNote = async (company) => {
 const fetchCompaniesWithResearch = async () => {
   try {
     companiesLoading.value = true
-    const response = await axios.get('/api/companies')
+    const response = await axios.get('/api/companies', {
+      params: {
+        include_counts: true,
+        limit: 1000
+      }
+    })
     companiesInfinite.value = response.data.data || response.data
   } catch (error) {
     console.error('Error fetching companies with research:', error)

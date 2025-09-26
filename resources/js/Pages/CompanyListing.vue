@@ -174,7 +174,7 @@
         <div v-else class="space-y-4">
           <!-- Company Card -->
           <div
-            v-for="company in paginatedCompanies"
+            v-for="company in filteredCompanies"
             :key="company.id"
             class="group relative bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl p-6 border border-white/10 hover:border-blue-400/30 transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-[0_8px_32px_0_rgba(59,130,246,0.15)]"
             style="backdrop-filter: blur(20px) saturate(180%);"
@@ -206,7 +206,7 @@
                     </div>
                     <div>
                       <p class="text-gray-400">Market Cap</p>
-                      <p class="text-white font-medium">{{ formatMarketCap(company.market_cap) }}</p>
+                      <p class="text-white font-medium">{{ formatMarketCap(company.marketCap) }}</p>
                     </div>
                   </div>
                 </div>
@@ -222,8 +222,8 @@
 
                 <!-- Blog Posts Count -->
                 <div class="text-center">
-                  <div class="text-2xl font-bold text-purple-300">{{ company.blog_posts_count || 0 }}</div>
-                  <div class="text-xs text-gray-400">Insights</div>
+                  <div class="text-2xl font-bold text-purple-300">{{ company.documents_count || 0 }}</div>
+                  <div class="text-xs text-gray-400">Docs</div>
                 </div>
 
                 <!-- Actions -->
@@ -255,55 +255,13 @@
           </div>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="totalPages > 1" class="flex items-center justify-center space-x-2 mt-8 pt-6 border-t border-white/10">
-          <button
-            @click="currentPage = Math.max(1, currentPage - 1)"
-            :disabled="currentPage === 1"
-            class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-blue-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
-          >
-            Previous
-          </button>
-
-          <!-- Page Numbers -->
-          <div class="flex space-x-1">
-            <button
-              v-for="page in pageNumbers"
-              :key="page"
-              @click="currentPage = page"
-              :class="[
-                'px-3 py-2 rounded-lg transition-all duration-200',
-                page === currentPage
-                  ? 'bg-blue-500/30 text-blue-200 border border-blue-400/30'
-                  : 'bg-white/10 text-gray-300 border border-white/20 hover:bg-white/20 hover:text-white'
-              ]"
-            >
-              {{ page }}
-            </button>
-          </div>
-
-          <button
-            @click="currentPage = Math.min(totalPages, currentPage + 1)"
-            :disabled="currentPage === totalPages"
-            class="px-4 py-2 rounded-xl backdrop-blur-sm bg-white/10 text-white border border-white/20 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/20 hover:border-blue-400/30 hover:scale-105 transition-all duration-200 transform-gpu"
-          >
-            Next
-          </button>
-        </div>
-
         <!-- Results Summary -->
-        <div class="text-center text-gray-400 text-sm mt-4">
-          Showing {{ ((currentPage - 1) * perPage) + 1 }} to {{ Math.min(currentPage * perPage, filteredCompanies.length) }} of {{ filteredCompanies.length }} companies
+        <div class="text-center text-gray-400 text-sm mt-8 pt-6 border-t border-white/10">
+          {{ filteredCompanies.length }} {{ filteredCompanies.length === 1 ? 'company' : 'companies' }} found
         </div>
       </div>
     </div>
 
-    <!-- Company Details Modal -->
-    <CompanyDetailsModal
-      :show="showCompanyDetailsModal"
-      :company="selectedCompany"
-      @close="closeCompanyDetailsModal"
-    />
 
     <!-- Create Company Modal -->
     <CreateCompanyModal
@@ -328,7 +286,6 @@ import { Head, router } from '@inertiajs/vue3'
 import { useDarkMode } from '@/composables/useDarkMode'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
-import CompanyDetailsModal from '@/Components/Modals/CompanyDetailsModal.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import QuickBlogModal from '@/Components/Modals/QuickBlogModal.vue'
 import axios from 'axios'
@@ -346,13 +303,8 @@ const searchQuery = ref('')
 const selectedSector = ref('')
 const sortBy = ref('name')
 
-// Pagination
-const currentPage = ref(1)
-const perPage = ref(10)
 
 // Modals
-const showCompanyDetailsModal = ref(false)
-const selectedCompany = ref(null)
 const showCreateCompanyModal = ref(false)
 const showQuickBlogModal = ref(false)
 const quickBlogCompany = ref(null)
@@ -390,7 +342,7 @@ const filteredCompanies = computed(() => {
       case 'symbol':
         return a.symbol.localeCompare(b.symbol)
       case 'market_cap':
-        return (b.market_cap || 0) - (a.market_cap || 0)
+        return (parseFloat(b.marketCap) || 0) - (parseFloat(a.marketCap) || 0)
       case 'research_count':
         return (b.research_items_count || 0) - (a.research_items_count || 0)
       case 'created_at':
@@ -403,40 +355,10 @@ const filteredCompanies = computed(() => {
   return filtered
 })
 
-const totalPages = computed(() => {
-  return Math.ceil(filteredCompanies.value.length / perPage.value)
-})
-
-const paginatedCompanies = computed(() => {
-  const start = (currentPage.value - 1) * perPage.value
-  const end = start + perPage.value
-  return filteredCompanies.value.slice(start, end)
-})
-
-const pageNumbers = computed(() => {
-  const pages = []
-  const total = totalPages.value
-  const current = currentPage.value
-
-  // Always show first page
-  pages.push(1)
-
-  // Add pages around current page
-  for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
-    if (!pages.includes(i)) pages.push(i)
-  }
-
-  // Always show last page if there's more than one page
-  if (total > 1 && !pages.includes(total)) {
-    pages.push(total)
-  }
-
-  return pages.sort((a, b) => a - b)
-})
 
 const totalResearchItems = computed(() => {
   return companies.value.reduce((sum, company) => {
-    return sum + (company.research_items_count || 0) + (company.blog_posts_count || 0)
+    return sum + (company.research_items_count || 0) + (company.documents_count || 0)
   }, 0)
 })
 
@@ -446,10 +368,11 @@ const fetchCompanies = async () => {
     loading.value = true
     const response = await axios.get('/api/companies', {
       params: {
-        include_counts: true
+        include_counts: true,
+        limit: 1000 // High limit to get all companies for infinite scroll
       }
     })
-    companies.value = response.data
+    companies.value = response.data.data
   } catch (error) {
     console.error('Error fetching companies:', error)
   } finally {
@@ -460,22 +383,26 @@ const fetchCompanies = async () => {
 const formatMarketCap = (marketCap) => {
   if (!marketCap) return 'N/A'
 
-  if (marketCap >= 1e12) {
-    return `$${(marketCap / 1e12).toFixed(1)}T`
-  } else if (marketCap >= 1e9) {
-    return `$${(marketCap / 1e9).toFixed(1)}B`
-  } else if (marketCap >= 1e6) {
-    return `$${(marketCap / 1e6).toFixed(1)}M`
+  // Convert string to number
+  const numericMarketCap = parseFloat(marketCap)
+  if (!numericMarketCap) return 'N/A'
+
+  if (numericMarketCap >= 1e12) {
+    return `$${(numericMarketCap / 1e12).toFixed(1)}T`
+  } else if (numericMarketCap >= 1e9) {
+    return `$${(numericMarketCap / 1e9).toFixed(1)}B`
+  } else if (numericMarketCap >= 1e6) {
+    return `$${(numericMarketCap / 1e6).toFixed(1)}M`
   } else {
-    return `$${marketCap.toLocaleString()}`
+    return `$${numericMarketCap.toLocaleString()}`
   }
 }
 
 const navigateToCompany = (company) => {
-  if (company.ticker_symbol) {
-    router.visit(route('company.profile', { ticker: company.ticker_symbol }))
+  if (company.ticker) {
+    router.visit(route('company.profile', { ticker: company.ticker }))
   } else {
-    console.error('Company ticker_symbol not available for navigation')
+    console.error('Company ticker not available for navigation')
   }
 }
 
@@ -484,10 +411,6 @@ const viewCompanyDetails = (company) => {
   navigateToCompany(company)
 }
 
-const closeCompanyDetailsModal = () => {
-  showCompanyDetailsModal.value = false
-  selectedCompany.value = null
-}
 
 const openQuickBlogWithCompany = (company) => {
   quickBlogCompany.value = company
@@ -566,10 +489,6 @@ const initializeStars = () => {
   animate()
 }
 
-// Reset pagination when filters change
-watch([searchQuery, selectedSector, sortBy], () => {
-  currentPage.value = 1
-})
 
 // Lifecycle
 onMounted(() => {

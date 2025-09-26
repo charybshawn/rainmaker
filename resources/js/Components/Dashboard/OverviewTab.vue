@@ -117,7 +117,7 @@
                 {{ company.name }}
               </h4>
               <span class="text-sm font-mono text-blue-400 bg-blue-500/20 px-2 py-1 rounded">
-                {{ company.ticker_symbol }}
+                {{ company.ticker }}
               </span>
             </div>
 
@@ -186,7 +186,7 @@
             {{ company.name }}
           </div>
           <div class="col-span-2 font-mono text-blue-400">
-            {{ company.ticker_symbol }}
+            {{ company.ticker }}
           </div>
           <div class="col-span-2 text-gray-300">
             {{ company.sector || 'N/A' }}

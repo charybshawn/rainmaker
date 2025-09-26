@@ -3,13 +3,20 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FileUploadRequest;
 use App\Models\Document;
-use App\Services\UrlDownloadService;
+use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class DocumentController extends Controller
 {
+    protected FileUploadService $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -105,7 +112,7 @@ class DocumentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): JsonResponse
+    public function store(FileUploadRequest $request): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -115,12 +122,6 @@ class DocumentController extends Controller
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
-            'document_urls' => 'nullable|array',
-            'document_urls.*' => 'url',
-            'document_names' => 'nullable|array',
-            'document_names.*' => 'nullable|string|max:255',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -132,50 +133,10 @@ class DocumentController extends Controller
             $document->tags()->sync($validated['tag_ids']);
         }
 
-        // Handle file uploads
-        if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $document->addMedia($file)
-                    ->toMediaCollection('attachments');
-            }
-        }
-
-        // Handle URL downloads
-        if ($request->has('document_urls') && is_array($request->document_urls)) {
-            foreach ($request->document_urls as $index => $url) {
-                if (!empty($url)) {
-                    try {
-                        // Get the document name from the parallel array or generate one
-                        $documentName = $request->document_names[$index] ?? null;
-                        if (empty($documentName)) {
-                            $documentName = 'Document ' . ($index + 1);
-                        }
-
-                        // Download the file from URL using enhanced service
-                        $downloadService = new UrlDownloadService();
-                        $tempFile = $downloadService->downloadFile($url, $documentName);
-
-                        if ($tempFile) {
-                            $document->addMedia($tempFile)
-                                ->usingName($documentName)
-                                ->toMediaCollection('attachments');
-
-                            // Clean up temp file
-                            unlink($tempFile);
-                        }
-                    } catch (\Exception $e) {
-                        // Log the error but continue with other files
-                        \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
-                    }
-                }
-            }
-        }
+        // Handle file uploads using centralized service
+        $uploadResults = $this->fileUploadService->handleUploads($document, $request);
 
         $document->load(['company', 'category', 'tags', 'user', 'media']);
-
-        // Sync assets table
-        $assetSyncService = new \App\Services\AssetSyncService();
-        $assetSyncService->syncAssetsForModel($document);
 
         return response()->json($this->transformDocument($document), 201);
     }
@@ -231,9 +192,8 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // Remove from assets table
-        $assetSyncService = new \App\Services\AssetSyncService();
-        $assetSyncService->removeAssetsForModel($document);
+        // Remove media files and sync assets
+        $this->fileUploadService->removeMediaFromModel($document);
 
         $document->delete();
         return response()->json(null, 204);
@@ -266,16 +226,7 @@ class DocumentController extends Controller
                     'color' => $tag->color,
                 ];
             }),
-            'attachments' => $document->getMedia('attachments')->map(function ($media) {
-                return [
-                    'id' => $media->id,
-                    'name' => $media->name,
-                    'file_name' => $media->file_name,
-                    'mime_type' => $media->mime_type,
-                    'size' => $media->size,
-                    'url' => $media->getUrl(),
-                ];
-            }),
+            'attachments' => $document->getFormattedAttachments(),
             'user' => $document->user ? [
                 'id' => $document->user->id,
                 'name' => $document->user->name,

@@ -38,8 +38,8 @@ class CompanyController extends Controller
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Transform the data for the frontend
-        $companiesData = $companies->map(function ($company) {
-            return [
+        $companiesData = $companies->map(function ($company) use ($request) {
+            $data = [
                 'id' => $company->id,
                 'name' => $company->name,
                 'ticker' => $company->ticker_symbol,
@@ -52,9 +52,16 @@ class CompanyController extends Controller
                 'headquarters' => $company->headquarters,
                 'employees' => $company->employees,
                 'foundedDate' => $company->founded_date?->format('Y-m-d'),
-                'researchItemsCount' => $company->researchItems->count(),
                 'createdAt' => $company->created_at->format('Y-m-d H:i:s'),
             ];
+
+            // Include counts if requested
+            if ($request->has('include_counts') || $request->boolean('include_counts')) {
+                $data['research_items_count'] = $company->researchItems->count();
+                $data['documents_count'] = $company->documents->count();
+            }
+
+            return $data;
         });
 
         // Return paginated response with metadata

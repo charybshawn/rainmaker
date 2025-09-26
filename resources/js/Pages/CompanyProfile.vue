@@ -52,7 +52,7 @@
             </div>
             <div>
               <h1 class="text-4xl font-bold text-white mb-2">{{ company?.name || 'Loading...' }}</h1>
-              <p class="text-xl text-gray-300">{{ company?.ticker_symbol || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
+              <p class="text-xl text-gray-300">{{ company?.ticker || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
             </div>
           </div>
 
@@ -120,7 +120,7 @@
               <div class="space-y-4">
                 <div class="flex justify-between items-center">
                   <span class="text-gray-300 font-medium">Ticker Symbol</span>
-                  <span class="text-white font-bold text-lg">{{ company?.ticker_symbol || 'N/A' }}</span>
+                  <span class="text-white font-bold text-lg">{{ company?.ticker || 'N/A' }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                   <span class="text-gray-300 font-medium">Market Cap</span>
@@ -158,7 +158,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-2xl font-bold text-white mb-2">Research Notes</h2>
-              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker_symbol }})</p>
+              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker }})</p>
             </div>
             <button
               v-if="$page.props.auth.user"
@@ -440,7 +440,7 @@
                     <!-- Company -->
                     <div class="col-span-2">
                       <div class="text-white font-medium">{{ doc.company.name }}</div>
-                      <div class="text-gray-400 text-xs">{{ doc.company.ticker_symbol }}</div>
+                      <div class="text-gray-400 text-xs">{{ doc.company.ticker }}</div>
                     </div>
 
                     <!-- Created Date -->
@@ -529,11 +529,11 @@
           </div>
         </div>
 
-        <!-- Insights Tab -->
+        <!-- Documents Tab -->
         <div v-show="activeTab === 'insights'" class="space-y-6">
           <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-            <h2 class="text-2xl font-semibold text-white mb-6">Insights</h2>
-            <p class="text-gray-400">Company insights will be displayed here.</p>
+            <h2 class="text-2xl font-semibold text-white mb-6">Documents</h2>
+            <p class="text-gray-400">Company documents will be displayed here.</p>
           </div>
         </div>
       </div>
@@ -599,28 +599,21 @@
       :selectedCompany="company"
       :form="documentForm"
       :errors="documentErrors"
-      :uploading="uploadingDocument"
       :categories="categories"
       :formatFileSize="formatFileSize"
-      :availableFiles="availableFiles"
       @close="showUploadDocumentModal = false"
-      @save="handleDocumentSave"
-      @file-upload="handleDocumentFileUpload"
-      @remove-file="handleDocumentRemoveFile"
-      @add-url="handleDocumentAddUrl"
-      @remove-url="handleDocumentRemoveUrl"
-      @load-existing-files="handleDocumentLoadExistingFiles"
-      @toggle-file-selection="handleDocumentToggleFileSelection"
+      @document-saved="handleDocumentSaved"
     />
 
     <!-- Document Viewer Modal -->
     <DocumentViewerModal
       :show="showDocumentViewer"
       :document="selectedDocument"
+      :categories="categories"
       :canEdit="$page.props.auth.user?.id === selectedDocument?.user?.id"
       :canDelete="$page.props.auth.user?.id === selectedDocument?.user?.id"
       @close="showDocumentViewer = false"
-      @edit="editDocumentFromModal"
+      @update="updateDocumentFromModal"
       @delete="deleteDocumentFromModal"
     />
 
@@ -733,19 +726,13 @@ const researchForm = ref({
 })
 
 const documentForm = ref({
-  title: '',
-  description: '',
-  company_id: null,
-  uploadType: 'file',
-  files: [],
-  urls: [],
-  newUrl: '',
-  selectedExistingFiles: []
+  category_id: null,
+  visibility: 'private'
 })
 
 const editCompanyForm = ref({
   name: '',
-  ticker_symbol: '',
+  ticker: '',
   sector: '',
   industry: '',
   market_cap: '',
@@ -794,7 +781,7 @@ const tabs = computed(() => {
     },
     {
       id: 'insights',
-      name: 'Insights',
+      name: 'Documents',
       count: null
     }
   ]
@@ -818,7 +805,7 @@ const fetchCompanyData = async () => {
     })
 
     const foundCompany = companiesResponse.data.data.find(
-      c => c.ticker_symbol?.toLowerCase() === props.ticker.toLowerCase()
+      c => c.ticker?.toLowerCase() === props.ticker.toLowerCase()
     )
 
     if (!foundCompany) {
@@ -1054,19 +1041,61 @@ const downloadDocument = (doc) => {
 }
 
 const editDocument = (doc) => {
-  // Initialize form with document data
+  // For now, just open the modal to upload new documents
+  // Document editing can be handled separately
   documentForm.value = {
-    title: doc.title || '',
-    description: doc.description || '',
-    company_id: doc.company_id,
-    files: []
+    category_id: doc.category_id || null,
+    visibility: doc.visibility || 'private'
   }
   showUploadDocumentModal.value = true
 }
 
-const editDocumentFromModal = (doc) => {
-  showDocumentViewer.value = false
-  editDocument(doc)
+const updateDocumentFromModal = async (updateData) => {
+  try {
+    let response
+    let endpoint
+
+    // Check if this is a research item (has research_item_type) or a document
+    if (selectedDocument.value?.research_item_type || selectedDocument.value?.content !== undefined) {
+      // This is a research item
+      endpoint = `/api/research-items/${updateData.id}`
+    } else {
+      // This is a document
+      endpoint = `/api/documents/${updateData.id}`
+    }
+
+    response = await axios.put(endpoint, updateData.data)
+
+    // Update the document/research item in the local state
+    if (selectedDocument.value && selectedDocument.value.id === updateData.id) {
+      selectedDocument.value = { ...selectedDocument.value, ...response.data }
+    }
+
+    // Update in documents list if present
+    const docIndex = documents.value.findIndex(doc => doc.id === updateData.id)
+    if (docIndex !== -1) {
+      documents.value[docIndex] = { ...documents.value[docIndex], ...response.data }
+    }
+
+    // Update in research items list if present
+    const researchIndex = researchItems.value.findIndex(item => item.id === updateData.id)
+    if (researchIndex !== -1) {
+      researchItems.value[researchIndex] = { ...researchItems.value[researchIndex], ...response.data }
+    }
+
+    // Show success toast
+    window.showToast(`${updateData.field.charAt(0).toUpperCase() + updateData.field.slice(1)} updated successfully`, 'success')
+  } catch (error) {
+    console.error('Error updating item:', error)
+    console.error('Update data:', updateData)
+    console.error('Selected document:', selectedDocument.value)
+
+    if (error.response?.status === 404) {
+      window.showToast(`Item not found. It may have been deleted.`, 'error')
+    } else {
+      window.showToast(`Failed to update ${updateData.field}`, 'error')
+    }
+  }
 }
 
 const deleteDocumentFromModal = async (doc) => {
@@ -1193,84 +1222,25 @@ const handleDocumentRemoveFile = (index) => {
   documentForm.value.files.splice(index, 1)
 }
 
-const handleDocumentSave = async () => {
-  if (!company.value) return
-
-  uploadingDocument.value = true
-  documentErrors.value = {}
-
-  try {
-    const formData = new FormData()
-
-    // Add basic fields
-    formData.append('title', documentForm.value.title)
-    formData.append('description', documentForm.value.description || '')
-    formData.append('company_id', company.value.id)
-    formData.append('visibility', documentForm.value.visibility || 'private')
-
-    const uploadType = documentForm.value.uploadType || 'file'
-
-    if (uploadType === 'file') {
-      // Handle file uploads
-      if (documentForm.value.files) {
-        documentForm.value.files.forEach((file, index) => {
-          formData.append(`attachments[${index}]`, file)
-        })
-      }
-    } else if (uploadType === 'url') {
-      // Handle URL downloads
-      if (documentForm.value.urls && documentForm.value.urls.length > 0) {
-        documentForm.value.urls.forEach((url, index) => {
-          formData.append(`document_urls[${index}]`, url)
-          formData.append(`document_names[${index}]`, `Document from ${new URL(url).hostname}`)
-        })
-      }
-    } else if (uploadType === 'existing') {
-      // Handle existing file selection
-      if (documentForm.value.selectedExistingFiles && documentForm.value.selectedExistingFiles.length > 0) {
-        documentForm.value.selectedExistingFiles.forEach((file, index) => {
-          formData.append(`existing_files[${index}]`, file.id)
-        })
-      }
-    }
-
-    const response = await axios.post('/api/documents', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
-
-    // Add the new document to the company documents
-    if (!company.value.documents) {
-      company.value.documents = []
-    }
-    company.value.documents.unshift(response.data)
-
-    // Reset form
-    documentForm.value = {
-      title: '',
-      description: '',
-      company_id: company.value.id,
-      uploadType: 'file',
-      files: [],
-      urls: [],
-      newUrl: '',
-      selectedExistingFiles: []
-    }
-
-    showUploadDocumentModal.value = false
-  } catch (error) {
-    if (error.response?.status === 422) {
-      documentErrors.value = error.response.data.errors || {}
-    } else if (error.response?.status === 401) {
-      showLoginModal.value = true
-    } else {
-      documentErrors.value = { general: 'Failed to upload document. Please try again.' }
-    }
-    console.error('Error uploading document:', error)
-  } finally {
-    uploadingDocument.value = false
+// Simplified handler for background upload completion
+const handleDocumentSaved = (document) => {
+  // Add the new document to the company documents
+  if (!company.value.documents) {
+    company.value.documents = []
   }
+  company.value.documents.unshift(document)
+
+  // Reset form state
+  documentForm.value = {
+    category_id: null,
+    visibility: 'private'
+  }
+
+  // Close modal
+  showUploadDocumentModal.value = false
+
+  // Show success notification
+  console.log('Document saved successfully:', document.title)
 }
 
 const handleDocumentSuccess = () => {
@@ -1380,7 +1350,7 @@ const openEditCompanyModal = () => {
   // Populate the form with current company data
   editCompanyForm.value = {
     name: company.value?.name || '',
-    ticker_symbol: company.value?.ticker_symbol || company.value?.ticker || '',
+    ticker: company.value?.ticker || '',
     sector: company.value?.sector || '',
     industry: company.value?.industry || '',
     market_cap: company.value?.market_cap || company.value?.marketCap || '',

@@ -12,7 +12,7 @@
               </div>
               <div>
                 <h2 class="text-3xl font-bold text-white">Edit Company</h2>
-                <p class="text-lg text-gray-300">{{ company?.ticker_symbol || company?.ticker || 'N/A' }} • {{ company?.name || 'Unknown Company' }}</p>
+                <p class="text-lg text-gray-300">{{ company?.ticker || 'N/A' }} • {{ company?.name || 'Unknown Company' }}</p>
               </div>
             </div>
             <div class="flex items-center space-x-3">
@@ -74,10 +74,10 @@
                 <div class="space-y-6">
                   <!-- Ticker Symbol -->
                   <div>
-                    <label for="edit_ticker_symbol" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
+                    <label for="edit_ticker" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
                     <input
-                      id="edit_ticker_symbol"
-                      :value="editForm.ticker_symbol"
+                      id="edit_ticker"
+                      :value="editForm.ticker"
                       @input="handleEditTickerInput"
                       type="text"
                       required
@@ -86,7 +86,7 @@
                       placeholder="e.g., AAPL"
                       maxlength="10"
                     />
-                    <div v-if="editErrors.ticker_symbol" class="text-red-400 text-sm mt-1">{{ editErrors.ticker_symbol }}</div>
+                    <div v-if="editErrors.ticker" class="text-red-400 text-sm mt-1">{{ editErrors.ticker }}</div>
                   </div>
 
                   <!-- Industry -->
@@ -354,6 +354,6 @@ const emit = defineEmits([
 // Handle ticker input with uppercase transformation
 const handleEditTickerInput = (event) => {
   const value = event.target.value.toUpperCase()
-  emit('update:edit-form', { ...props.editForm, ticker_symbol: value })
+  emit('update:edit-form', { ...props.editForm, ticker: value })
 }
 </script>

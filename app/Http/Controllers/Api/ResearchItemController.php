@@ -3,17 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\FileUploadRequest;
 use App\Models\ResearchItem;
 use App\Models\Company;
 use App\Models\Category;
 use App\Models\Tag;
-use App\Services\AssetSyncService;
-use App\Services\UrlDownloadService;
+use App\Services\FileUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class ResearchItemController extends Controller
 {
+    protected FileUploadService $fileUploadService;
+
+    public function __construct(FileUploadService $fileUploadService)
+    {
+        $this->fileUploadService = $fileUploadService;
+    }
     public function index(Request $request): JsonResponse
     {
         // Pagination parameters
@@ -97,7 +103,7 @@ class ResearchItemController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(FileUploadRequest $request): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -108,23 +114,13 @@ class ResearchItemController extends Controller
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
             'ai_synopsis' => 'nullable|string',
-            // Support both old and new file upload formats
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
-            'files' => 'nullable|array',
-            'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
-            // Support both old and new URL formats
-            'document_urls' => 'nullable|array',
-            'document_urls.*' => 'url',
-            'urls' => 'nullable|array',
-            'urls.*' => 'url',
-            'document_names' => 'nullable|array',
-            'document_names.*' => 'nullable|string|max:255',
-            // Support both old and new existing file formats
+            // Support legacy existing file formats for compatibility
             'existing_file_ids' => 'nullable|array',
             'existing_file_ids.*' => 'integer|exists:media,id',
             'existing_files' => 'nullable|array',
             'existing_files.*' => 'integer|exists:media,id',
+            'existing_attachment_ids' => 'nullable|array',
+            'existing_attachment_ids.*' => 'integer|exists:media,id',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -136,122 +132,10 @@ class ResearchItemController extends Controller
             $researchItem->tags()->sync($validated['tag_ids']);
         }
 
-        // Track attachment processing results
-        $attachmentResults = [
-            'files' => ['expected' => 0, 'successful' => 0, 'failed' => []],
-            'urls' => ['expected' => 0, 'successful' => 0, 'failed' => []],
-            'existing' => ['expected' => 0, 'successful' => 0, 'failed' => []]
-        ];
-
-        // Handle file uploads (support both 'attachments' and 'files' parameters)
-        $files = [];
-        if ($request->hasFile('attachments')) {
-            $files = array_merge($files, $request->file('attachments'));
-        }
-        if ($request->hasFile('files')) {
-            $files = array_merge($files, $request->file('files'));
-        }
-
-        $attachmentResults['files']['expected'] = count($files);
-        foreach ($files as $file) {
-            try {
-                $researchItem->addMedia($file)
-                    ->toMediaCollection('attachments');
-                $attachmentResults['files']['successful']++;
-            } catch (\Exception $e) {
-                $attachmentResults['files']['failed'][] = [
-                    'filename' => $file->getClientOriginalName(),
-                    'error' => $e->getMessage()
-                ];
-                \Log::error('Failed to upload file: ' . $file->getClientOriginalName(), ['error' => $e->getMessage()]);
-            }
-        }
-
-        // Handle URL downloads (support both 'document_urls' and 'urls' parameters)
-        $urls = [];
-        if ($request->has('document_urls') && is_array($request->document_urls)) {
-            $urls = $request->document_urls;
-        } elseif ($request->has('urls') && is_array($request->urls)) {
-            $urls = $request->urls;
-        }
-
-        // Filter out empty URLs
-        $urls = array_filter($urls, function($url) {
-            return !empty($url);
-        });
-
-        $attachmentResults['urls']['expected'] = count($urls);
-        if (!empty($urls)) {
-            foreach ($urls as $index => $url) {
-                try {
-                    // Get the document name from the parallel array or generate one
-                    $documentName = $request->document_names[$index] ?? null;
-                    if (empty($documentName)) {
-                        $documentName = 'Document ' . ($index + 1);
-                    }
-
-                    // Download the file from URL using enhanced service
-                    $downloadService = new UrlDownloadService();
-                    $tempFile = $downloadService->downloadFile($url, $documentName);
-
-                    if ($tempFile) {
-                        $researchItem->addMedia($tempFile)
-                            ->usingName($documentName)
-                            ->toMediaCollection('attachments');
-
-                        // Clean up temp file
-                        unlink($tempFile);
-                        $attachmentResults['urls']['successful']++;
-                    } else {
-                        $attachmentResults['urls']['failed'][] = [
-                            'url' => $url,
-                            'name' => $documentName,
-                            'error' => 'Download failed - file could not be retrieved'
-                        ];
-                    }
-                } catch (\Exception $e) {
-                    $attachmentResults['urls']['failed'][] = [
-                        'url' => $url,
-                        'name' => $documentName ?? 'Unknown',
-                        'error' => $e->getMessage()
-                    ];
-                    \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
-                }
-            }
-        }
-
-        // Handle existing file linking (support both 'existing_file_ids' and 'existing_files' parameters)
-        $existingFileIds = [];
-        if ($request->has('existing_file_ids') && is_array($request->existing_file_ids)) {
-            $existingFileIds = $request->existing_file_ids;
-        } elseif ($request->has('existing_files') && is_array($request->existing_files)) {
-            $existingFileIds = $request->existing_files;
-        }
-
-        if (!empty($existingFileIds)) {
-            foreach ($existingFileIds as $mediaId) {
-                try {
-                    // Get the original media item
-                    $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
-
-                    if ($originalMedia) {
-                        // Copy the file to the new research item
-                        $researchItem->addMedia($originalMedia->getPath())
-                            ->usingName($originalMedia->name)
-                            ->usingFileName($originalMedia->file_name)
-                            ->toMediaCollection('attachments');
-                    }
-                } catch (\Exception $e) {
-                    \Log::error('Failed to link existing file: ' . $mediaId, ['error' => $e->getMessage()]);
-                }
-            }
-        }
+        // Handle file uploads using centralized service
+        $attachmentResults = $this->fileUploadService->handleUploads($researchItem, $request);
 
         $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
-
-        // Sync assets table after successful creation
-        $assetSyncService = new \App\Services\AssetSyncService();
-        $assetSyncService->syncAssetsForModel($researchItem);
 
         return response()->json([
             'id' => $researchItem->id,
@@ -275,16 +159,7 @@ class ResearchItemController extends Controller
                     'color' => $tag->color,
                 ];
             }),
-            'attachments' => $researchItem->getMedia('attachments')->map(function ($media) {
-                return [
-                    'id' => $media->id,
-                    'name' => $media->name,
-                    'file_name' => $media->file_name,
-                    'mime_type' => $media->mime_type,
-                    'size' => $media->size,
-                    'url' => $media->getUrl(),
-                ];
-            }),
+            'attachments' => $researchItem->getFormattedAttachments(),
             'created_at' => $researchItem->created_at->format('Y-m-d H:i:s'),
             'attachment_results' => $attachmentResults,
         ], 201);
@@ -329,16 +204,7 @@ class ResearchItemController extends Controller
                     'color' => $tag->color,
                 ];
             }),
-            'attachments' => $researchItem->getMedia('attachments')->map(function ($media) {
-                return [
-                    'id' => $media->id,
-                    'name' => $media->name,
-                    'file_name' => $media->file_name,
-                    'mime_type' => $media->mime_type,
-                    'size' => $media->size,
-                    'url' => $media->getUrl(),
-                ];
-            }),
+            'attachments' => $researchItem->getFormattedAttachments(),
             'user' => $researchItem->user ? [
                 'id' => $researchItem->user->id,
                 'name' => $researchItem->user->name,
@@ -348,7 +214,7 @@ class ResearchItemController extends Controller
         ]);
     }
 
-    public function update(Request $request, ResearchItem $researchItem): JsonResponse
+    public function update(FileUploadRequest $request, ResearchItem $researchItem): JsonResponse
     {
         try {
             \Log::info('Update research item started', [
@@ -371,23 +237,13 @@ class ResearchItemController extends Controller
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
             'ai_synopsis' => 'nullable|string',
-            // Support both old and new file upload formats
-            'attachments' => 'nullable|array',
-            'attachments.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
-            'files' => 'nullable|array',
-            'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
-            // Support both old and new URL formats
-            'document_urls' => 'nullable|array',
-            'document_urls.*' => 'url',
-            'urls' => 'nullable|array',
-            'urls.*' => 'url',
-            'document_names' => 'nullable|array',
-            'document_names.*' => 'nullable|string|max:255',
-            // Support both old and new existing file formats
+            // Support legacy existing file formats for compatibility
             'existing_file_ids' => 'nullable|array',
             'existing_file_ids.*' => 'integer|exists:media,id',
             'existing_files' => 'nullable|array',
             'existing_files.*' => 'integer|exists:media,id',
+            'existing_attachment_ids' => 'nullable|array',
+            'existing_attachment_ids.*' => 'integer|exists:media,id',
         ]);
 
         // Filter out non-database fields before updating
@@ -408,84 +264,8 @@ class ResearchItemController extends Controller
             $researchItem->tags()->sync($validated['tag_ids']);
         }
 
-        // Handle file uploads (support both 'attachments' and 'files' parameters)
-        $files = [];
-        if ($request->hasFile('attachments')) {
-            $files = array_merge($files, $request->file('attachments'));
-        }
-        if ($request->hasFile('files')) {
-            $files = array_merge($files, $request->file('files'));
-        }
-
-        foreach ($files as $file) {
-            $researchItem->addMedia($file)
-                ->toMediaCollection('attachments');
-        }
-
-        // Handle URL downloads (support both 'document_urls' and 'urls' parameters)
-        $urls = [];
-        if ($request->has('document_urls') && is_array($request->document_urls)) {
-            $urls = $request->document_urls;
-        } elseif ($request->has('urls') && is_array($request->urls)) {
-            $urls = $request->urls;
-        }
-
-        if (!empty($urls)) {
-            foreach ($urls as $index => $url) {
-                if (!empty($url)) {
-                    try {
-                        // Get the document name from the parallel array or generate one
-                        $documentName = $request->document_names[$index] ?? null;
-                        if (empty($documentName)) {
-                            $documentName = 'Document ' . ($index + 1);
-                        }
-
-                        // Download the file from URL using enhanced service
-                        $downloadService = new UrlDownloadService();
-                        $tempFile = $downloadService->downloadFile($url, $documentName);
-
-                        if ($tempFile) {
-                            $researchItem->addMedia($tempFile)
-                                ->usingName($documentName)
-                                ->toMediaCollection('attachments');
-
-                            // Clean up temp file
-                            unlink($tempFile);
-                        }
-                    } catch (\Exception $e) {
-                        // Log the error but continue with other files
-                        \Log::error('Failed to download document from URL: ' . $url, ['error' => $e->getMessage()]);
-                    }
-                }
-            }
-        }
-
-        // Handle existing file linking (support both 'existing_file_ids' and 'existing_files' parameters)
-        $existingFileIds = [];
-        if ($request->has('existing_file_ids') && is_array($request->existing_file_ids)) {
-            $existingFileIds = $request->existing_file_ids;
-        } elseif ($request->has('existing_files') && is_array($request->existing_files)) {
-            $existingFileIds = $request->existing_files;
-        }
-
-        if (!empty($existingFileIds)) {
-            foreach ($existingFileIds as $mediaId) {
-                try {
-                    // Get the original media item
-                    $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
-
-                    if ($originalMedia) {
-                        // Copy the file to the research item
-                        $researchItem->addMedia($originalMedia->getPath())
-                            ->usingName($originalMedia->name)
-                            ->usingFileName($originalMedia->file_name)
-                            ->toMediaCollection('attachments');
-                    }
-                } catch (\Exception $e) {
-                    \Log::error('Failed to link existing file: ' . $mediaId, ['error' => $e->getMessage()]);
-                }
-            }
-        }
+        // Handle file uploads using centralized service
+        $attachmentResults = $this->fileUploadService->handleUploads($researchItem, $request);
 
         $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
 
@@ -511,16 +291,7 @@ class ResearchItemController extends Controller
                     'color' => $tag->color,
                 ];
             }),
-            'attachments' => $researchItem->getMedia('attachments')->map(function ($media) {
-                return [
-                    'id' => $media->id,
-                    'name' => $media->name,
-                    'file_name' => $media->file_name,
-                    'mime_type' => $media->mime_type,
-                    'size' => $media->size,
-                    'url' => $media->getUrl(),
-                ];
-            }),
+            'attachments' => $researchItem->getFormattedAttachments(),
             'created_at' => $researchItem->created_at->format('Y-m-d H:i:s'),
         ]);
         } catch (\Exception $e) {
@@ -545,7 +316,7 @@ class ResearchItemController extends Controller
         }
 
         // Mark associated assets as orphaned before deletion
-        app(AssetSyncService::class)->removeAssetsForModel($researchItem);
+        $this->fileUploadService->removeMediaFromModel($researchItem);
 
         $researchItem->delete();
         return response()->json(null, 204);
