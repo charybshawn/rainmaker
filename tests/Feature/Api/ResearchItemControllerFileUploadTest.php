@@ -2,31 +2,34 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\ResearchItem;
-use App\Models\Company;
 use App\Models\Category;
+use App\Models\Company;
+use App\Models\ResearchItem;
 use App\Models\Tag;
 use App\Models\User;
-use App\Services\FileUploadService;
-use App\Services\UrlDownloadService;
 use App\Services\AssetSyncService;
+use App\Services\UrlDownloadService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Spatie\MediaLibrary\MediaCollections\Models\Media;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
 
 class ResearchItemControllerFileUploadTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
     protected User $user;
+
     protected Company $company;
+
     protected Category $category;
+
     protected Tag $tag;
+
     protected $urlDownloadService;
+
     protected $assetSyncService;
 
     protected function setUp(): void
@@ -73,7 +76,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'category_id' => $this->category->id,
             'tag_ids' => [$this->tag->id],
             'visibility' => 'public',
-            'attachments' => [$file]
+            'attachments' => [$file],
         ]);
 
         $response->assertStatus(201)
@@ -84,28 +87,28 @@ class ResearchItemControllerFileUploadTest extends TestCase
                 'company' => [
                     'id' => $this->company->id,
                     'name' => $this->company->name,
-                    'ticker' => $this->company->ticker_symbol
+                    'ticker' => $this->company->ticker,
                 ],
                 'category' => [
                     'id' => $this->category->id,
-                    'name' => $this->category->name
+                    'name' => $this->category->name,
                 ],
                 'user' => [
                     'id' => $this->user->id,
-                    'name' => $this->user->name
-                ]
+                    'name' => $this->user->name,
+                ],
             ])
             ->assertJsonStructure([
                 'id',
                 'attachments' => [
-                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
-                ]
+                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
+                ],
             ]);
 
         $this->assertDatabaseHas('research_items', [
             'title' => 'Test Research Item',
             'user_id' => $this->user->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         // Verify file was uploaded
@@ -135,19 +138,19 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'company_id' => $this->company->id,
             'visibility' => 'public',
             'document_urls' => [$testUrl],
-            'document_names' => ['Research Report']
+            'document_names' => ['Research Report'],
         ]);
 
         $response->assertStatus(201)
             ->assertJson([
                 'title' => 'Research with URL',
-                'content' => 'Research item with URL download'
+                'content' => 'Research item with URL download',
             ])
             ->assertJsonStructure([
                 'id',
                 'attachments' => [
-                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
-                ]
+                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
+                ],
             ]);
 
         // Clean up temp file
@@ -171,7 +174,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'content' => 'Research item with existing files',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'existing_attachment_ids' => [$mediaItem->id]
+            'existing_attachment_ids' => [$mediaItem->id],
         ]);
 
         $response->assertStatus(201);
@@ -197,7 +200,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'company_id' => $this->company->id,
             'visibility' => 'public',
             'files' => [$file], // Legacy parameter
-            'urls' => [$testUrl] // Legacy parameter
+            'urls' => [$testUrl], // Legacy parameter
         ]);
 
         $response->assertStatus(201);
@@ -239,7 +242,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'attachments' => [$file],
             'document_urls' => [$testUrl],
             'document_names' => ['URL Document'],
-            'existing_attachment_ids' => [$existingMediaItem->id]
+            'existing_attachment_ids' => [$existingMediaItem->id],
         ]);
 
         $response->assertStatus(201);
@@ -271,7 +274,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'company_id' => $this->company->id,
             'visibility' => 'public',
             'document_urls' => [$testUrl],
-            'document_names' => ['Nonexistent File']
+            'document_names' => ['Nonexistent File'],
         ]);
 
         // Should still create research item even if URL download fails
@@ -291,7 +294,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'content' => 'Testing invalid file type',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'attachments' => [$invalidFile]
+            'attachments' => [$invalidFile],
         ]);
 
         $response->assertStatus(422)
@@ -308,7 +311,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'content' => 'Testing large file upload',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'attachments' => [$largeFile]
+            'attachments' => [$largeFile],
         ]);
 
         $response->assertStatus(422)
@@ -320,14 +323,14 @@ class ResearchItemControllerFileUploadTest extends TestCase
     {
         $researchItem = ResearchItem::factory()->create([
             'user_id' => $this->user->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         $response = $this->putJson("/api/research-items/{$researchItem->id}", [
             'title' => 'Updated Research Title',
             'content' => 'Updated research content',
             'company_id' => $this->company->id,
-            'visibility' => 'private'
+            'visibility' => 'private',
         ]);
 
         $response->assertStatus(200)
@@ -335,7 +338,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
                 'id' => $researchItem->id,
                 'title' => 'Updated Research Title',
                 'content' => 'Updated research content',
-                'visibility' => 'private'
+                'visibility' => 'private',
             ]);
     }
 
@@ -345,7 +348,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
         $researchItem = ResearchItem::factory()->create([
             'user_id' => $this->user->id,
             'company_id' => $this->company->id,
-            'category_id' => $this->category->id
+            'category_id' => $this->category->id,
         ]);
 
         $researchItem->tags()->attach($this->tag);
@@ -365,14 +368,14 @@ class ResearchItemControllerFileUploadTest extends TestCase
                 'company' => ['id', 'name', 'ticker'],
                 'category' => ['id', 'name', 'color'],
                 'tags' => [
-                    '*' => ['id', 'name', 'color']
+                    '*' => ['id', 'name', 'color'],
                 ],
                 'attachments' => [
-                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
+                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
                 ],
                 'user' => ['id', 'name'],
                 'created_at',
-                'updated_at'
+                'updated_at',
             ]);
     }
 
@@ -381,7 +384,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
     {
         $researchItem = ResearchItem::factory()->create([
             'user_id' => $this->user->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         // Add a file to the research item
@@ -405,7 +408,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
         $researchItem = ResearchItem::factory()->create([
             'user_id' => $this->user->id,
             'company_id' => $this->company->id,
-            'visibility' => 'public'
+            'visibility' => 'public',
         ]);
 
         // Add a file
@@ -422,10 +425,10 @@ class ResearchItemControllerFileUploadTest extends TestCase
                         'title',
                         'content',
                         'attachments' => [
-                            '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
-                        ]
-                    ]
-                ]
+                            '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
+                        ],
+                    ],
+                ],
             ]);
     }
 
@@ -438,14 +441,14 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'user_id' => $this->user->id,
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'title' => 'Company 1 Research'
+            'title' => 'Company 1 Research',
         ]);
 
         $item2 = ResearchItem::factory()->create([
             'user_id' => $this->user->id,
             'company_id' => $anotherCompany->id,
             'visibility' => 'public',
-            'title' => 'Company 2 Research'
+            'title' => 'Company 2 Research',
         ]);
 
         // Add files to both
@@ -475,7 +478,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'content' => 'Testing invalid existing file IDs',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'existing_attachment_ids' => [99999] // Non-existent ID
+            'existing_attachment_ids' => [99999], // Non-existent ID
         ]);
 
         // Should still create the research item
@@ -493,7 +496,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             UploadedFile::fake()->create('analysis.xlsx', 512, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
             UploadedFile::fake()->create('notes.txt', 512, 'text/plain'),
             UploadedFile::fake()->create('chart.png', 512, 'image/png'),
-            UploadedFile::fake()->create('data.csv', 512, 'text/csv')
+            UploadedFile::fake()->create('data.csv', 512, 'text/csv'),
         ];
 
         $this->assetSyncService->shouldReceive('syncAssetsForModel')->once();
@@ -503,7 +506,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'content' => 'Research with various file formats',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'attachments' => $files
+            'attachments' => $files,
         ]);
 
         $response->assertStatus(201);
@@ -525,7 +528,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
             'attachments' => [],
             'document_urls' => [],
             'document_names' => [],
-            'existing_attachment_ids' => []
+            'existing_attachment_ids' => [],
         ]);
 
         $response->assertStatus(201);
@@ -541,7 +544,7 @@ class ResearchItemControllerFileUploadTest extends TestCase
         $privateItem = ResearchItem::factory()->create([
             'user_id' => $otherUser->id,
             'company_id' => $this->company->id,
-            'visibility' => 'private'
+            'visibility' => 'private',
         ]);
 
         $response = $this->getJson('/api/research-items');

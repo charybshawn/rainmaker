@@ -2,17 +2,14 @@
 
 namespace App\Models;
 
-use App\Traits\HasFileUploads;
 use App\Traits\TracksActivity;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
 
-class Document extends Model implements HasMedia
+class Document extends Model
 {
-    use InteractsWithMedia, TracksActivity, HasFileUploads;
+    use TracksActivity;
 
     protected $fillable = [
         'title',
@@ -47,26 +44,27 @@ class Document extends Model implements HasMedia
         return $this->belongsToMany(Tag::class);
     }
 
-    /**
-     * Register media collections for file uploads.
-     */
-    public function registerMediaCollections(): void
+    public function assets(): BelongsToMany
     {
-        $this->addMediaCollection('attachments')
-            ->acceptsMimeTypes($this->getSupportedMimeTypes());
+        return $this->belongsToMany(Asset::class, 'document_assets');
     }
 
     /**
-     * Register media conversions for uploaded files.
+     * Get formatted attachments for API responses.
+     * Now uses assets instead of media.
      */
-    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    public function getFormattedAttachments(): array
     {
-        $this->addMediaConversion('thumb')
-            ->width(300)
-            ->height(200)
-            ->sharpen(10)
-            ->performOnCollections('attachments')
-            ->nonQueued();
+        return $this->assets->map(function ($asset) {
+            return [
+                'id' => $asset->id,
+                'name' => $asset->title,
+                'file_name' => $asset->file_name,
+                'mime_type' => $asset->mime_type,
+                'size' => $asset->size,
+                'url' => $asset->url,
+            ];
+        })->toArray();
     }
 
     /**

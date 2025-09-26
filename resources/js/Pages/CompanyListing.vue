@@ -220,10 +220,10 @@
                   <div class="text-xs text-gray-400">Research Items</div>
                 </div>
 
-                <!-- Blog Posts Count -->
+                <!-- Research Assets Count -->
                 <div class="text-center">
                   <div class="text-2xl font-bold text-purple-300">{{ company.documents_count || 0 }}</div>
-                  <div class="text-xs text-gray-400">Docs</div>
+                  <div class="text-xs text-gray-400">Assets</div>
                 </div>
 
                 <!-- Actions -->

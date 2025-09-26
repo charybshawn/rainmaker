@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
-use App\Models\Company;
 use Illuminate\Http\Request;
 
 class BlogPostController extends Controller
@@ -30,25 +29,25 @@ class BlogPostController extends Controller
                     'per_page' => $perPage,
                     'from' => null,
                     'to' => null,
-                ]
+                ],
             ]);
         }
 
         // Start with published blog posts
         $blogPostsQuery = BlogPost::where('status', 'published')
-            ->with(['user:id,name', 'companies:id,name,ticker_symbol']);
+            ->with(['user:id,name', 'companies:id,name,ticker']);
 
         // Search by title or content (case-insensitive, database agnostic)
-        $blogPostsQuery->where(function($q) use ($query) {
-            $q->whereRaw('LOWER(title) LIKE ?', ['%' . strtolower($query) . '%'])
-              ->orWhereRaw('LOWER(content) LIKE ?', ['%' . strtolower($query) . '%']);
+        $blogPostsQuery->where(function ($q) use ($query) {
+            $q->whereRaw('LOWER(title) LIKE ?', ['%'.strtolower($query).'%'])
+                ->orWhereRaw('LOWER(content) LIKE ?', ['%'.strtolower($query).'%']);
         });
 
         // If include_companies is true, also include blog posts linked to companies that match the query
         if ($includeCompanies) {
-            $blogPostsQuery->orWhereHas('companies', function($q) use ($query) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($query) . '%'])
-                  ->orWhereRaw('LOWER(ticker_symbol) LIKE ?', ['%' . strtolower($query) . '%']);
+            $blogPostsQuery->orWhereHas('companies', function ($q) use ($query) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($query).'%'])
+                    ->orWhereRaw('LOWER(ticker) LIKE ?', ['%'.strtolower($query).'%']);
             });
         }
 
@@ -67,7 +66,7 @@ class BlogPostController extends Controller
                 'per_page' => $blogPosts->perPage(),
                 'from' => $blogPosts->firstItem(),
                 'to' => $blogPosts->lastItem(),
-            ]
+            ],
         ]);
     }
 

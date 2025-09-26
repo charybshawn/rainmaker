@@ -178,7 +178,7 @@
           </div>
         </div>
 
-        <!-- Attachments Section -->
+        <!-- Research Assets Section -->
         <div v-if="researchNote.attachments && researchNote.attachments.length > 0" class="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
           <button
             @click="toggleSection('attachments')"
@@ -191,7 +191,7 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-base sm:text-lg font-semibold text-white">Attachments</h3>
+                <h3 class="text-base sm:text-lg font-semibold text-white">Research Assets</h3>
                 <p class="text-sm text-gray-400">{{ researchNote.attachments.length }} file{{ researchNote.attachments.length !== 1 ? 's' : '' }}</p>
               </div>
             </div>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Asset extends Model
@@ -22,6 +23,7 @@ class Asset extends Model
         'user_id',
         'visibility',
         'is_orphaned',
+        'created_via',
     ];
 
     public function company(): BelongsTo
@@ -46,6 +48,11 @@ class Asset extends Model
 
         // Fallback to storage URL
         return \Storage::url($this->file_path);
+    }
+
+    public function documents(): BelongsToMany
+    {
+        return $this->belongsToMany(Document::class, 'document_assets');
     }
 
     public function source(): MorphTo

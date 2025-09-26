@@ -1,7 +1,10 @@
 <template>
   <Head :title="company?.name || 'Company Profile'" />
 
-  <div class="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+  <div :class="[
+    'min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
+    { 'blur-sm pointer-events-none': !isAuthenticated }
+  ]">
     <!-- Header Section -->
     <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 shadow-[0_5px_16px_0_rgba(31,38,135,0.2)]">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -342,11 +345,11 @@
         </div>
 
 
-        <!-- Documents Tab -->
+        <!-- Research Assets Tab -->
         <div v-show="activeTab === 'documents'" class="space-y-6">
           <!-- Header with Upload Button -->
           <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-semibold text-white">Documents</h2>
+            <h2 class="text-2xl font-semibold text-white">Research Assets</h2>
             <button
               v-if="$page.props.auth.user"
               @click="showUploadDocumentModal = true"
@@ -356,17 +359,17 @@
               <svg class="w-5 h-5 shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
-              <span>Upload Document</span>
+              <span>Create Research Asset</span>
             </button>
           </div>
 
-          <!-- Documents Data Table -->
+          <!-- Research Assets Data Table -->
           <div v-if="company?.documents && company.documents.length > 0">
             <!-- Bulk Actions Toolbar -->
             <div v-if="selectedDocuments.size > 0" class="mb-4 backdrop-blur-3xl bg-gradient-to-r from-red-500/10 to-red-600/20 rounded-2xl px-6 py-4 border border-red-500/20">
               <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-4">
-                  <span class="text-white font-medium">{{ selectedDocuments.size }} item{{ selectedDocuments.size !== 1 ? 's' : '' }} selected</span>
+                  <span class="text-white font-medium">{{ selectedDocuments.size }} asset{{ selectedDocuments.size !== 1 ? 's' : '' }} selected</span>
                   <button
                     @click="clearDocumentSelection"
                     class="text-gray-300 hover:text-white text-sm underline"
@@ -397,7 +400,7 @@
                     />
                   </div>
                   <div class="col-span-4">Title & Description</div>
-                  <div class="col-span-2">Company</div>
+                  <div class="col-span-2">Uploaded by</div>
                   <div class="col-span-2">Created</div>
                   <div class="col-span-1 text-center">Files</div>
                   <div class="col-span-1 text-center">Source</div>
@@ -437,10 +440,10 @@
                       </div>
                     </div>
 
-                    <!-- Company -->
+                    <!-- Uploaded by -->
                     <div class="col-span-2">
-                      <div class="text-white font-medium">{{ doc.company.name }}</div>
-                      <div class="text-gray-400 text-xs">{{ doc.company.ticker }}</div>
+                      <div class="text-white font-medium">{{ doc.user?.name || 'Unknown' }}</div>
+                      <div class="text-gray-400 text-xs">{{ formatDate(doc.created_at).split(' ')[0] }}</div>
                     </div>
 
                     <!-- Created Date -->
@@ -515,15 +518,15 @@
               <svg class="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
-              <h3 class="text-xl font-medium text-white mb-2">No documents available</h3>
-              <p class="text-gray-400 mb-6">Upload documents or add research notes with attachments to see them here</p>
+              <h3 class="text-xl font-medium text-white mb-2">No research assets available</h3>
+              <p class="text-gray-400 mb-6">Create research assets or add research notes with files to see them here</p>
               <button
                 v-if="$page.props.auth.user"
                 @click="showUploadDocumentModal = true"
                 class="group backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-green-200 font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10"
                 style="backdrop-filter: blur(20px) saturate(180%);"
               >
-                <span class="shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]">🚀 Upload First Document</span>
+                <span class="shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]">🚀 Create First Research Asset</span>
               </button>
             </div>
           </div>
@@ -532,8 +535,8 @@
         <!-- Documents Tab -->
         <div v-show="activeTab === 'insights'" class="space-y-6">
           <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-            <h2 class="text-2xl font-semibold text-white mb-6">Documents</h2>
-            <p class="text-gray-400">Company documents will be displayed here.</p>
+            <h2 class="text-2xl font-semibold text-white mb-6">Research Assets</h2>
+            <p class="text-gray-400">Company research assets will be displayed here.</p>
           </div>
         </div>
       </div>
@@ -592,7 +595,7 @@
       @toggle-file-selection="handleToggleFileSelection"
     />
 
-    <!-- Document Upload Modal -->
+    <!-- Research Asset Creation Modal -->
     <DocumentUploadModal
       v-if="company"
       :show="showUploadDocumentModal"
@@ -642,6 +645,20 @@
       @close="closeResearchViewer"
     />
 
+    <!-- Auth Modals -->
+    <LoginModal
+      :show="showLoginModal"
+      :can-reset-password="true"
+      @close="showLoginModal = false"
+      @switch-to-register="showLoginModal = false; showRegisterModal = true"
+    />
+
+    <RegisterModal
+      :show="showRegisterModal"
+      @close="showRegisterModal = false"
+      @switch-to-login="showRegisterModal = false; showLoginModal = true"
+    />
+
     <!-- Toast Notifications -->
     <ToastNotification />
 
@@ -650,11 +667,12 @@
 
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
-import { Head, Link } from '@inertiajs/vue3'
+import { Head, Link, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import Dropdown from '@/Components/Dropdown.vue'
 import DropdownLink from '@/Components/DropdownLink.vue'
 import LoginModal from '@/Components/Modals/LoginModal.vue'
+import RegisterModal from '@/Components/Modals/RegisterModal.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import DocumentViewerModal from '@/Components/Modals/DocumentViewerModal.vue'
@@ -679,6 +697,7 @@ const company = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const showLoginModal = ref(false)
+const showRegisterModal = ref(false)
 const activeTab = ref(props.tab)
 
 // Modal states
@@ -776,17 +795,23 @@ const tabs = computed(() => {
     },
     {
       id: 'documents',
-      name: 'Documents',
+      name: 'Research Assets',
       count: company.value?.documents?.length || 0
     },
     {
       id: 'insights',
-      name: 'Documents',
+      name: 'Insights',
       count: null
     }
   ]
 
   return baseTabs
+})
+
+// Authentication check
+const page = usePage()
+const isAuthenticated = computed(() => {
+  return !!page.props.auth.user
 })
 
 // Methods
@@ -799,9 +824,12 @@ const fetchCompanyData = async () => {
     loading.value = true
     error.value = null
 
-    // First try to find company by ticker symbol
+    // First try to find company by ticker symbol with higher limit to ensure we get it
     const companiesResponse = await axios.get('/api/companies', {
-      params: { search: props.ticker }
+      params: {
+        search: props.ticker,
+        limit: 1000  // High limit to ensure we get all companies
+      }
     })
 
     const foundCompany = companiesResponse.data.data.find(
@@ -1821,6 +1849,13 @@ watch(company, (newCompany) => {
   }
 })
 
+
+// Watch for authentication status and show login modal if not authenticated
+watch(isAuthenticated, (newValue) => {
+  if (!newValue) {
+    showLoginModal.value = true
+  }
+}, { immediate: true })
 
 // Lifecycle
 onMounted(() => {

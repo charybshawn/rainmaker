@@ -19,7 +19,7 @@ class BlogPostController extends Controller
             ->get(['id', 'title', 'slug', 'status', 'published_at', 'created_at']);
 
         return Inertia::render('Blog/Dashboard', [
-            'posts' => $posts
+            'posts' => $posts,
         ]);
     }
 
@@ -35,7 +35,7 @@ class BlogPostController extends Controller
             'author_name' => 'required_if:category,quotes|nullable|string|max:255',
             'status' => 'required|in:draft,published',
             'company_ids' => 'array',
-            'company_ids.*' => 'exists:companies,id'
+            'company_ids.*' => 'exists:companies,id',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -50,13 +50,13 @@ class BlogPostController extends Controller
 
         $post = BlogPost::create($validated);
 
-        if (!empty($companyIds)) {
+        if (! empty($companyIds)) {
             $post->companies()->attach($companyIds);
         }
 
         return response()->json([
             'message' => 'Blog post created successfully.',
-            'post' => $post->load('user:id,name', 'companies:id,name,ticker_symbol')
+            'post' => $post->load('user:id,name', 'companies:id,name,ticker'),
         ], 201);
     }
 
@@ -69,10 +69,10 @@ class BlogPostController extends Controller
             abort(404);
         }
 
-        $post->load('user:id,name', 'companies:id,name,ticker_symbol,sector');
+        $post->load('user:id,name', 'companies:id,name,ticker,sector');
 
         return Inertia::render('Blog/Post', [
-            'post' => $post
+            'post' => $post,
         ]);
     }
 
@@ -90,7 +90,7 @@ class BlogPostController extends Controller
             'author_name' => 'required_if:category,quotes|nullable|string|max:255',
             'status' => 'required|in:draft,published',
             'company_ids' => 'array',
-            'company_ids.*' => 'exists:companies,id'
+            'company_ids.*' => 'exists:companies,id',
         ]);
 
         $validated['slug'] = Str::slug($validated['title']);
@@ -111,7 +111,7 @@ class BlogPostController extends Controller
 
         return response()->json([
             'message' => 'Blog post updated successfully.',
-            'post' => $post->load('user:id,name', 'companies:id,name,ticker_symbol')
+            'post' => $post->load('user:id,name', 'companies:id,name,ticker'),
         ]);
     }
 
@@ -125,7 +125,7 @@ class BlogPostController extends Controller
         $post->delete();
 
         return response()->json([
-            'message' => 'Blog post deleted successfully.'
+            'message' => 'Blog post deleted successfully.',
         ]);
     }
 
@@ -143,7 +143,7 @@ class BlogPostController extends Controller
 
         return Inertia::render('Blog/UserBlog', [
             'user' => $user->only(['name']),
-            'posts' => $posts
+            'posts' => $posts,
         ]);
     }
 }

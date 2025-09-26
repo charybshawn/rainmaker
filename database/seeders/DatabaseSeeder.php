@@ -2,11 +2,10 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use App\Models\Company;
 use App\Models\Category;
+use App\Models\Company;
 use App\Models\Tag;
-use App\Models\ResearchItem;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -55,7 +54,7 @@ class DatabaseSeeder extends Seeder
         $companies = [
             [
                 'name' => 'Apple Inc.',
-                'ticker_symbol' => 'AAPL',
+                'ticker' => 'AAPL',
                 'sector' => 'Technology',
                 'industry' => 'Consumer Electronics',
                 'market_cap' => 3000000000000,
@@ -66,7 +65,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Microsoft Corporation',
-                'ticker_symbol' => 'MSFT',
+                'ticker' => 'MSFT',
                 'sector' => 'Technology',
                 'industry' => 'Software',
                 'market_cap' => 2800000000000,
@@ -77,7 +76,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Amazon.com Inc.',
-                'ticker_symbol' => 'AMZN',
+                'ticker' => 'AMZN',
                 'sector' => 'Consumer Discretionary',
                 'industry' => 'E-commerce',
                 'market_cap' => 1500000000000,
@@ -88,7 +87,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Alphabet Inc.',
-                'ticker_symbol' => 'GOOGL',
+                'ticker' => 'GOOGL',
                 'sector' => 'Communication Services',
                 'industry' => 'Internet Services',
                 'market_cap' => 1700000000000,
@@ -99,7 +98,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'Tesla Inc.',
-                'ticker_symbol' => 'TSLA',
+                'ticker' => 'TSLA',
                 'sector' => 'Consumer Discretionary',
                 'industry' => 'Electric Vehicles',
                 'market_cap' => 800000000000,
@@ -110,7 +109,7 @@ class DatabaseSeeder extends Seeder
             ],
             [
                 'name' => 'NVIDIA Corporation',
-                'ticker_symbol' => 'NVDA',
+                'ticker' => 'NVDA',
                 'sector' => 'Technology',
                 'industry' => 'Semiconductors',
                 'market_cap' => 1100000000000,

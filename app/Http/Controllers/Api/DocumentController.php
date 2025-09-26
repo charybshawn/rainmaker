@@ -3,20 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\FileUploadRequest;
+use App\Models\Asset;
 use App\Models\Document;
-use App\Services\FileUploadService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DocumentController extends Controller
 {
-    protected FileUploadService $fileUploadService;
-
-    public function __construct(FileUploadService $fileUploadService)
-    {
-        $this->fileUploadService = $fileUploadService;
-    }
     /**
      * Display a listing of the resource.
      */
@@ -30,12 +23,12 @@ class DocumentController extends Controller
             ->with(['company', 'user']);
 
         // Filter by company if provided
-        if ($request->has('company_id') && !empty($request->company_id)) {
+        if ($request->has('company_id') && ! empty($request->company_id)) {
             $query->where('company_id', $request->company_id);
         }
 
         // Filter by source type if provided
-        if ($request->has('source_type') && !empty($request->source_type)) {
+        if ($request->has('source_type') && ! empty($request->source_type)) {
             $query->where('source_type', $request->source_type);
         }
 
@@ -46,16 +39,16 @@ class DocumentController extends Controller
         }
 
         // Search functionality
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('description', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('file_name', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('company', function($companyQuery) use ($searchTerm) {
-                      $companyQuery->where('name', 'like', '%' . $searchTerm . '%')
-                                  ->orWhere('ticker_symbol', 'like', '%' . $searchTerm . '%');
-                  });
+                $q->where('title', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('description', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('file_name', 'like', '%'.$searchTerm.'%')
+                    ->orWhereHas('company', function ($companyQuery) use ($searchTerm) {
+                        $companyQuery->where('name', 'like', '%'.$searchTerm.'%')
+                            ->orWhere('ticker', 'like', '%'.$searchTerm.'%');
+                    });
             });
         }
 
@@ -69,10 +62,13 @@ class DocumentController extends Controller
                 'description' => $asset->description,
                 'visibility' => $asset->visibility,
                 'is_orphaned' => $asset->is_orphaned,
+                'size' => $asset->size, // Add size field for widget display
+                'file_name' => $asset->file_name,
+                'mime_type' => $asset->mime_type,
                 'company' => $asset->company ? [
                     'id' => $asset->company->id,
                     'name' => $asset->company->name,
-                    'ticker' => $asset->company->ticker_symbol,
+                    'ticker' => $asset->company->ticker,
                 ] : null,
                 'category' => null, // We can add category relationship to Asset later if needed
                 'tags' => collect(), // We can add tags relationship to Asset later if needed
@@ -105,14 +101,14 @@ class DocumentController extends Controller
                 'per_page' => $assets->perPage(),
                 'from' => $assets->firstItem(),
                 'to' => $assets->lastItem(),
-            ]
+            ],
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(FileUploadRequest $request): JsonResponse
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -122,6 +118,8 @@ class DocumentController extends Controller
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
+            'asset_ids' => 'nullable|array',
+            'asset_ids.*' => 'exists:assets,id',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -133,10 +131,12 @@ class DocumentController extends Controller
             $document->tags()->sync($validated['tag_ids']);
         }
 
-        // Handle file uploads using centralized service
-        $uploadResults = $this->fileUploadService->handleUploads($document, $request);
+        // Attach assets if provided
+        if (isset($validated['asset_ids'])) {
+            $document->assets()->sync($validated['asset_ids']);
+        }
 
-        $document->load(['company', 'category', 'tags', 'user', 'media']);
+        $document->load(['company', 'category', 'tags', 'user', 'assets']);
 
         return response()->json($this->transformDocument($document), 201);
     }
@@ -146,7 +146,8 @@ class DocumentController extends Controller
      */
     public function show(Document $document): JsonResponse
     {
-        $document->load(['company', 'category', 'tags', 'user', 'media']);
+        $document->load(['company', 'category', 'tags', 'user', 'assets']);
+
         return response()->json($this->transformDocument($document));
     }
 
@@ -168,6 +169,8 @@ class DocumentController extends Controller
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
+            'asset_ids' => 'nullable|array',
+            'asset_ids.*' => 'exists:assets,id',
         ]);
 
         $document->update($validated);
@@ -177,7 +180,12 @@ class DocumentController extends Controller
             $document->tags()->sync($validated['tag_ids']);
         }
 
-        $document->load(['company', 'category', 'tags', 'user', 'media']);
+        // Sync assets if provided
+        if (isset($validated['asset_ids'])) {
+            $document->assets()->sync($validated['asset_ids']);
+        }
+
+        $document->load(['company', 'category', 'tags', 'user', 'assets']);
 
         return response()->json($this->transformDocument($document));
     }
@@ -192,10 +200,11 @@ class DocumentController extends Controller
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
-        // Remove media files and sync assets
-        $this->fileUploadService->removeMediaFromModel($document);
+        // Remove asset associations (but keep the assets themselves)
+        $document->assets()->detach();
 
         $document->delete();
+
         return response()->json(null, 204);
     }
 
@@ -209,11 +218,11 @@ class DocumentController extends Controller
             'title' => $document->title,
             'description' => $document->description,
             'visibility' => $document->visibility,
-            'company' => [
+            'company' => $document->company ? [
                 'id' => $document->company->id,
                 'name' => $document->company->name,
-                'ticker' => $document->company->ticker_symbol,
-            ],
+                'ticker' => $document->company->ticker,
+            ] : null,
             'category' => $document->category ? [
                 'id' => $document->category->id,
                 'name' => $document->category->name,
@@ -235,5 +244,4 @@ class DocumentController extends Controller
             'updated_at' => $document->updated_at->format('Y-m-d H:i:s'),
         ];
     }
-
 }

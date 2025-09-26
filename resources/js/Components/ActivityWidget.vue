@@ -87,7 +87,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const props = defineProps({
@@ -119,6 +120,11 @@ const activities = ref([])
 const stats = ref(null)
 const loading = ref(false)
 
+// Authentication check
+const isAuthenticated = computed(() => {
+  return !!usePage().props.auth?.user
+})
+
 // Icon path mapping
 const iconPaths = {
   'plus-circle': 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z',
@@ -140,6 +146,8 @@ const iconPaths = {
 
 // Methods
 const fetchActivities = async () => {
+  if (!isAuthenticated.value) return
+
   loading.value = true
 
   try {

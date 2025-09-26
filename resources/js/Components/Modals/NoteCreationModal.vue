@@ -120,9 +120,9 @@
           </div>
         </div>
 
-        <!-- File Attachments Section -->
+        <!-- Research Files Section -->
         <div class="space-y-4">
-          <label class="block text-sm font-medium text-white mb-3">Attachments (optional)</label>
+          <label class="block text-sm font-medium text-white mb-3">Research Files (optional)</label>
 
           <!-- Upload Type Toggle -->
           <div class="flex space-x-2 mb-4">

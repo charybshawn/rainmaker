@@ -2,30 +2,34 @@
 
 namespace Tests\Feature\Api;
 
-use App\Models\Document;
-use App\Models\Company;
 use App\Models\Category;
+use App\Models\Company;
+use App\Models\Document;
 use App\Models\Tag;
 use App\Models\User;
-use App\Services\FileUploadService;
-use App\Services\UrlDownloadService;
 use App\Services\AssetSyncService;
+use App\Services\UrlDownloadService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Tests\TestCase;
 use Mockery;
+use Tests\TestCase;
 
 class DocumentControllerFileUploadTest extends TestCase
 {
     use RefreshDatabase, WithFaker;
 
     protected User $user;
+
     protected Company $company;
+
     protected Category $category;
+
     protected Tag $tag;
+
     protected $urlDownloadService;
+
     protected $assetSyncService;
 
     protected function setUp(): void
@@ -72,7 +76,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'category_id' => $this->category->id,
             'tag_ids' => [$this->tag->id],
             'visibility' => 'public',
-            'attachments' => [$file]
+            'attachments' => [$file],
         ]);
 
         $response->assertStatus(201)
@@ -83,28 +87,28 @@ class DocumentControllerFileUploadTest extends TestCase
                 'company' => [
                     'id' => $this->company->id,
                     'name' => $this->company->name,
-                    'ticker' => $this->company->ticker_symbol
+                    'ticker' => $this->company->ticker,
                 ],
                 'category' => [
                     'id' => $this->category->id,
-                    'name' => $this->category->name
+                    'name' => $this->category->name,
                 ],
                 'user' => [
                     'id' => $this->user->id,
-                    'name' => $this->user->name
-                ]
+                    'name' => $this->user->name,
+                ],
             ])
             ->assertJsonStructure([
                 'id',
                 'attachments' => [
-                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
-                ]
+                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
+                ],
             ]);
 
         $this->assertDatabaseHas('documents', [
             'title' => 'Test Document',
             'user_id' => $this->user->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         // Verify file was uploaded
@@ -134,19 +138,19 @@ class DocumentControllerFileUploadTest extends TestCase
             'company_id' => $this->company->id,
             'visibility' => 'public',
             'document_urls' => [$testUrl],
-            'document_names' => ['Downloaded Document']
+            'document_names' => ['Downloaded Document'],
         ]);
 
         $response->assertStatus(201)
             ->assertJson([
                 'title' => 'Test Document',
-                'description' => 'Test document with URL'
+                'description' => 'Test document with URL',
             ])
             ->assertJsonStructure([
                 'id',
                 'attachments' => [
-                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
-                ]
+                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
+                ],
             ]);
 
         // Clean up temp file
@@ -177,7 +181,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'visibility' => 'public',
             'attachments' => [$file],
             'document_urls' => [$testUrl],
-            'document_names' => ['URL Document']
+            'document_names' => ['URL Document'],
         ]);
 
         $response->assertStatus(201);
@@ -203,7 +207,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'description' => 'Test legacy files parameter',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'files' => [$file] // Using legacy parameter name
+            'files' => [$file], // Using legacy parameter name
         ]);
 
         $response->assertStatus(201);
@@ -221,7 +225,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'title' => 'Test Document',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'attachments' => [$invalidFile]
+            'attachments' => [$invalidFile],
         ]);
 
         $response->assertStatus(422)
@@ -237,7 +241,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'title' => 'Test Document',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'attachments' => [$largeFile]
+            'attachments' => [$largeFile],
         ]);
 
         $response->assertStatus(422)
@@ -251,7 +255,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'title' => 'Test Document',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'document_urls' => ['not-a-valid-url']
+            'document_urls' => ['not-a-valid-url'],
         ]);
 
         $response->assertStatus(422)
@@ -275,7 +279,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'company_id' => $this->company->id,
             'visibility' => 'public',
             'document_urls' => [$testUrl],
-            'document_names' => ['Failed Document']
+            'document_names' => ['Failed Document'],
         ]);
 
         // Should still create document even if URL download fails
@@ -294,13 +298,13 @@ class DocumentControllerFileUploadTest extends TestCase
             'title' => 'No Attachments Document',
             'description' => 'Document without any files',
             'company_id' => $this->company->id,
-            'visibility' => 'public'
+            'visibility' => 'public',
         ]);
 
         $response->assertStatus(201)
             ->assertJson([
                 'title' => 'No Attachments Document',
-                'attachments' => []
+                'attachments' => [],
             ]);
 
         $document = Document::where('title', 'No Attachments Document')->first();
@@ -312,14 +316,14 @@ class DocumentControllerFileUploadTest extends TestCase
     {
         $document = Document::factory()->create([
             'user_id' => $this->user->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         $response = $this->putJson("/api/documents/{$document->id}", [
             'title' => 'Updated Title',
             'description' => 'Updated description',
             'company_id' => $this->company->id,
-            'visibility' => 'private'
+            'visibility' => 'private',
         ]);
 
         $response->assertStatus(200)
@@ -327,13 +331,13 @@ class DocumentControllerFileUploadTest extends TestCase
                 'id' => $document->id,
                 'title' => 'Updated Title',
                 'description' => 'Updated description',
-                'visibility' => 'private'
+                'visibility' => 'private',
             ]);
 
         $this->assertDatabaseHas('documents', [
             'id' => $document->id,
             'title' => 'Updated Title',
-            'visibility' => 'private'
+            'visibility' => 'private',
         ]);
     }
 
@@ -343,13 +347,13 @@ class DocumentControllerFileUploadTest extends TestCase
         $otherUser = User::factory()->create();
         $document = Document::factory()->create([
             'user_id' => $otherUser->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         $response = $this->putJson("/api/documents/{$document->id}", [
             'title' => 'Unauthorized Update',
             'company_id' => $this->company->id,
-            'visibility' => 'public'
+            'visibility' => 'public',
         ]);
 
         $response->assertStatus(403);
@@ -360,7 +364,7 @@ class DocumentControllerFileUploadTest extends TestCase
     {
         $document = Document::factory()->create([
             'user_id' => $this->user->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         // Add a file to the document
@@ -384,7 +388,7 @@ class DocumentControllerFileUploadTest extends TestCase
         $otherUser = User::factory()->create();
         $document = Document::factory()->create([
             'user_id' => $otherUser->id,
-            'company_id' => $this->company->id
+            'company_id' => $this->company->id,
         ]);
 
         $response = $this->deleteJson("/api/documents/{$document->id}");
@@ -400,7 +404,7 @@ class DocumentControllerFileUploadTest extends TestCase
         $document = Document::factory()->create([
             'user_id' => $this->user->id,
             'company_id' => $this->company->id,
-            'category_id' => $this->category->id
+            'category_id' => $this->category->id,
         ]);
 
         $document->tags()->attach($this->tag);
@@ -414,7 +418,7 @@ class DocumentControllerFileUploadTest extends TestCase
         $response->assertStatus(200)
             ->assertJson([
                 'id' => $document->id,
-                'title' => $document->title
+                'title' => $document->title,
             ])
             ->assertJsonStructure([
                 'id',
@@ -424,14 +428,14 @@ class DocumentControllerFileUploadTest extends TestCase
                 'company' => ['id', 'name', 'ticker'],
                 'category' => ['id', 'name', 'color'],
                 'tags' => [
-                    '*' => ['id', 'name', 'color']
+                    '*' => ['id', 'name', 'color'],
                 ],
                 'attachments' => [
-                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url']
+                    '*' => ['id', 'name', 'file_name', 'mime_type', 'size', 'url'],
                 ],
                 'user' => ['id', 'name'],
                 'created_at',
-                'updated_at'
+                'updated_at',
             ]);
     }
 
@@ -450,7 +454,7 @@ class DocumentControllerFileUploadTest extends TestCase
         $response = $this->postJson('/api/documents', [
             'title' => 'Test Document',
             'company_id' => 99999, // Non-existent company
-            'visibility' => 'public'
+            'visibility' => 'public',
         ]);
 
         $response->assertStatus(422)
@@ -463,7 +467,7 @@ class DocumentControllerFileUploadTest extends TestCase
         $response = $this->postJson('/api/documents', [
             'title' => 'Test Document',
             'company_id' => $this->company->id,
-            'visibility' => 'invalid_visibility'
+            'visibility' => 'invalid_visibility',
         ]);
 
         $response->assertStatus(422)
@@ -477,7 +481,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'title' => 'Test Document',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'tag_ids' => [99999] // Non-existent tag
+            'tag_ids' => [99999], // Non-existent tag
         ]);
 
         $response->assertStatus(422)
@@ -493,7 +497,7 @@ class DocumentControllerFileUploadTest extends TestCase
             UploadedFile::fake()->create('test.xlsx', 512, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
             UploadedFile::fake()->create('test.jpg', 512, 'image/jpeg'),
             UploadedFile::fake()->create('test.png', 512, 'image/png'),
-            UploadedFile::fake()->create('test.txt', 512, 'text/plain')
+            UploadedFile::fake()->create('test.txt', 512, 'text/plain'),
         ];
 
         $this->assetSyncService->shouldReceive('syncAssetsForModel')->once();
@@ -502,7 +506,7 @@ class DocumentControllerFileUploadTest extends TestCase
             'title' => 'Multi-type Document',
             'company_id' => $this->company->id,
             'visibility' => 'public',
-            'attachments' => $files
+            'attachments' => $files,
         ]);
 
         $response->assertStatus(201);

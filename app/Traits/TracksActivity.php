@@ -45,7 +45,7 @@ trait TracksActivity
         ?string $description = null
     ): AssetActivity {
         // Generate description if not provided
-        if (!$description) {
+        if (! $description) {
             $description = AssetActivity::generateDescription(
                 $activityType,
                 $fieldName,
@@ -90,11 +90,11 @@ trait TracksActivity
         if (isset($this->name)) {
             return $this->name;
         }
-        if (isset($this->ticker_symbol)) {
-            return $this->ticker_symbol;
+        if (isset($this->ticker)) {
+            return $this->ticker;
         }
 
-        return class_basename($this) . ' #' . $this->id;
+        return class_basename($this).' #'.$this->id;
     }
 
     /**
@@ -112,7 +112,7 @@ trait TracksActivity
 
         // Truncate very long strings
         if (is_string($value) && strlen($value) > 500) {
-            return substr($value, 0, 500) . '...';
+            return substr($value, 0, 500).'...';
         }
 
         return $value;

@@ -48,7 +48,7 @@ const switchToLogin = () => {
         class="fixed inset-0 z-50 overflow-y-auto"
         @click="closeModal"
     >
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="flex items-center justify-center min-h-screen p-4">
             <!-- Background overlay -->
             <div
                 class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
@@ -57,7 +57,7 @@ const switchToLogin = () => {
 
             <!-- Modal panel -->
             <div
-                class="relative inline-block align-bottom bg-black/20 backdrop-blur-3xl rounded-2xl px-4 pt-5 pb-4 text-left overflow-hidden shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4),0_10px_10px_-5px_rgba(0,0,0,0.3)] transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6 border border-white/20"
+                class="relative bg-black/20 backdrop-blur-3xl rounded-2xl p-6 text-left overflow-hidden shadow-[0_20px_25px_-5px_rgba(0,0,0,0.4),0_10px_10px_-5px_rgba(0,0,0,0.3)] transform transition-all max-w-lg w-full border border-white/20"
                 style="backdrop-filter: blur(20px) saturate(180%); background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));"
                 @click.stop
             >
@@ -76,8 +76,8 @@ const switchToLogin = () => {
                 </div>
 
                 <!-- Modal content -->
-                <div class="sm:flex sm:items-start">
-                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                <div class="w-full">
+                    <div class="text-center w-full">
                         <div class="flex flex-col items-center mb-6">
                             <div class="mb-4">
                                 <img

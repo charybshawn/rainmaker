@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('ticker_symbol', 10)->unique();
+            $table->string('ticker', 10)->unique();
             $table->string('sector')->nullable();
             $table->string('industry')->nullable();
             $table->decimal('market_cap', 20, 2)->nullable();
@@ -25,7 +25,7 @@ return new class extends Migration
             $table->date('founded_date')->nullable();
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->timestamps();
-            
+
             $table->index(['sector', 'industry']);
             $table->index('created_by');
         });

@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Company;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class CompanyController extends Controller
@@ -16,16 +16,16 @@ class CompanyController extends Controller
         $perPage = $request->get('limit', 10);
         $page = $request->get('page', 1);
 
-        $query = Company::query()->with(['researchItems', 'creator']);
+        $query = Company::query()->with(['researchItems', 'documents', 'creator']);
 
         // Search functionality
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('ticker_symbol', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('sector', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('industry', 'like', '%' . $searchTerm . '%');
+                $q->where('name', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('ticker', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('sector', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('industry', 'like', '%'.$searchTerm.'%');
             });
         }
 
@@ -42,7 +42,7 @@ class CompanyController extends Controller
             $data = [
                 'id' => $company->id,
                 'name' => $company->name,
-                'ticker' => $company->ticker_symbol,
+                'ticker' => $company->ticker,
                 'sector' => $company->sector,
                 'industry' => $company->industry,
                 'marketCap' => $company->market_cap,
@@ -58,7 +58,8 @@ class CompanyController extends Controller
             // Include counts if requested
             if ($request->has('include_counts') || $request->boolean('include_counts')) {
                 $data['research_items_count'] = $company->researchItems->count();
-                $data['documents_count'] = $company->documents->count();
+                // Count documents that have assets (since documents now reference assets)
+                $data['documents_count'] = $company->documents()->whereHas('assets')->count();
             }
 
             return $data;
@@ -75,7 +76,7 @@ class CompanyController extends Controller
                 'per_page' => $companies->perPage(),
                 'from' => $companies->firstItem(),
                 'to' => $companies->lastItem(),
-            ]
+            ],
         ]);
     }
 
@@ -84,11 +85,11 @@ class CompanyController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'ticker_symbol' => [
+                'ticker' => [
                     'required',
                     'string',
                     'max:10',
-                    Rule::unique('companies')->whereNull('deleted_at')
+                    Rule::unique('companies')->whereNull('deleted_at'),
                 ],
                 'sector' => 'nullable|string|max:255',
                 'industry' => 'nullable|string|max:255',
@@ -102,14 +103,14 @@ class CompanyController extends Controller
             ]);
 
             $validated['created_by'] = auth()->id() ?? 1; // Default to user 1 for now
-            $validated['ticker_symbol'] = strtoupper($validated['ticker_symbol']);
+            $validated['ticker'] = strtoupper($validated['ticker']);
 
             $company = Company::create($validated);
 
             return response()->json([
                 'id' => $company->id,
                 'name' => $company->name,
-                'ticker' => $company->ticker_symbol,
+                'ticker' => $company->ticker,
                 'sector' => $company->sector,
                 'industry' => $company->industry,
                 'marketCap' => $company->market_cap,
@@ -120,32 +121,31 @@ class CompanyController extends Controller
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Company creation validation failed', [
                 'errors' => $e->errors(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
             throw $e; // Re-throw to let Laravel handle it properly
-
         } catch (\Exception $e) {
             \Log::error('Company creation failed', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to create company: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Failed to create company: '.$e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
 
     public function show(Company $company): JsonResponse
     {
-        $company->load(['researchItems.tags', 'researchItems.media', 'documents.tags', 'documents.media', 'creator']);
+        $company->load(['researchItems.tags', 'researchItems.media', 'researchItems.user', 'documents.tags', 'documents.user', 'documents.assets', 'creator']);
 
         return response()->json([
             'id' => $company->id,
             'name' => $company->name,
-            'ticker' => $company->ticker_symbol,
+            'ticker' => $company->ticker,
             'sector' => $company->sector,
             'industry' => $company->industry,
             'marketCap' => $company->market_cap,
@@ -163,6 +163,10 @@ class CompanyController extends Controller
                     'title' => $item->title,
                     'content' => $item->content,
                     'visibility' => $item->visibility,
+                    'user' => $item->user ? [
+                        'id' => $item->user->id,
+                        'name' => $item->user->name,
+                    ] : null,
                     'attachments' => $item->getMedia('attachments')->map(function ($media) {
                         return [
                             'id' => $media->id,
@@ -183,14 +187,18 @@ class CompanyController extends Controller
                     'description' => $document->description,
                     'ai_synopsis' => $document->ai_synopsis,
                     'visibility' => $document->visibility,
-                    'attachments' => $document->getMedia('attachments')->map(function ($media) {
+                    'user' => $document->user ? [
+                        'id' => $document->user->id,
+                        'name' => $document->user->name,
+                    ] : null,
+                    'attachments' => $document->assets->map(function ($asset) {
                         return [
-                            'id' => $media->id,
-                            'name' => $media->name,
-                            'file_name' => $media->file_name,
-                            'mime_type' => $media->mime_type,
-                            'size' => $media->size,
-                            'url' => $media->getUrl(),
+                            'id' => $asset->id,
+                            'name' => $asset->title,
+                            'file_name' => $asset->file_name,
+                            'mime_type' => $asset->mime_type,
+                            'size' => $asset->size,
+                            'url' => $asset->url,
                         ];
                     }),
                     'created_at' => $document->created_at->format('Y-m-d H:i:s'),
@@ -206,16 +214,16 @@ class CompanyController extends Controller
             \Log::info('Company update started', [
                 'company_id' => $company->id,
                 'request_data' => $request->all(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
-                'ticker_symbol' => [
+                'ticker' => [
                     'required',
                     'string',
                     'max:10',
-                    Rule::unique('companies')->ignore($company->id)->whereNull('deleted_at')
+                    Rule::unique('companies')->ignore($company->id)->whereNull('deleted_at'),
                 ],
                 'sector' => 'nullable|string|max:255',
                 'industry' => 'nullable|string|max:255',
@@ -230,10 +238,10 @@ class CompanyController extends Controller
 
             \Log::info('Company update validation passed', [
                 'company_id' => $company->id,
-                'validated_data' => $validated
+                'validated_data' => $validated,
             ]);
 
-            $validated['ticker_symbol'] = strtoupper($validated['ticker_symbol']);
+            $validated['ticker'] = strtoupper($validated['ticker']);
 
             // Update the company
             $company->update($validated);
@@ -243,7 +251,7 @@ class CompanyController extends Controller
 
             \Log::info('Company update completed successfully', [
                 'company_id' => $company->id,
-                'updated_data' => $company->toArray()
+                'updated_data' => $company->toArray(),
             ]);
 
             // Return data in the format expected by frontend
@@ -252,8 +260,8 @@ class CompanyController extends Controller
                 'company' => [
                     'id' => $company->id,
                     'name' => $company->name,
-                    'ticker' => $company->ticker_symbol,
-                    'ticker_symbol' => $company->ticker_symbol,
+                    'ticker' => $company->ticker,
+                    'ticker' => $company->ticker,
                     'sector' => $company->sector,
                     'industry' => $company->industry,
                     'market_cap' => $company->market_cap,
@@ -267,28 +275,27 @@ class CompanyController extends Controller
                     'foundedDate' => $company->founded_date?->format('Y-m-d'),
                     'website' => $company->website_url,
                     'website_url' => $company->website_url,
-                ]
+                ],
             ]);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Company update validation failed', [
                 'company_id' => $company->id,
                 'errors' => $e->errors(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
             throw $e; // Re-throw to let Laravel handle it properly
-
         } catch (\Exception $e) {
             \Log::error('Company update failed', [
                 'company_id' => $company->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
-                'request' => $request->all()
+                'request' => $request->all(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to update company: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Failed to update company: '.$e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -299,14 +306,14 @@ class CompanyController extends Controller
             \Log::info('Company deletion started', [
                 'company_id' => $company->id,
                 'company_name' => $company->name,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             $company->delete(); // This will be a soft delete
 
             \Log::info('Company deletion completed successfully', [
                 'company_id' => $company->id,
-                'company_name' => $company->name
+                'company_name' => $company->name,
             ]);
 
             return response()->json(null, 204);
@@ -316,12 +323,12 @@ class CompanyController extends Controller
                 'company_id' => $company->id,
                 'company_name' => $company->name,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to delete company: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Failed to delete company: '.$e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -333,7 +340,7 @@ class CompanyController extends Controller
     {
         $validated = $request->validate([
             'company_ids' => 'required|array',
-            'company_ids.*' => 'exists:companies,id'
+            'company_ids.*' => 'exists:companies,id',
         ]);
 
         $companyIds = $validated['company_ids'];
@@ -346,7 +353,7 @@ class CompanyController extends Controller
                 'research_items' => 0,
                 'documents' => 0,
                 'blog_post_associations' => 0,
-            ]
+            ],
         ];
 
         foreach ($companies as $company) {
@@ -357,7 +364,7 @@ class CompanyController extends Controller
             $impact['companies'][] = [
                 'id' => $company->id,
                 'name' => $company->name,
-                'ticker' => $company->ticker_symbol,
+                'ticker' => $company->ticker,
                 'research_items' => $researchCount,
                 'documents' => $documentsCount,
                 'blog_associations' => $blogAssociationsCount,
@@ -378,7 +385,7 @@ class CompanyController extends Controller
     {
         $validated = $request->validate([
             'company_ids' => 'required|array',
-            'company_ids.*' => 'exists:companies,id'
+            'company_ids.*' => 'exists:companies,id',
         ]);
 
         $companyIds = $validated['company_ids'];
@@ -395,7 +402,7 @@ class CompanyController extends Controller
                 $errors[] = [
                     'company_id' => $company->id,
                     'name' => $company->name,
-                    'error' => $e->getMessage()
+                    'error' => $e->getMessage(),
                 ];
             }
         }
@@ -405,7 +412,7 @@ class CompanyController extends Controller
             'errors' => $errors,
             'message' => $deletedCount === count($companyIds)
                 ? "Successfully soft-deleted {$deletedCount} companies"
-                : "Soft-deleted {$deletedCount} of " . count($companyIds) . " companies with " . count($errors) . " errors"
+                : "Soft-deleted {$deletedCount} of ".count($companyIds).' companies with '.count($errors).' errors',
         ]);
     }
 

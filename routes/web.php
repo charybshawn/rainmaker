@@ -123,7 +123,8 @@ Route::prefix('api')->group(function () {
         Route::put('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'update']);
         Route::delete('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'destroy']);
 
-        // Assets (for direct deletion of orphaned files)
+        // Assets (for direct creation and deletion)
+        Route::post('assets', [\App\Http\Controllers\Api\AssetController::class, 'store']);
         Route::delete('assets/{asset}', [\App\Http\Controllers\Api\AssetController::class, 'destroy']);
 
         // Background Upload System

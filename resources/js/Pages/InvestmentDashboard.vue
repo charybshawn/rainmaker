@@ -694,7 +694,7 @@
                 <div class="absolute inset-0 bg-gradient-to-br from-green-500/5 via-transparent to-green-400/10 rounded-2xl"></div>
                 <div class="relative z-10 flex items-center justify-between">
                   <div>
-                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Documents</p>
+                    <p class="text-xs text-green-300/80 font-medium tracking-wider uppercase mb-2">Research Assets</p>
                     <p class="text-xl sm:text-2xl lg:text-3xl font-light text-white/90">{{ getTotalDocuments() }}</p>
                   </div>
                   <div class="w-12 h-12 bg-gradient-to-br from-green-500/20 to-green-600/30 rounded-full flex items-center justify-center shadow-[0_0_10px_rgba(34,197,94,0.15)] group-hover:shadow-[0_0_15px_rgba(34,197,94,0.25)] transition-all duration-500">
@@ -776,7 +776,7 @@
                     <svg class="w-5 h-5 mr-2 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                     </svg>
-                    Latest Documents
+                    Latest Research Assets
                   </h3>
                   <button
                     @click="switchTab('companies')"
@@ -796,7 +796,7 @@
                     <div class="flex-1 min-w-0">
                       <p class="text-white font-medium line-clamp-2 mb-1">{{ doc.title || doc.file_name }}</p>
                       <div class="flex items-center space-x-2 text-xs text-gray-400">
-                        <span v-if="doc.source_type">{{ doc.source_type === 'document' ? 'Direct Upload' : 'Research Attachment' }}</span>
+                        <span v-if="doc.user">{{ doc.user.name }}</span>
                         <span v-if="doc.source_type">•</span>
                         <span>{{ formatFileSize(doc.size || 0) }}</span>
                         <span>•</span>
@@ -1318,7 +1318,7 @@
                   <div class="col-span-2">Sector</div>
                   <div class="col-span-2">Market Cap</div>
                   <div class="col-span-1 text-center">Research</div>
-                  <div class="col-span-1 text-center">Documents</div>
+                  <div class="col-span-1 text-center">Assets</div>
                   <div class="col-span-2 text-center">Actions</div>
                 </div>
               </div>
@@ -1378,7 +1378,7 @@
                       </div>
                     </div>
 
-                    <!-- Insights Count -->
+                    <!-- Assets Count -->
                     <div class="col-span-1 text-center">
                       <div class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-purple-500/20 border border-purple-400/20">
                         <span class="text-purple-300 font-bold text-sm">{{ company.documents_count || 0 }}</span>
@@ -1650,7 +1650,7 @@
       @save="createNote"
     />
 
-    <!-- Document Upload Modal -->
+    <!-- Research Asset Creation Modal -->
     <DocumentUploadModal
       :show="showUploadModal"
       :selectedCompany="selectedCompany"
@@ -1958,6 +1958,7 @@ const latestCompanies = ref([])
 const latestResearch = ref([])
 const latestDocuments = ref([])
 const latestInsights = ref([])
+const totalDocumentsCount = ref(0)
 
 // Tab configuration for responsive navigation
 const allTabs = ref([
@@ -2146,6 +2147,11 @@ const filteredCompanies = computed(() => {
 const canAccessAdmin = computed(() => {
   const user = usePage().props.auth?.user
   return user && (user.roles?.some(role => role.name === 'admin') || user.permissions?.some(permission => ['manage users', 'manage roles', 'manage permissions'].includes(permission.name)))
+})
+
+// Authentication check
+const isAuthenticated = computed(() => {
+  return !!usePage().props.auth?.user
 })
 
 // Page title computed property
@@ -3472,14 +3478,20 @@ const formatTotalMarketCap = () => {
 
 const getTotalResearchItems = () => {
   return companiesInfinite.value.reduce((sum, company) => {
-    return sum + (company.researchItemsCount || 0)
+    return sum + (company.research_items_count || 0)
   }, 0)
 }
 
 const getTotalDocuments = () => {
-  // Count both direct document uploads and research note attachments
+  // For authenticated users, use the total documents count from API
+  // For unauthenticated users, fall back to company-linked documents
+  if ($page.props.auth?.user && totalDocumentsCount.value > 0) {
+    return totalDocumentsCount.value
+  }
+
+  // Fallback: count company-linked documents
   return companiesInfinite.value.reduce((sum, company) => {
-    return sum + (company.documentsCount || 0)
+    return sum + (company.documents_count || 0)
   }, 0)
 }
 
@@ -3650,7 +3662,7 @@ const saveCompanyEdits = async () => {
     
     const response = await axios.put(`/api/companies/${selectedCompany.value.id}`, {
       name: companyForm.value.name,
-      ticker_symbol: companyForm.value.ticker,
+      ticker: companyForm.value.ticker,
       sector: companyForm.value.sector,
       industry: companyForm.value.industry,
       market_cap: parseMarketCap(companyForm.value.market_cap),
@@ -3812,6 +3824,8 @@ watch([companiesSearchQuery, companiesSelectedSector, companiesSortBy], async ()
 
 // Latest additions methods
 const fetchLatestCompanies = async () => {
+  if (!isAuthenticated.value) return
+
   try {
     const response = await axios.get('/api/activities/latest/companies?limit=5')
     latestCompanies.value = response.data || []
@@ -3824,6 +3838,8 @@ const fetchLatestCompanies = async () => {
 }
 
 const fetchLatestResearch = async () => {
+  if (!isAuthenticated.value) return
+
   try {
     const response = await axios.get('/api/activities/latest/research?limit=5')
     console.log('📊 Latest research API response:', response.data)
@@ -3838,6 +3854,8 @@ const fetchLatestResearch = async () => {
 }
 
 const fetchLatestInsights = async () => {
+  if (!isAuthenticated.value) return
+
   try {
     const response = await axios.get('/api/activities/latest/insights?limit=5')
     latestInsights.value = response.data || []
@@ -3850,9 +3868,17 @@ const fetchLatestInsights = async () => {
 }
 
 const fetchLatestDocuments = async () => {
+  if (!isAuthenticated.value) return
+
   try {
     const response = await axios.get('/api/documents?limit=5&sort=created_at&order=desc')
     latestDocuments.value = response.data.data || response.data || []
+
+    // Also fetch total count for the widget
+    const countResponse = await axios.get('/api/documents?limit=1')
+    if (countResponse.data.pagination) {
+      totalDocumentsCount.value = countResponse.data.pagination.total_items || 0
+    }
   } catch (error) {
     console.error('Error fetching latest documents:', error)
     if (error.response && error.response.status === 401) {
@@ -3921,6 +3947,8 @@ onMounted(async () => {
       fetchLatestCompanies()
       fetchLatestResearch()
       fetchLatestDocuments()
+      fetchLatestInsights()
+      fetchCompaniesWithResearch() // Refresh company counts for widgets
     }
   }, 45000) // 45 seconds
 

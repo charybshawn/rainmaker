@@ -14,11 +14,13 @@ class AssetSyncService
      */
     public function syncAssetsForModel($model)
     {
-        if (!($model instanceof Document || $model instanceof ResearchItem)) {
+        // Only sync ResearchItem media files now - Documents use direct asset references
+        if (!($model instanceof ResearchItem)) {
             return;
         }
 
-        $sourceType = $model instanceof Document ? 'document' : 'research_note';
+        $sourceType = 'research_note';
+        $createdVia = 'research_item';
 
         // Get all media for this model
         $mediaFiles = $model->getMedia('attachments');
@@ -31,9 +33,7 @@ class AssetSyncService
                 // Create new asset record
                 Asset::create([
                     'title' => $media->name ?: $media->file_name,
-                    'description' => $sourceType === 'document'
-                        ? $model->description ?? 'Direct upload'
-                        : "From research note: " . $model->title,
+                    'description' => "From research note: " . $model->title,
                     'file_name' => $media->file_name,
                     'file_path' => $media->getPathRelativeToRoot(),
                     'mime_type' => $media->mime_type,
@@ -44,6 +44,7 @@ class AssetSyncService
                     'company_id' => $model->company_id,
                     'user_id' => $model->user_id,
                     'visibility' => $model->visibility ?? 'private',
+                    'created_via' => $createdVia,
                 ]);
             }
         }
@@ -55,23 +56,14 @@ class AssetSyncService
      */
     public function removeAssetsForModel($model)
     {
-        if (!($model instanceof Document || $model instanceof ResearchItem)) {
+        if (!($model instanceof ResearchItem)) {
             return;
         }
 
-        $sourceType = $model instanceof Document ? 'document' : 'research_note';
-
-        if ($sourceType === 'research_note') {
-            // Mark research note assets as orphaned instead of deleting
-            Asset::where('source_type', $sourceType)
-                  ->where('source_id', $model->id)
-                  ->update(['is_orphaned' => true]);
-        } else {
-            // Delete document assets completely
-            Asset::where('source_type', $sourceType)
-                  ->where('source_id', $model->id)
-                  ->delete();
-        }
+        // Mark research note assets as orphaned instead of deleting
+        Asset::where('source_type', 'research_note')
+              ->where('source_id', $model->id)
+              ->update(['is_orphaned' => true]);
     }
 
     /**
@@ -118,14 +110,7 @@ class AssetSyncService
         // Clear existing assets
         Asset::truncate();
 
-        // Sync all documents
-        Document::with('media')->chunk(100, function ($documents) {
-            foreach ($documents as $document) {
-                $this->syncAssetsForModel($document);
-            }
-        });
-
-        // Sync all research items
+        // Sync all research items (documents now use direct asset references)
         ResearchItem::with('media')->chunk(100, function ($researchItems) {
             foreach ($researchItems as $researchItem) {
                 $this->syncAssetsForModel($researchItem);

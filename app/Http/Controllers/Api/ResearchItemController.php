@@ -4,13 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\FileUploadRequest;
-use App\Models\ResearchItem;
 use App\Models\Company;
-use App\Models\Category;
-use App\Models\Tag;
+use App\Models\ResearchItem;
 use App\Services\FileUploadService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class ResearchItemController extends Controller
 {
@@ -20,6 +18,7 @@ class ResearchItemController extends Controller
     {
         $this->fileUploadService = $fileUploadService;
     }
+
     public function index(Request $request): JsonResponse
     {
         // Pagination parameters
@@ -32,29 +31,29 @@ class ResearchItemController extends Controller
         // If user is authenticated, show their own items + public items
         // If user is not authenticated, show only public items
         if (auth()->check()) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('user_id', auth()->id())
-                  ->orWhere('visibility', 'public');
+                    ->orWhere('visibility', 'public');
             });
         } else {
             $query->where('visibility', 'public');
         }
 
         // Filter by company if provided
-        if ($request->has('company_id') && !empty($request->company_id)) {
+        if ($request->has('company_id') && ! empty($request->company_id)) {
             $query->where('company_id', $request->company_id);
         }
 
         // Search functionality (enhanced to also search company names)
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('title', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('content', 'like', '%' . $searchTerm . '%')
-                  ->orWhereHas('company', function($companyQuery) use ($searchTerm) {
-                      $companyQuery->where('name', 'like', '%' . $searchTerm . '%')
-                                  ->orWhere('ticker_symbol', 'like', '%' . $searchTerm . '%');
-                  });
+                $q->where('title', 'like', '%'.$searchTerm.'%')
+                    ->orWhere('content', 'like', '%'.$searchTerm.'%')
+                    ->orWhereHas('company', function ($companyQuery) use ($searchTerm) {
+                        $companyQuery->where('name', 'like', '%'.$searchTerm.'%')
+                            ->orWhere('ticker', 'like', '%'.$searchTerm.'%');
+                    });
             });
         }
 
@@ -70,7 +69,7 @@ class ResearchItemController extends Controller
                 'company' => $item->company ? [
                     'id' => $item->company->id,
                     'name' => $item->company->name,
-                    'ticker' => $item->company->ticker_symbol,
+                    'ticker' => $item->company->ticker,
                 ] : null,
                 'category' => $item->category ? [
                     'id' => $item->category->id,
@@ -99,7 +98,7 @@ class ResearchItemController extends Controller
                 'per_page' => $researchItems->perPage(),
                 'from' => $researchItems->firstItem(),
                 'to' => $researchItems->lastItem(),
-            ]
+            ],
         ]);
     }
 
@@ -145,7 +144,7 @@ class ResearchItemController extends Controller
             'company' => $researchItem->company ? [
                 'id' => $researchItem->company->id,
                 'name' => $researchItem->company->name,
-                'ticker' => $researchItem->company->ticker_symbol,
+                'ticker' => $researchItem->company->ticker,
             ] : null,
             'category' => $researchItem->category ? [
                 'id' => $researchItem->category->id,
@@ -190,7 +189,7 @@ class ResearchItemController extends Controller
             'company' => $researchItem->company ? [
                 'id' => $researchItem->company->id,
                 'name' => $researchItem->company->name,
-                'ticker' => $researchItem->company->ticker_symbol,
+                'ticker' => $researchItem->company->ticker,
             ] : null,
             'category' => $researchItem->category ? [
                 'id' => $researchItem->category->id,
@@ -220,7 +219,7 @@ class ResearchItemController extends Controller
             \Log::info('Update research item started', [
                 'research_item_id' => $researchItem->id,
                 'user_id' => auth()->id(),
-                'request_data' => $request->all()
+                'request_data' => $request->all(),
             ]);
 
             // Only allow updating own research items
@@ -228,82 +227,83 @@ class ResearchItemController extends Controller
                 return response()->json(['message' => 'Forbidden'], 403);
             }
 
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'content' => 'required|string',
-            'company_id' => 'required|exists:companies,id',
-            'category_id' => 'nullable|exists:categories,id',
-            'tag_ids' => 'nullable|array',
-            'tag_ids.*' => 'exists:tags,id',
-            'visibility' => 'required|in:public,team,private',
-            'ai_synopsis' => 'nullable|string',
-            // Support legacy existing file formats for compatibility
-            'existing_file_ids' => 'nullable|array',
-            'existing_file_ids.*' => 'integer|exists:media,id',
-            'existing_files' => 'nullable|array',
-            'existing_files.*' => 'integer|exists:media,id',
-            'existing_attachment_ids' => 'nullable|array',
-            'existing_attachment_ids.*' => 'integer|exists:media,id',
-        ]);
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'content' => 'required|string',
+                'company_id' => 'required|exists:companies,id',
+                'category_id' => 'nullable|exists:categories,id',
+                'tag_ids' => 'nullable|array',
+                'tag_ids.*' => 'exists:tags,id',
+                'visibility' => 'required|in:public,team,private',
+                'ai_synopsis' => 'nullable|string',
+                // Support legacy existing file formats for compatibility
+                'existing_file_ids' => 'nullable|array',
+                'existing_file_ids.*' => 'integer|exists:media,id',
+                'existing_files' => 'nullable|array',
+                'existing_files.*' => 'integer|exists:media,id',
+                'existing_attachment_ids' => 'nullable|array',
+                'existing_attachment_ids.*' => 'integer|exists:media,id',
+            ]);
 
-        // Filter out non-database fields before updating
-        $updateData = collect($validated)->only([
-            'title', 'content', 'company_id', 'category_id', 'visibility', 'ai_synopsis'
-        ])->filter(function ($value, $key) {
-            // Don't include null category_id since it's not nullable in the database
-            if ($key === 'category_id' && $value === null) {
-                return false;
+            // Filter out non-database fields before updating
+            $updateData = collect($validated)->only([
+                'title', 'content', 'company_id', 'category_id', 'visibility', 'ai_synopsis',
+            ])->filter(function ($value, $key) {
+                // Don't include null category_id since it's not nullable in the database
+                if ($key === 'category_id' && $value === null) {
+                    return false;
+                }
+
+                return true;
+            })->toArray();
+
+            $researchItem->update($updateData);
+
+            // Sync tags if provided
+            if (isset($validated['tag_ids'])) {
+                $researchItem->tags()->sync($validated['tag_ids']);
             }
-            return true;
-        })->toArray();
 
-        $researchItem->update($updateData);
+            // Handle file uploads using centralized service
+            $attachmentResults = $this->fileUploadService->handleUploads($researchItem, $request);
 
-        // Sync tags if provided
-        if (isset($validated['tag_ids'])) {
-            $researchItem->tags()->sync($validated['tag_ids']);
-        }
+            $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
 
-        // Handle file uploads using centralized service
-        $attachmentResults = $this->fileUploadService->handleUploads($researchItem, $request);
-
-        $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
-
-        return response()->json([
-            'id' => $researchItem->id,
-            'title' => $researchItem->title,
-            'content' => $researchItem->content,
-            'visibility' => $researchItem->visibility,
-            'company' => $researchItem->company ? [
-                'id' => $researchItem->company->id,
-                'name' => $researchItem->company->name,
-                'ticker' => $researchItem->company->ticker_symbol,
-            ] : null,
-            'category' => $researchItem->category ? [
-                'id' => $researchItem->category->id,
-                'name' => $researchItem->category->name,
-                'color' => $researchItem->category->color,
-            ] : null,
-            'tags' => $researchItem->tags->map(function ($tag) {
-                return [
-                    'id' => $tag->id,
-                    'name' => $tag->name,
-                    'color' => $tag->color,
-                ];
-            }),
-            'attachments' => $researchItem->getFormattedAttachments(),
-            'created_at' => $researchItem->created_at->format('Y-m-d H:i:s'),
-        ]);
+            return response()->json([
+                'id' => $researchItem->id,
+                'title' => $researchItem->title,
+                'content' => $researchItem->content,
+                'visibility' => $researchItem->visibility,
+                'company' => $researchItem->company ? [
+                    'id' => $researchItem->company->id,
+                    'name' => $researchItem->company->name,
+                    'ticker' => $researchItem->company->ticker,
+                ] : null,
+                'category' => $researchItem->category ? [
+                    'id' => $researchItem->category->id,
+                    'name' => $researchItem->category->name,
+                    'color' => $researchItem->category->color,
+                ] : null,
+                'tags' => $researchItem->tags->map(function ($tag) {
+                    return [
+                        'id' => $tag->id,
+                        'name' => $tag->name,
+                        'color' => $tag->color,
+                    ];
+                }),
+                'attachments' => $researchItem->getFormattedAttachments(),
+                'created_at' => $researchItem->created_at->format('Y-m-d H:i:s'),
+            ]);
         } catch (\Exception $e) {
             \Log::error('Update research item failed', [
                 'research_item_id' => $researchItem->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to update research item: ' . $e->getMessage(),
-                'error' => $e->getMessage()
+                'message' => 'Failed to update research item: '.$e->getMessage(),
+                'error' => $e->getMessage(),
             ], 500);
         }
     }
@@ -319,9 +319,9 @@ class ResearchItemController extends Controller
         $this->fileUploadService->removeMediaFromModel($researchItem);
 
         $researchItem->delete();
+
         return response()->json(null, 204);
     }
-
 
     /**
      * Get available files that can be reused for research items
@@ -331,7 +331,7 @@ class ResearchItemController extends Controller
         \Log::info('getAvailableFiles called', [
             'user_id' => auth()->id(),
             'search' => $request->get('search'),
-            'limit' => $request->get('limit')
+            'limit' => $request->get('limit'),
         ]);
 
         // Get all media files from research items and documents that the user has access to
@@ -388,11 +388,11 @@ class ResearchItemController extends Controller
 
         \Log::info('Files found', [
             'total_files' => $sortedFiles->count(),
-            'user_id' => auth()->id()
+            'user_id' => auth()->id(),
         ]);
 
         // Apply search filter if provided
-        if ($request->has('search') && !empty($request->search)) {
+        if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = strtolower($request->search);
             $sortedFiles = $sortedFiles->filter(function ($file) use ($searchTerm) {
                 return str_contains(strtolower($file['name']), $searchTerm) ||
@@ -416,7 +416,7 @@ class ResearchItemController extends Controller
                 'total_items' => $sortedFiles->count(),
                 'total_pages' => ceil($sortedFiles->count() / $perPage),
                 'has_more_pages' => $offset + $perPage < $sortedFiles->count(),
-            ]
+            ],
         ]);
     }
 
@@ -445,9 +445,9 @@ class ResearchItemController extends Controller
                     $hasAccess = $sourceDocument && $sourceDocument->user_id === auth()->id();
                 }
 
-                if (!$hasAccess) {
+                if (! $hasAccess) {
                     return response()->json([
-                        'message' => 'You do not have access to one or more selected files.'
+                        'message' => 'You do not have access to one or more selected files.',
                     ], 403);
                 }
 
@@ -460,18 +460,18 @@ class ResearchItemController extends Controller
 
             return response()->json([
                 'message' => 'Files linked successfully',
-                'linked_count' => count($validated['media_ids'])
+                'linked_count' => count($validated['media_ids']),
             ]);
 
         } catch (\Exception $e) {
             \Log::error('Error linking existing files to research item', [
                 'research_item_id' => $researchItem->id,
                 'media_ids' => $validated['media_ids'],
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to link files: ' . $e->getMessage()
+                'message' => 'Failed to link files: '.$e->getMessage(),
             ], 500);
         }
     }

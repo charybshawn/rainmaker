@@ -11,7 +11,7 @@
         <div class="flex items-start justify-between">
           <div class="flex-1">
             <h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">
-              📄 {{ document?.title || 'Document Title' }}
+              📄 {{ document?.title || 'Research Asset' }}
             </h1>
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
               <!-- Category - Inline Editable -->
