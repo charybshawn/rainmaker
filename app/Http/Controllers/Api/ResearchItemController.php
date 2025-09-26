@@ -124,6 +124,11 @@ class ResearchItemController extends Controller
 
         $validated['user_id'] = auth()->id();
 
+        // Convert empty string category_id to null
+        if (isset($validated['category_id']) && $validated['category_id'] === '') {
+            $validated['category_id'] = null;
+        }
+
         $researchItem = ResearchItem::create($validated);
 
         // Attach tags if provided
@@ -245,17 +250,15 @@ class ResearchItemController extends Controller
                 'existing_attachment_ids.*' => 'integer|exists:media,id',
             ]);
 
+            // Convert empty string category_id to null
+            if (isset($validated['category_id']) && $validated['category_id'] === '') {
+                $validated['category_id'] = null;
+            }
+
             // Filter out non-database fields before updating
             $updateData = collect($validated)->only([
                 'title', 'content', 'company_id', 'category_id', 'visibility', 'ai_synopsis',
-            ])->filter(function ($value, $key) {
-                // Don't include null category_id since it's not nullable in the database
-                if ($key === 'category_id' && $value === null) {
-                    return false;
-                }
-
-                return true;
-            })->toArray();
+            ])->toArray();
 
             $researchItem->update($updateData);
 

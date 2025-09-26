@@ -27,6 +27,111 @@ class AssetActivity extends Model
     ];
 
     /**
+     * Set the old_value attribute with UTF-8 cleaning only when needed.
+     */
+    public function setOldValueAttribute($value)
+    {
+        if ($value === null) {
+            $this->attributes['old_value'] = null;
+            return;
+        }
+
+        // Try normal JSON encoding first
+        $encoded = json_encode($value);
+        if ($encoded !== false) {
+            $this->attributes['old_value'] = $encoded;
+            return;
+        }
+
+        // Only clean if JSON encoding failed
+        $this->attributes['old_value'] = json_encode($this->cleanUtf8($value));
+    }
+
+    /**
+     * Set the new_value attribute with UTF-8 cleaning only when needed.
+     */
+    public function setNewValueAttribute($value)
+    {
+        if ($value === null) {
+            $this->attributes['new_value'] = null;
+            return;
+        }
+
+        // Try normal JSON encoding first
+        $encoded = json_encode($value);
+        if ($encoded !== false) {
+            $this->attributes['new_value'] = $encoded;
+            return;
+        }
+
+        // Only clean if JSON encoding failed
+        $this->attributes['new_value'] = json_encode($this->cleanUtf8($value));
+    }
+
+    /**
+     * Set the metadata attribute with UTF-8 cleaning only when needed.
+     */
+    public function setMetadataAttribute($value)
+    {
+        if ($value === null) {
+            $this->attributes['metadata'] = null;
+            return;
+        }
+
+        // Try normal JSON encoding first
+        $encoded = json_encode($value);
+        if ($encoded !== false) {
+            $this->attributes['metadata'] = $encoded;
+            return;
+        }
+
+        // Only clean if JSON encoding failed
+        $this->attributes['metadata'] = json_encode($this->cleanUtf8($value));
+    }
+
+    /**
+     * Clean UTF-8 encoding recursively for arrays and strings.
+     */
+    protected function cleanUtf8($value)
+    {
+        if (is_string($value)) {
+            // Convert smart quotes and other problematic characters to regular ones
+            $value = str_replace([
+                "\u{201C}", // left double quotation mark
+                "\u{201D}", // right double quotation mark
+                "\u{2018}", // left single quotation mark
+                "\u{2019}"  // right single quotation mark
+            ], ['"', '"', "'", "'"], $value);
+
+            // Clean and ensure valid UTF-8 encoding
+            $value = mb_convert_encoding($value, 'UTF-8', 'UTF-8');
+
+            // Only remove NULL bytes and other truly problematic control characters
+            // Preserve spaces (\x20), tabs (\x09), newlines (\x0A), carriage returns (\x0D)
+            $value = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value);
+
+            // Final check: if still invalid, try to detect and convert encoding
+            if (!mb_check_encoding($value, 'UTF-8')) {
+                $detected = mb_detect_encoding($value, ['UTF-8', 'ISO-8859-1', 'ASCII'], true);
+                if ($detected) {
+                    $value = mb_convert_encoding($value, 'UTF-8', $detected);
+                } else {
+                    // Last resort: convert with replacement characters
+                    $value = @iconv('UTF-8', 'UTF-8//IGNORE', $value);
+                }
+            }
+
+            return $value;
+        }
+
+        if (is_array($value)) {
+            return array_map([$this, 'cleanUtf8'], $value);
+        }
+
+        return $value;
+    }
+
+    /**
      * Get the model that the activity belongs to.
      */
     public function trackable(): MorphTo

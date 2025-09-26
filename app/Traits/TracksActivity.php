@@ -110,9 +110,20 @@ trait TracksActivity
             return $value;
         }
 
-        // Truncate very long strings
-        if (is_string($value) && strlen($value) > 500) {
-            return substr($value, 0, 500).'...';
+        // Handle string values with minimal cleaning only for activity tracking
+        if (is_string($value)) {
+            // Only convert smart quotes that cause JSON encoding issues
+            $value = str_replace([
+                "\u{201C}", // left double quotation mark
+                "\u{201D}", // right double quotation mark
+                "\u{2018}", // left single quotation mark
+                "\u{2019}"  // right single quotation mark
+            ], ['"', '"', "'", "'"], $value);
+
+            // Truncate very long strings for activity tracking
+            if (mb_strlen($value) > 500) {
+                return mb_substr($value, 0, 500).'...';
+            }
         }
 
         return $value;

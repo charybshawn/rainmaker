@@ -9,9 +9,12 @@
       <div class="sticky top-0 bg-gray-900 border-b border-white/20 px-8 py-6 rounded-t-2xl z-10">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-3xl font-semibold text-white">{{ props.isEditing ? '✏️ Edit Research' : '📝 Add Research' }}</h2>
+            <h2 class="text-3xl font-semibold text-white">{{ props.isEditing ? '✏️ Edit Research Post' : '📝 Create Research Post' }}</h2>
             <p class="text-lg text-gray-300 mt-1" v-if="selectedCompany">
-              for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
+              Investment analysis for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
+            </p>
+            <p class="text-sm text-gray-400 mt-1" v-else>
+              Professional investment research with rich formatting
             </p>
           </div>
           <div class="flex items-center space-x-3">
@@ -58,32 +61,159 @@
 
         <!-- Title -->
         <div>
-          <label for="note_title" class="block text-sm font-medium text-white mb-2">Note Title</label>
+          <label for="note_title" class="block text-sm font-medium text-white mb-2">Research Title</label>
           <input
             id="note_title"
             v-model="form.title"
             type="text"
             required
-            class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+            class="w-full px-4 py-4 text-xl rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500 font-semibold"
             style="backdrop-filter: blur(20px) saturate(180%);"
-            placeholder="e.g., Q3 2024 Earnings Analysis"
+            placeholder="e.g., Apple Inc. Q3 2024: Strong iPhone Sales Drive Revenue Growth"
           />
           <div v-if="errors.title" class="text-red-400 text-sm mt-1">{{ errors.title }}</div>
+          <div class="mt-1 text-xs text-gray-400">
+            ✨ Write a compelling headline that captures your key investment insight
+          </div>
         </div>
 
         <!-- Content -->
         <div>
-          <label for="note_content" class="block text-sm font-medium text-white mb-2">Note Content</label>
-          <textarea
-            id="note_content"
-            v-model="form.content"
-            rows="12"
-            required
-            class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500 resize-none"
-            style="backdrop-filter: blur(20px) saturate(180%);"
-            placeholder="Enter your analysis, thoughts, observations, and research notes..."
-          ></textarea>
+          <label for="note_content" class="block text-sm font-medium text-white mb-2">Research Content</label>
+          <div class="relative">
+            <!-- Tiptap Rich Text Editor with Clean Toolbar -->
+            <div class="tiptap-editor-container">
+              <!-- Clean Toolbar -->
+              <div v-if="editor" class="tiptap-toolbar">
+                <!-- Text Formatting -->
+                <div class="toolbar-group">
+                  <button
+                    @click="editor.chain().focus().toggleBold().run()"
+                    :class="{ 'is-active': editor.isActive('bold') }"
+                    class="toolbar-btn"
+                    title="Bold"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4h4a4 4 0 110 8H8V4zM8 12h6a4 4 0 110 8H8v-8z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleItalic().run()"
+                    :class="{ 'is-active': editor.isActive('italic') }"
+                    class="toolbar-btn"
+                    title="Italic"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 4l4 16m-4-8h8"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleStrike().run()"
+                    :class="{ 'is-active': editor.isActive('strike') }"
+                    class="toolbar-btn"
+                    title="Strikethrough"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleHighlight().run()"
+                    :class="{ 'is-active': editor.isActive('highlight') }"
+                    class="toolbar-btn"
+                    title="Highlight"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"></path>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Headings -->
+                <div class="toolbar-group">
+                  <button
+                    @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
+                    :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
+                    class="toolbar-btn"
+                    title="Heading 1"
+                  >
+                    H1
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
+                    :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
+                    class="toolbar-btn"
+                    title="Heading 2"
+                  >
+                    H2
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
+                    :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
+                    class="toolbar-btn"
+                    title="Heading 3"
+                  >
+                    H3
+                  </button>
+                </div>
+
+                <!-- Lists & Content -->
+                <div class="toolbar-group">
+                  <button
+                    @click="editor.chain().focus().toggleBulletList().run()"
+                    :class="{ 'is-active': editor.isActive('bulletList') }"
+                    class="toolbar-btn"
+                    title="Bullet List"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleOrderedList().run()"
+                    :class="{ 'is-active': editor.isActive('orderedList') }"
+                    class="toolbar-btn"
+                    title="Numbered List"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 12h4m6 5H7l4-4"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleBlockquote().run()"
+                    :class="{ 'is-active': editor.isActive('blockquote') }"
+                    class="toolbar-btn"
+                    title="Quote"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                  </button>
+                  <button
+                    @click="editor.chain().focus().toggleCodeBlock().run()"
+                    :class="{ 'is-active': editor.isActive('codeBlock') }"
+                    class="toolbar-btn"
+                    title="Code Block"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m-4 4l-4-4 4-4m8 0l4 4-4 4"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Editor Content -->
+              <EditorContent
+                :editor="editor"
+                class="tiptap-content"
+                placeholder="Write your research content here..."
+              />
+            </div>
+          </div>
           <div v-if="errors.content" class="text-red-400 text-sm mt-1">{{ errors.content }}</div>
+          <div class="mt-2 text-xs text-gray-400">
+💡 <strong>Pro tip:</strong> Use the toolbar buttons to format your content professionally. You can also paste markdown text directly into the editor - it will be automatically converted to rich text formatting!
+          </div>
         </div>
 
         <!-- Category and Visibility -->
@@ -197,10 +327,25 @@
               <input
                 v-model="form.newUrl"
                 type="url"
-                placeholder="https://example.com/document.pdf"
+                placeholder="https://example.com/article-to-extract.html"
                 class="flex-1 px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
                 style="backdrop-filter: blur(20px) saturate(180%);"
               />
+              <button
+                type="button"
+                @click="extractArticle"
+                :disabled="!form.newUrl || extractingArticle"
+                class="px-4 py-3 bg-green-500/20 text-green-300 border border-green-400/30 rounded-xl hover:bg-green-500/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+              >
+                <svg v-if="!extractingArticle" class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <svg v-else class="animate-spin w-4 h-4 mr-2 inline" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ extractingArticle ? 'Extracting...' : 'Extract Article' }}
+              </button>
               <button
                 type="button"
                 @click="$emit('add-url', form.newUrl)"
@@ -209,6 +354,139 @@
               >
                 Add URL
               </button>
+            </div>
+
+            <!-- Article Extraction Preview -->
+            <div v-if="extractedArticle" class="mt-6 p-6 bg-green-500/10 border border-green-400/30 rounded-xl backdrop-blur-xl space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-lg font-medium text-green-300 flex items-center">
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                  </svg>
+                  Article Extracted Successfully
+                </h4>
+                <button
+                  type="button"
+                  @click="clearExtractedArticle"
+                  class="text-red-400 hover:text-red-300 p-1 transition-colors"
+                  title="Clear extraction"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span class="text-gray-400">Title:</span>
+                  <span class="text-white ml-2">{{ extractedArticle.title || 'No title found' }}</span>
+                </div>
+                <div v-if="extractedArticle.author">
+                  <span class="text-gray-400">Author:</span>
+                  <span class="text-white ml-2">{{ extractedArticle.author }}</span>
+                </div>
+                <div v-if="extractedArticle.word_count">
+                  <span class="text-gray-400">Word Count:</span>
+                  <span class="text-white ml-2">{{ extractedArticle.word_count }} words</span>
+                </div>
+                <div v-if="extractedArticle.read_time">
+                  <span class="text-gray-400">Read Time:</span>
+                  <span class="text-white ml-2">{{ extractedArticle.read_time }} min</span>
+                </div>
+                <div v-if="extractedArticle.images && extractedArticle.images.length > 0">
+                  <span class="text-gray-400">Images:</span>
+                  <span class="text-white ml-2">{{ extractedArticle.images.length }} images found</span>
+                </div>
+                <div v-if="extractedArticle.main_image">
+                  <span class="text-gray-400">Main Image:</span>
+                  <span class="text-green-300 ml-2">✓ Available</span>
+                </div>
+              </div>
+
+              <!-- Main Image Preview -->
+              <div v-if="extractedArticle.main_image" class="p-4 bg-black/20 rounded-lg border border-white/10">
+                <h5 class="text-sm font-medium text-gray-300 mb-3">Main Image:</h5>
+                <div class="flex justify-center">
+                  <img
+                    :src="extractedArticle.main_image"
+                    :alt="extractedArticle.title"
+                    class="max-h-32 max-w-full object-contain rounded-lg border border-white/10 shadow-lg"
+                    @error="$event.target.style.display='none'"
+                  />
+                </div>
+              </div>
+
+              <!-- Images Gallery (Collapsible) -->
+              <div v-if="extractedArticle.images && extractedArticle.images.length > 0" class="p-4 bg-black/20 rounded-lg border border-white/10">
+                <button
+                  @click="showImageGallery = !showImageGallery"
+                  class="flex items-center justify-between w-full text-sm font-medium text-gray-300 mb-3 hover:text-white transition-colors"
+                >
+                  <span>Additional Images ({{ extractedArticle.images.length }})</span>
+                  <svg
+                    :class="{ 'rotate-180': showImageGallery }"
+                    class="w-4 h-4 transition-transform duration-200"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+
+                <div v-if="showImageGallery" class="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto">
+                  <div
+                    v-for="(image, index) in extractedArticle.images.slice(0, 9)"
+                    :key="index"
+                    class="aspect-square"
+                  >
+                    <img
+                      :src="image.url"
+                      :alt="image.alt || `Image ${index + 1}`"
+                      class="w-full h-full object-cover rounded border border-white/10 hover:border-white/30 transition-colors cursor-pointer"
+                      @error="$event.target.style.display='none'"
+                      @click="selectedImage = image.url"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Content Preview -->
+              <div class="max-h-48 overflow-y-auto p-4 bg-black/20 rounded-lg border border-white/10">
+                <h5 class="text-sm font-medium text-gray-300 mb-2">Content Preview:</h5>
+                <div class="text-gray-300 text-sm leading-relaxed" v-html="extractedArticle.excerpt || extractedArticle.content?.substring(0, 500) + '...'"></div>
+              </div>
+
+              <!-- Image Lightbox Modal -->
+              <div v-if="selectedImage" @click="selectedImage = null" class="fixed inset-0 z-[9999] bg-black/80 flex items-center justify-center p-4">
+                <div class="relative max-w-4xl max-h-full">
+                  <img :src="selectedImage" class="max-w-full max-h-full object-contain rounded-lg" />
+                  <button
+                    @click="selectedImage = null"
+                    class="absolute top-2 right-2 w-8 h-8 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              <div class="flex space-x-3">
+                <button
+                  type="button"
+                  @click="useExtractedArticle"
+                  class="flex-1 px-4 py-2 bg-green-500/20 text-green-300 border border-green-400/30 rounded-lg hover:bg-green-500/30 transition-all duration-300 font-medium"
+                >
+                  ✅ Use This Content
+                </button>
+                <button
+                  type="button"
+                  @click="clearExtractedArticle"
+                  class="px-4 py-2 bg-red-500/20 text-red-300 border border-red-400/30 rounded-lg hover:bg-red-500/30 transition-all duration-300 font-medium"
+                >
+                  ❌ Discard
+                </button>
+              </div>
             </div>
 
             <!-- Added URLs List -->
@@ -357,7 +635,11 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { useEditor, EditorContent } from '@tiptap/vue-3'
+import StarterKit from '@tiptap/starter-kit'
+import Highlight from '@tiptap/extension-highlight'
+import { Markdown } from 'tiptap-markdown'
 
 const props = defineProps({
   show: {
@@ -412,6 +694,55 @@ defineEmits([
 
 // Reactive data
 const existingFilesSearch = ref('')
+const extractingArticle = ref(false)
+const extractedArticle = ref(null)
+const showImageGallery = ref(false)
+const selectedImage = ref(null)
+
+// Tiptap Editor Setup
+const editor = useEditor({
+  content: props.form?.content || '',
+  extensions: [
+    StarterKit.configure({
+      heading: {
+        levels: [1, 2, 3, 4],
+      },
+    }),
+    Highlight.configure({
+      HTMLAttributes: {
+        class: 'bg-yellow-400/20 text-yellow-300 px-1 rounded',
+      },
+    }),
+    Markdown.configure({
+      html: true,                // Enable HTML output
+      tightLists: true,         // Render tight lists
+      tightListClass: 'tight',  // CSS class for tight lists
+      bulletListMarker: '-',    // Use - for bullet lists
+      linkify: true,           // Automatically detect links
+      breaks: false,           // Don't convert line breaks to <br>
+      transformPastedText: true, // Transform pasted markdown
+      transformCopiedText: true, // Transform copied text to markdown
+    }),
+  ],
+  editorProps: {
+    attributes: {
+      class: 'prose prose-invert max-w-none focus:outline-none p-4 min-h-[400px]',
+    },
+  },
+  onUpdate: ({ editor }) => {
+    // Update the form content when editor changes
+    if (props.form) {
+      props.form.content = editor.getHTML()
+    }
+  },
+})
+
+// Watch for form content changes to update editor
+watch(() => props.form?.content, (newContent) => {
+  if (editor.value && newContent !== editor.value.getHTML()) {
+    editor.value.commands.setContent(newContent || '')
+  }
+})
 
 // Utility functions
 const formatFileSize = (bytes) => {
@@ -431,4 +762,395 @@ const toggleAllFiles = (event) => {
     props.form.selectedExistingFiles = []
   }
 }
+
+// Article extraction methods
+const extractArticle = async () => {
+  if (!props.form.newUrl) return
+
+  extractingArticle.value = true
+  extractedArticle.value = null
+
+  try {
+    const response = await fetch('/api/extract-article', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+        'Accept': 'application/json',
+      },
+      body: JSON.stringify({
+        url: props.form.newUrl
+      })
+    })
+
+    const result = await response.json()
+
+    if (result.success) {
+      extractedArticle.value = result.data
+      // Optional: Clear the URL input after successful extraction
+      // form.newUrl = ''
+    } else {
+      alert('Failed to extract article: ' + result.message)
+    }
+  } catch (error) {
+    console.error('Article extraction error:', error)
+    alert('Error extracting article. Please try again.')
+  } finally {
+    extractingArticle.value = false
+  }
+}
+
+const useExtractedArticle = () => {
+  if (!extractedArticle.value) return
+
+  // Auto-populate the form with extracted data
+  if (extractedArticle.value.title && !props.form.title) {
+    props.form.title = extractedArticle.value.title
+  }
+
+  // Set the content in the editor
+  if (editor.value && extractedArticle.value.content) {
+    editor.value.commands.setContent(extractedArticle.value.content)
+    props.form.content = extractedArticle.value.content
+  }
+
+  // Clear the extracted article preview
+  extractedArticle.value = null
+
+  // Optional: Clear the URL input
+  props.form.newUrl = ''
+}
+
+const clearExtractedArticle = () => {
+  extractedArticle.value = null
+  showImageGallery.value = false
+  selectedImage.value = null
+}
+
 </script>
+
+<style scoped>
+/* Tiptap Editor Styling to match modal's glassmorphism design */
+.tiptap-editor-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px 0 rgba(31, 38, 135, 0.15);
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Clean Toolbar Styling */
+.tiptap-toolbar {
+  background: rgba(0, 0, 0, 0.3);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  backdrop-filter: blur(20px) saturate(180%);
+  border-radius: 12px 12px 0 0;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 0 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.toolbar-group:last-child {
+  border-right: none;
+}
+
+.toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  min-width: 32px;
+  height: 32px;
+}
+
+.toolbar-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px 0 rgba(31, 38, 135, 0.15);
+}
+
+.toolbar-btn.is-active {
+  background: rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.5);
+  color: #60a5fa;
+}
+
+/* Editor Content Area */
+.tiptap-content {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(20px) saturate(180%);
+  min-height: 350px;
+}
+
+/* Tiptap Editor Prose Styling */
+:deep(.tiptap-content .ProseMirror) {
+  outline: none;
+  padding: 20px;
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.7;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  min-height: 330px;
+  background: transparent;
+}
+
+/* Placeholder */
+:deep(.tiptap-content .ProseMirror p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  float: left;
+  color: #9ca3af;
+  pointer-events: none;
+  height: 0;
+}
+
+/* Typography Styles */
+:deep(.tiptap-content .ProseMirror h1) {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 2rem 0 1rem 0;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+:deep(.tiptap-content .ProseMirror h2) {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 1.75rem 0 0.75rem 0;
+  position: relative;
+}
+
+:deep(.tiptap-content .ProseMirror h2::before) {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 1.5rem;
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+}
+
+:deep(.tiptap-content .ProseMirror h3) {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 1.5rem 0 0.5rem 0;
+}
+
+:deep(.tiptap-content .ProseMirror h4) {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin: 1.25rem 0 0.5rem 0;
+}
+
+:deep(.tiptap-content .ProseMirror p) {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 1rem 0;
+  line-height: 1.8;
+}
+
+:deep(.tiptap-content .ProseMirror strong) {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+:deep(.tiptap-content .ProseMirror em) {
+  color: #e5e7eb;
+  font-style: italic;
+}
+
+/* Lists */
+:deep(.tiptap-content .ProseMirror ul) {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+:deep(.tiptap-content .ProseMirror ol) {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+:deep(.tiptap-content .ProseMirror li) {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0;
+}
+
+:deep(.tiptap-content .ProseMirror ul li::marker) {
+  color: #3b82f6;
+}
+
+:deep(.tiptap-content .ProseMirror ol li::marker) {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* Blockquotes */
+:deep(.tiptap-content .ProseMirror blockquote) {
+  border-left: 4px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.tiptap-content .ProseMirror blockquote::before) {
+  content: '"';
+  position: absolute;
+  top: -0.5rem;
+  left: 1rem;
+  font-size: 3rem;
+  color: #3b82f6;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:deep(.tiptap-content .ProseMirror blockquote p) {
+  color: #e5e7eb;
+  font-style: italic;
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+/* Code */
+:deep(.tiptap-content .ProseMirror code) {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+:deep(.tiptap-content .ProseMirror pre) {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.tiptap-content .ProseMirror pre code) {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #e5e7eb;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+
+/* Links */
+:deep(.tiptap-content .ProseMirror a) {
+  color: #60a5fa;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.3);
+  transition: all 0.3s ease;
+}
+
+:deep(.tiptap-content .ProseMirror a:hover) {
+  color: #93c5fd;
+  border-bottom-color: #93c5fd;
+}
+
+/* Highlights */
+:deep(.tiptap-content .ProseMirror mark) {
+  background: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+}
+
+/* Selection */
+:deep(.tiptap-content .ProseMirror ::selection) {
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Focus */
+:deep(.tiptap-content .ProseMirror:focus) {
+  outline: none;
+}
+
+/* Scrollbar */
+:deep(.tiptap-content .ProseMirror::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.tiptap-content .ProseMirror::-webkit-scrollbar-track) {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+:deep(.tiptap-content .ProseMirror::-webkit-scrollbar-thumb) {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+:deep(.tiptap-content .ProseMirror::-webkit-scrollbar-thumb:hover) {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Tables (if used) */
+:deep(.tiptap-content .ProseMirror table) {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  overflow: hidden;
+  table-layout: fixed;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.5rem;
+}
+
+:deep(.tiptap-content .ProseMirror table td),
+:deep(.tiptap-content .ProseMirror table th) {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-sizing: border-box;
+  min-width: 1em;
+  padding: 0.5rem 0.75rem;
+  position: relative;
+  vertical-align: top;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.tiptap-content .ProseMirror table th) {
+  background: rgba(59, 130, 246, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  text-align: left;
+}
+
+:deep(.tiptap-content .ProseMirror table tr:hover) {
+  background: rgba(255, 255, 255, 0.05);
+}
+</style>

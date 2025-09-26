@@ -161,18 +161,23 @@
             </svg>
           </button>
           <div v-if="!collapsedSections.content" class="mt-4">
-            <div class="prose prose-invert prose-sm sm:prose-base max-w-none">
-              <div v-if="researchNote.content" class="text-gray-100 leading-relaxed">
-                <MdPreview
-                  v-model="researchNote.content"
-                  :theme="'dark'"
-                  :preview-theme="'github'"
-                  :code-theme="'github'"
-                  class="!bg-transparent"
-                />
+            <!-- Professional blog-style content display -->
+            <div class="bg-white/5 rounded-xl p-6 border border-white/10 backdrop-blur-xl">
+              <div v-if="researchNote.content" class="text-gray-100">
+                <!-- Research content with professional blog styling -->
+                <div
+                  class="research-content-display blog-style-content"
+                  v-html="researchNote.content"
+                ></div>
               </div>
-              <div v-else class="text-gray-400 italic text-center py-8">
-                No content available for this research note.
+              <div v-else class="text-center py-12">
+                <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-white mb-2">No Content Available</h3>
+                <p class="text-gray-400">This research post doesn't have any content yet.</p>
               </div>
             </div>
           </div>
@@ -272,12 +277,10 @@
 
 <script setup>
 import { ref } from 'vue'
-import { MdPreview } from 'md-editor-v3'
-import 'md-editor-v3/lib/style.css'
 import ActivityTimeline from '../ActivityTimeline.vue'
 
 // Props
-defineProps({
+const props = defineProps({
   researchNote: {
     type: [Object, null],
     default: null
@@ -335,3 +338,245 @@ const formatCurrency = (amount) => {
   }).format(amount)
 }
 </script>
+
+<style scoped>
+/* Professional blog-style content display */
+:deep(.blog-style-content) {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.8;
+  color: #ffffff;
+}
+
+/* Enhanced typography for blog content */
+:deep(.blog-style-content h1) {
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 2rem 0 1rem 0;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+  padding-bottom: 0.5rem;
+}
+
+:deep(.blog-style-content h2) {
+  font-size: 1.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 1.75rem 0 0.75rem 0;
+  position: relative;
+}
+
+:deep(.blog-style-content h2::before) {
+  content: '';
+  position: absolute;
+  left: -1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 1.5rem;
+  background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+  border-radius: 2px;
+}
+
+:deep(.blog-style-content h3) {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 1.5rem 0 0.5rem 0;
+}
+
+:deep(.blog-style-content h4) {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin: 1.25rem 0 0.5rem 0;
+}
+
+:deep(.blog-style-content p) {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 1rem 0;
+  line-height: 1.8;
+  font-size: 1rem;
+}
+
+:deep(.blog-style-content strong) {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+:deep(.blog-style-content em) {
+  color: #e5e7eb;
+  font-style: italic;
+}
+
+/* Enhanced lists */
+:deep(.blog-style-content ul) {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+:deep(.blog-style-content li) {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0.5rem 0;
+  position: relative;
+}
+
+:deep(.blog-style-content ul li::marker) {
+  color: #3b82f6;
+}
+
+:deep(.blog-style-content ol li::marker) {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+/* Enhanced code blocks */
+:deep(.blog-style-content code) {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+:deep(.blog-style-content pre) {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  overflow-x: auto;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.blog-style-content pre code) {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: #e5e7eb;
+}
+
+/* Enhanced blockquotes */
+:deep(.blog-style-content blockquote) {
+  border-left: 4px solid #3b82f6;
+  background: rgba(59, 130, 246, 0.1);
+  margin: 1.5rem 0;
+  padding: 1.25rem 1.5rem;
+  border-radius: 0 0.75rem 0.75rem 0;
+  position: relative;
+  backdrop-filter: blur(10px);
+}
+
+:deep(.blog-style-content blockquote::before) {
+  content: '"';
+  position: absolute;
+  top: -0.5rem;
+  left: 1rem;
+  font-size: 3rem;
+  color: #3b82f6;
+  font-weight: 700;
+  line-height: 1;
+}
+
+:deep(.blog-style-content blockquote p) {
+  color: #e5e7eb;
+  font-style: italic;
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+/* Enhanced tables */
+:deep(.blog-style-content table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.blog-style-content th) {
+  background: rgba(59, 130, 246, 0.2);
+  color: #ffffff;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+:deep(.blog-style-content td) {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:deep(.blog-style-content tr:last-child td) {
+  border-bottom: none;
+}
+
+:deep(.blog-style-content tr:hover) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced links */
+:deep(.blog-style-content a) {
+  color: #60a5fa;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.3);
+  transition: all 0.3s ease;
+}
+
+:deep(.blog-style-content a:hover) {
+  color: #93c5fd;
+  border-bottom-color: #93c5fd;
+}
+
+/* Horizontal rules */
+:deep(.blog-style-content hr) {
+  border: none;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);
+  margin: 2rem 0;
+}
+
+/* Image styling */
+:deep(.blog-style-content img) {
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+  margin: 1.5rem 0;
+}
+
+/* Task lists */
+:deep(.blog-style-content input[type="checkbox"]) {
+  accent-color: #3b82f6;
+  margin-right: 0.5rem;
+}
+
+/* Scroll styling for content */
+.research-content-display {
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.research-content-display::-webkit-scrollbar {
+  width: 8px;
+}
+
+.research-content-display::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.research-content-display::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.research-content-display::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+</style>

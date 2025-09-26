@@ -142,6 +142,18 @@ Route::prefix('api')->group(function () {
         Route::get('activities/users/{user}', [\App\Http\Controllers\Api\ActivityController::class, 'forUser']);
         Route::get('activities/{modelType}/{modelId}', [\App\Http\Controllers\Api\ActivityController::class, 'forModel']);
 
+        // Article Extraction (protected)
+        Route::post('extract-article', function (\Illuminate\Http\Request $request) {
+            $request->validate([
+                'url' => 'required|url|max:2048'
+            ]);
+
+            $extractionService = new \App\Services\ArticleExtractionService();
+            $result = $extractionService->extractFromUrl($request->url);
+
+            return response()->json($result, $result['success'] ? 200 : 400);
+        });
+
         // URL Download Testing (protected)
         Route::get('test-download', function () {
             $downloadService = new \App\Services\UrlDownloadService();
