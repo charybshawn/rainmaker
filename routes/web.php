@@ -8,12 +8,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Main Investment Research Dashboard - accessible to all
+// Main Investment Research Dashboard - requires authentication
 Route::get('/', function () {
-    $auth = auth()->check() ? [
-        'user' => auth()->user()->load('roles', 'permissions')
-    ] : ['user' => null];
-
     // Get recent published blog posts for community feed
     $recentPosts = \App\Models\BlogPost::where('status', 'published')
         ->with('user:id,name')
@@ -22,10 +18,12 @@ Route::get('/', function () {
         ->get(['id', 'title', 'slug', 'content', 'published_at', 'user_id']);
 
     return Inertia::render('InvestmentDashboard', [
-        'auth' => $auth,
+        'auth' => [
+            'user' => auth()->user()->load('roles', 'permissions')
+        ],
         'recentBlogPosts' => $recentPosts
     ]);
-})->name('dashboard');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 // Authenticated Dashboard - same as main but shows user context
 Route::get('/dashboard', function () {
@@ -72,31 +70,30 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::delete('permissions/{permission}', [AdminController::class, 'deletePermission'])->name('permissions.destroy');
 });
 
-// API Routes
-Route::prefix('api')->group(function () {
-    // Public endpoints (accessible to everyone)
-    Route::get('companies', [CompanyController::class, 'index']);
-    Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
-    Route::get('git-info', [\App\Http\Controllers\GitInfoController::class, 'index']);
+// API Routes - All require authentication
+Route::prefix('api')->middleware('auth')->group(function () {
+        // Application data endpoints
+        Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
+        Route::get('git-info', [\App\Http\Controllers\GitInfoController::class, 'index']);
 
-    // Public Categories and Tags (accessible to everyone for dashboard filtering)
-    Route::get('categories', function() {
-        return response()->json(\App\Models\Category::all(['id', 'name', 'color']));
-    });
-    Route::get('tags', function() {
-        return response()->json(\App\Models\Tag::all(['id', 'name', 'color']));
-    });
+        // Categories and Tags
+        Route::get('categories', function() {
+            return response()->json(\App\Models\Category::all(['id', 'name', 'color']));
+        });
+        Route::get('tags', function() {
+            return response()->json(\App\Models\Tag::all(['id', 'name', 'color']));
+        });
 
-    // Public search endpoints (accessible to everyone, with different results based on auth status)
-    Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
-    Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
+        // Search endpoints
+        Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
+        Route::get('blog-posts/search', [\App\Http\Controllers\Api\BlogPostController::class, 'search']);
 
-    // Public research item endpoints (accessible to everyone, with different results based on auth status)
-    Route::get('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'index']);
-    Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
+        // Research item endpoints
+        Route::get('research-items', [\App\Http\Controllers\Api\ResearchItemController::class, 'index']);
+        Route::get('research-items/{research_item}', [\App\Http\Controllers\Api\ResearchItemController::class, 'show']);
 
-    Route::middleware('auth')->group(function () {
-        // Protected endpoints (require authentication)
+        // Company endpoints
+        Route::get('companies', [CompanyController::class, 'index']);
         Route::post('companies', [CompanyController::class, 'store']);
         Route::get('companies/{company}', [CompanyController::class, 'show']);
         Route::put('companies/{company}', [CompanyController::class, 'update']);
@@ -192,7 +189,6 @@ Route::prefix('api')->group(function () {
                 ], 500);
             }
         });
-    });
 });
 
 // Blog Routes - SPA-friendly (no separate create/edit pages)
@@ -203,27 +199,31 @@ Route::middleware('auth')->prefix('my-blog')->name('blog.')->group(function () {
     Route::delete('/{blogPost}', [BlogPostController::class, 'destroy'])->name('destroy');
 });
 
-// Public Company Routes
-Route::get('/companies', function () {
-    return Inertia::render('CompanyListing', [
-        'auth' => auth()->check() ? [
-            'user' => auth()->user()->load('roles', 'permissions')
-        ] : ['user' => null]
-    ]);
-})->name('companies.index');
+// Company Routes (require authentication)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/companies', function () {
+        return Inertia::render('CompanyListing', [
+            'auth' => [
+                'user' => auth()->user()->load('roles', 'permissions')
+            ]
+        ]);
+    })->name('companies.index');
 
-Route::get('/companies/{ticker}', function ($ticker) {
-    return Inertia::render('CompanyProfile', [
-        'ticker' => $ticker,
-        'tab' => request('tab', 'overview'),
-        'auth' => auth()->check() ? [
-            'user' => auth()->user()->load('roles', 'permissions')
-        ] : ['user' => null]
-    ]);
-})->name('company.profile');
+    Route::get('/companies/{ticker}', function ($ticker) {
+        return Inertia::render('CompanyProfile', [
+            'ticker' => $ticker,
+            'tab' => request('tab', 'overview'),
+            'auth' => [
+                'user' => auth()->user()->load('roles', 'permissions')
+            ]
+        ]);
+    })->name('company.profile');
+});
 
-// Public Blog Routes
-Route::get('/users/{username}/blog', [BlogPostController::class, 'userBlog'])->name('user.blog');
-Route::get('/blog/{blogPost:slug}', [BlogPostController::class, 'show'])->name('blog.show');
+// Blog Routes (require authentication)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/users/{username}/blog', [BlogPostController::class, 'userBlog'])->name('user.blog');
+    Route::get('/blog/{blogPost:slug}', [BlogPostController::class, 'show'])->name('blog.show');
+});
 
 require __DIR__.'/auth.php';
