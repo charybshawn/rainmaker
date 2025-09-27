@@ -216,8 +216,8 @@
           </div>
         </div>
 
-        <!-- Category and Visibility -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Category, Visibility, and Source Date -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label for="note_category" class="block text-sm font-medium text-white mb-2">Category</label>
             <select
@@ -247,6 +247,22 @@
               <option value="public">Public</option>
             </select>
             <div v-if="errors.visibility" class="text-red-400 text-sm mt-1">{{ errors.visibility }}</div>
+          </div>
+
+          <div>
+            <label for="note_source_date" class="block text-sm font-medium text-white mb-2">Source Date</label>
+            <input
+              id="note_source_date"
+              v-model="form.source_date"
+              type="date"
+              class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+              style="backdrop-filter: blur(20px) saturate(180%);"
+              placeholder="YYYY-MM-DD"
+            />
+            <div v-if="errors.source_date" class="text-red-400 text-sm mt-1">{{ errors.source_date }}</div>
+            <div class="mt-1 text-xs text-gray-400">
+              📅 When was this article originally published?
+            </div>
           </div>
         </div>
 
@@ -423,7 +439,7 @@
                   @click="showImageGallery = !showImageGallery"
                   class="flex items-center justify-between w-full text-sm font-medium text-gray-300 mb-3 hover:text-white transition-colors"
                 >
-                  <span>Additional Images ({{ extractedArticle.images.length }})</span>
+                  <span>Additional Images ({{ extractedArticle.images.length }}) - Select to Include</span>
                   <svg
                     :class="{ 'rotate-180': showImageGallery }"
                     class="w-4 h-4 transition-transform duration-200"
@@ -435,19 +451,56 @@
                   </svg>
                 </button>
 
-                <div v-if="showImageGallery" class="grid grid-cols-3 gap-3 max-h-48 overflow-y-auto">
-                  <div
-                    v-for="(image, index) in extractedArticle.images.slice(0, 9)"
-                    :key="index"
-                    class="aspect-square"
-                  >
-                    <img
-                      :src="image.url"
-                      :alt="image.alt || `Image ${index + 1}`"
-                      class="w-full h-full object-cover rounded border border-white/10 hover:border-white/30 transition-colors cursor-pointer"
-                      @error="$event.target.style.display='none'"
-                      @click="selectedImage = image.url"
+                <div v-if="showImageGallery" class="space-y-3">
+                  <!-- Include main image option -->
+                  <div v-if="extractedArticle.main_image" class="flex items-center space-x-3 p-3 bg-black/10 rounded-lg border border-white/10">
+                    <input
+                      type="checkbox"
+                      :id="`main-image-${extractedArticle.main_image}`"
+                      v-model="includeMainImage"
+                      class="rounded bg-white/10 border-white/20 text-green-400 focus:ring-green-400/20"
                     />
+                    <img
+                      :src="extractedArticle.main_image"
+                      alt="Main image"
+                      class="w-16 h-16 object-cover rounded border border-white/10"
+                      @error="$event.target.style.display='none'"
+                    />
+                    <div class="flex-1">
+                      <label :for="`main-image-${extractedArticle.main_image}`" class="text-sm text-white cursor-pointer">
+                        <strong>Main Image</strong> - Include at the beginning of the article
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Additional images selection -->
+                  <div class="grid grid-cols-1 gap-3 max-h-48 overflow-y-auto">
+                    <div
+                      v-for="(image, index) in extractedArticle.images.slice(0, 6)"
+                      :key="index"
+                      class="flex items-center space-x-3 p-3 bg-black/10 rounded-lg border border-white/10"
+                    >
+                      <input
+                        type="checkbox"
+                        :id="`image-${index}`"
+                        v-model="selectedImageIndices"
+                        :value="index"
+                        class="rounded bg-white/10 border-white/20 text-green-400 focus:ring-green-400/20"
+                      />
+                      <img
+                        :src="image.url"
+                        :alt="image.alt || `Image ${index + 1}`"
+                        class="w-16 h-16 object-cover rounded border border-white/10 cursor-pointer"
+                        @error="$event.target.style.display='none'"
+                        @click="selectedImage = image.url"
+                      />
+                      <div class="flex-1">
+                        <label :for="`image-${index}`" class="text-sm text-white cursor-pointer">
+                          Additional Image {{ index + 1 }}
+                        </label>
+                        <p class="text-xs text-gray-400">Click image to preview</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -698,6 +751,8 @@ const extractingArticle = ref(false)
 const extractedArticle = ref(null)
 const showImageGallery = ref(false)
 const selectedImage = ref(null)
+const includeMainImage = ref(true)
+const selectedImageIndices = ref([])
 
 // Tiptap Editor Setup
 const editor = useEditor({
@@ -808,14 +863,71 @@ const useExtractedArticle = () => {
     props.form.title = extractedArticle.value.title
   }
 
-  // Set the content in the editor
-  if (editor.value && extractedArticle.value.content) {
-    editor.value.commands.setContent(extractedArticle.value.content)
-    props.form.content = extractedArticle.value.content
+  // Auto-populate source date if available
+  if (extractedArticle.value.published_date && !props.form.source_date) {
+    props.form.source_date = extractedArticle.value.published_date
   }
 
-  // Clear the extracted article preview
+  // Enhance content with user-selected images
+  let enhancedContent = extractedArticle.value.content || ''
+
+  // Add main image at the beginning if user selected it
+  if (includeMainImage.value && extractedArticle.value.main_image) {
+    const mainImageHtml = `<figure>
+      <img src="${extractedArticle.value.main_image}" alt="${extractedArticle.value.title || 'Article image'}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;" />
+      <figcaption style="font-size: 0.9em; color: #666; text-align: center; margin-top: 8px; font-style: italic;">Main article image</figcaption>
+    </figure>`
+
+    enhancedContent = mainImageHtml + '\n\n' + enhancedContent
+  }
+
+  // Add user-selected additional images
+  if (selectedImageIndices.value.length > 0 && extractedArticle.value.images) {
+    const selectedImages = selectedImageIndices.value
+      .map(index => extractedArticle.value.images[index])
+      .filter(img => img && img.url && img.url !== extractedArticle.value.main_image) // Avoid duplicating main image
+      .map((img, displayIndex) => `<figure>
+        <img src="${img.url}" alt="${img.alt || `Additional image ${displayIndex + 1}`}" style="max-width: 100%; height: auto; border-radius: 8px; margin: 1rem 0;" />
+        <figcaption style="font-size: 0.9em; color: #666; text-align: center; margin-top: 8px; font-style: italic;">${img.alt || `Additional image ${displayIndex + 1}`}</figcaption>
+      </figure>`)
+      .join('\n\n')
+
+    if (selectedImages) {
+      enhancedContent += '\n\n<hr style="margin: 2rem 0; border: none; height: 1px; background: #e5e7eb;" />\n\n<h4 style="color: #374151; margin-bottom: 1rem;">Additional Images</h4>\n\n' + selectedImages
+    }
+  }
+
+  // Always add source URL citation at the bottom
+  if (props.form.newUrl) {
+    const sourceUrl = props.form.newUrl
+    const sourceDomain = new URL(sourceUrl).hostname.replace('www.', '')
+
+    enhancedContent += `\n\n<hr style="margin: 2rem 0; border: none; height: 2px; background: linear-gradient(to right, transparent, rgba(59, 130, 246, 0.5), transparent);" />
+
+<div style="margin-top: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0;">
+  <p style="margin: 0; font-size: 0.9em; color: #9ca3af; font-style: italic;">
+    <strong>Source:</strong>
+    <a href="${sourceUrl}" target="_blank" rel="noopener noreferrer" style="color: #60a5fa; text-decoration: none; border-bottom: 1px solid rgba(96, 165, 250, 0.3);">
+      ${sourceDomain}
+    </a>
+  </p>
+  <p style="margin: 0.5rem 0 0 0; font-size: 0.8em; color: #6b7280;">
+    Article extracted on ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+  </p>
+</div>`
+  }
+
+  // Set the enhanced content in the editor
+  if (editor.value) {
+    editor.value.commands.setContent(enhancedContent)
+    props.form.content = enhancedContent
+  }
+
+  // Clear the extracted article preview and reset selections
   extractedArticle.value = null
+  includeMainImage.value = true
+  selectedImageIndices.value = []
+  showImageGallery.value = false
 
   // Optional: Clear the URL input
   props.form.newUrl = ''

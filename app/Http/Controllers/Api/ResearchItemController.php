@@ -113,6 +113,7 @@ class ResearchItemController extends Controller
             'tag_ids.*' => 'exists:tags,id',
             'visibility' => 'required|in:public,team,private',
             'ai_synopsis' => 'nullable|string',
+            'source_date' => 'nullable|date',
             // Support legacy existing file formats for compatibility
             'existing_file_ids' => 'nullable|array',
             'existing_file_ids.*' => 'integer|exists:media,id',
@@ -241,6 +242,7 @@ class ResearchItemController extends Controller
                 'tag_ids.*' => 'exists:tags,id',
                 'visibility' => 'required|in:public,team,private',
                 'ai_synopsis' => 'nullable|string',
+                'source_date' => 'nullable|date',
                 // Support legacy existing file formats for compatibility
                 'existing_file_ids' => 'nullable|array',
                 'existing_file_ids.*' => 'integer|exists:media,id',
@@ -257,7 +259,7 @@ class ResearchItemController extends Controller
 
             // Filter out non-database fields before updating
             $updateData = collect($validated)->only([
-                'title', 'content', 'company_id', 'category_id', 'visibility', 'ai_synopsis',
+                'title', 'content', 'company_id', 'category_id', 'visibility', 'ai_synopsis', 'source_date',
             ])->toArray();
 
             $researchItem->update($updateData);

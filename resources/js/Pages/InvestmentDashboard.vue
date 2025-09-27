@@ -472,7 +472,10 @@
                   >
                     <p class="font-medium text-white group-hover:text-purple-200 line-clamp-2">{{ item.title || item.name }}</p>
                     <p class="text-sm text-gray-400 mt-1">{{ item.category?.name || 'Uncategorized' }}</p>
-                    <p class="text-xs text-gray-500 mt-1">{{ formatDate(item.created_at) }}</p>
+                    <div class="flex items-center justify-between text-xs mt-1">
+                      <span class="text-gray-500">Created: {{ formatDate(item.created_at) }}</span>
+                      <span v-if="item.source_date" class="text-blue-400">Source: {{ formatDate(item.source_date) }}</span>
+                    </div>
                   </div>
                 </div>
 
@@ -600,6 +603,7 @@
                       <div>
                         <h4 class="text-white font-medium">{{ item.title }}</h4>
                         <p class="text-gray-400 text-sm">{{ item.company?.name }} • {{ item.category?.name }}</p>
+                        <p v-if="item.source_date" class="text-blue-400 text-xs mt-1">Source: {{ formatDate(item.source_date) }}</p>
                       </div>
                     </div>
                     <div class="text-green-300 text-sm">Research</div>
@@ -2105,6 +2109,7 @@ const noteForm = ref({
   content: '',
   company_id: '',
   category_id: '',
+  source_date: '',
   visibility: 'private',
   files: []
 })
@@ -3149,8 +3154,12 @@ const createNote = async (eventData = {}) => {
       formData.append('company_id', noteForm.value.company_id)
       formData.append('visibility', noteForm.value.visibility)
 
-      if (noteForm.value.category_id) {
-        formData.append('category_id', noteForm.value.category_id)
+      // Always send category_id, even if empty (to allow clearing categories)
+      formData.append('category_id', noteForm.value.category_id || '')
+
+      // Add source_date if provided
+      if (noteForm.value.source_date) {
+        formData.append('source_date', noteForm.value.source_date)
       }
 
       // For PUT requests with FormData, we need to add _method
@@ -3191,7 +3200,8 @@ const createNote = async (eventData = {}) => {
         content: noteForm.value.content,
         company_id: noteForm.value.company_id,
         category_id: noteForm.value.category_id,
-        visibility: noteForm.value.visibility
+        visibility: noteForm.value.visibility,
+        source_date: noteForm.value.source_date || null
       }
 
       // Add URL data if present
@@ -3214,6 +3224,7 @@ const createNote = async (eventData = {}) => {
       content: '',
       company_id: '',
       category_id: '',
+      source_date: '',
       visibility: 'private',
       files: [],
       urls: [],
@@ -3255,10 +3266,9 @@ const uploadDocuments = async () => {
     formData.append('visibility', uploadForm.value.visibility)
 
     formData.append('ai_synopsis', uploadForm.value.ai_synopsis || '')
-    
-    if (uploadForm.value.category_id) {
-      formData.append('category_id', uploadForm.value.category_id)
-    }
+
+    // Always send category_id, even if empty (to allow clearing categories)
+    formData.append('category_id', uploadForm.value.category_id || '')
     
     // Append files or URLs based on upload type
     if (uploadForm.value.uploadType === 'file') {
@@ -3344,6 +3354,7 @@ const editResearchItem = (item) => {
     content: item.content || '',
     company_id: item.company_id || selectedCompany.value?.id,
     category_id: item.category_id || '',
+    source_date: item.source_date || '',
     visibility: item.visibility || 'private',
     files: [] // Files will be handled separately as they're already uploaded
   }

@@ -140,7 +140,7 @@ class CompanyController extends Controller
 
     public function show(Company $company): JsonResponse
     {
-        $company->load(['researchItems.tags', 'researchItems.media', 'researchItems.user', 'documents.tags', 'documents.user', 'documents.assets', 'creator']);
+        $company->load(['researchItems.tags', 'researchItems.category', 'researchItems.media', 'researchItems.user', 'documents.tags', 'documents.user', 'documents.assets', 'creator']);
 
         return response()->json([
             'id' => $company->id,
@@ -177,6 +177,12 @@ class CompanyController extends Controller
                             'url' => $media->getUrl(),
                         ];
                     }),
+                    'category' => $item->category ? [
+                        'id' => $item->category->id,
+                        'name' => $item->category->name,
+                        'color' => $item->category->color,
+                    ] : null,
+                    'source_date' => $item->source_date ? $item->source_date->format('Y-m-d') : null,
                     'created_at' => $item->created_at->format('Y-m-d H:i:s'),
                 ];
             }),

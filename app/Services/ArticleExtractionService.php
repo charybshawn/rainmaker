@@ -245,7 +245,7 @@ class ArticleExtractionService
             if ($result->length > 0) {
                 $dateValue = trim($result->item(0)->value ?? $result->item(0)->textContent);
                 if ($dateValue && strtotime($dateValue)) {
-                    $metadata['published_date'] = date('Y-m-d H:i:s', strtotime($dateValue));
+                    $metadata['published_date'] = date('Y-m-d', strtotime($dateValue));
                     break;
                 }
             }

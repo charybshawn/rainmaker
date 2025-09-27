@@ -23,6 +23,7 @@ class ResearchItem extends Model implements HasMedia
         'rating',
         'metadata',
         'published_at',
+        'source_date',
         'company_id',
         'category_id',
         'user_id',
@@ -31,6 +32,7 @@ class ResearchItem extends Model implements HasMedia
     protected $casts = [
         'metadata' => 'array',
         'published_at' => 'datetime',
+        'source_date' => 'date',
         'rating' => 'decimal:1',
     ];
 

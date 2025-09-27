@@ -178,6 +178,139 @@
 
           <!-- Research Items Data Table -->
           <div v-if="company?.researchItems && company.researchItems.length > 0">
+            <!-- Filters and Column Controls -->
+            <div class="mb-4 backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-4">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Filters Row -->
+                <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                  <!-- Search Filter -->
+                  <div class="flex-1 min-w-0">
+                    <input
+                      v-model="researchFilters.search"
+                      type="text"
+                      placeholder="Search research items..."
+                      class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white placeholder-gray-400 focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
+                    />
+                  </div>
+
+                  <!-- Category Filter -->
+                  <div class="min-w-0 sm:w-40">
+                    <select
+                      v-model="researchFilters.category"
+                      class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
+                    >
+                      <option value="">All Categories</option>
+                      <option v-for="category in availableCategories" :key="category.id" :value="category.id.toString()">
+                        {{ category.name }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- Visibility Filter -->
+                  <div class="min-w-0 sm:w-32">
+                    <select
+                      v-model="researchFilters.visibility"
+                      class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
+                    >
+                      <option value="">All Visibility</option>
+                      <option value="public">Public</option>
+                      <option value="team">Team</option>
+                      <option value="private">Private</option>
+                    </select>
+                  </div>
+                </div>
+
+                <!-- Controls Row -->
+                <div class="flex items-center gap-2">
+                  <!-- Reset Filters -->
+                  <button
+                    @click="resetFilters"
+                    class="px-3 py-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg transition-colors"
+                  >
+                    Reset Filters
+                  </button>
+
+                  <!-- Column Controls -->
+                  <div class="relative">
+                    <button
+                      @click="showColumnControls = !showColumnControls"
+                      class="px-3 py-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg transition-colors flex items-center space-x-1"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path>
+                      </svg>
+                      <span>Columns</span>
+                    </button>
+
+                    <!-- Column Dropdown -->
+                    <div v-if="showColumnControls" class="absolute right-0 top-full mt-2 w-48 backdrop-blur-3xl bg-gray-900/95 border border-white/20 rounded-lg shadow-xl z-50">
+                      <div class="p-3">
+                        <div class="flex items-center justify-between mb-3">
+                          <span class="text-sm font-medium text-white">Show Columns</span>
+                          <button
+                            @click="resetColumns"
+                            class="text-xs text-blue-400 hover:text-blue-300"
+                          >
+                            Reset
+                          </button>
+                        </div>
+                        <div class="space-y-2">
+                          <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              v-model="visibleColumns.title"
+                              class="w-4 h-4 text-blue-500 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span>Title</span>
+                          </label>
+                          <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              v-model="visibleColumns.category"
+                              class="w-4 h-4 text-blue-500 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span>Category</span>
+                          </label>
+                          <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              v-model="visibleColumns.created"
+                              class="w-4 h-4 text-blue-500 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span>Created</span>
+                          </label>
+                          <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              v-model="visibleColumns.sourceDate"
+                              class="w-4 h-4 text-blue-500 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span>Source Date</span>
+                          </label>
+                          <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              v-model="visibleColumns.files"
+                              class="w-4 h-4 text-blue-500 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span>Files</span>
+                          </label>
+                          <label class="flex items-center space-x-2 text-sm text-gray-300">
+                            <input
+                              type="checkbox"
+                              v-model="visibleColumns.actions"
+                              class="w-4 h-4 text-blue-500 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                            />
+                            <span>Actions</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Bulk Actions Toolbar -->
             <div v-if="selectedResearchItems.size > 0" class="mb-4 backdrop-blur-3xl bg-gradient-to-r from-red-500/10 to-red-600/20 rounded-2xl px-6 py-4 border border-red-500/20">
               <div class="flex items-center justify-between">
@@ -214,19 +347,19 @@
                       class="w-4 h-4 text-blue-600 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
                     />
                   </div>
-                  <div class="col-span-4">Research Title</div>
-                  <div class="col-span-2">Category</div>
-                  <div class="col-span-2">Created</div>
-                  <div class="col-span-1 text-center">Files</div>
-                  <div class="col-span-1 text-center">Status</div>
-                  <div class="col-span-1 text-center">Actions</div>
+                  <div v-if="visibleColumns.title" class="col-span-5">Research Title</div>
+                  <div v-if="visibleColumns.category" class="col-span-2">Category</div>
+                  <div v-if="visibleColumns.created" class="col-span-1">Created</div>
+                  <div v-if="visibleColumns.sourceDate" class="col-span-1">Source Date</div>
+                  <div v-if="visibleColumns.files" class="col-span-1 text-center">Files</div>
+                  <div v-if="visibleColumns.actions" class="col-span-1 text-center">Actions</div>
                 </div>
               </div>
 
               <!-- Table Body -->
               <div class="divide-y divide-white/5">
                 <div
-                  v-for="(item, index) in company.researchItems"
+                  v-for="(item, index) in filteredResearchItems"
                   :key="item.id"
                   :class="[
                     'group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300',
@@ -248,28 +381,34 @@
                     </div>
 
                     <!-- Title -->
-                    <div class="col-span-4">
-                      <h3 class="text-base font-medium text-white/90 line-clamp-1 mb-1">{{ item.title }}</h3>
-                      <p class="text-xs text-blue-200/60 line-clamp-1">{{ item.content ? item.content.substring(0, 80) + '...' : 'No content preview' }}</p>
+                    <div v-if="visibleColumns.title" class="col-span-5">
+                      <h3 class="text-base font-medium text-white/90 line-clamp-1" :title="item.title">{{ item.title }}</h3>
                     </div>
 
                     <!-- Category -->
-                    <div class="col-span-2">
+                    <div v-if="visibleColumns.category" class="col-span-2">
                       <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-500/30">
                         {{ item.category?.name || 'Uncategorized' }}
                       </span>
                     </div>
 
                     <!-- Created Date -->
-                    <div class="col-span-2">
+                    <div v-if="visibleColumns.created" class="col-span-1">
                       <div class="text-white/70">
-                        <div class="font-medium">{{ formatDate(item.created_at) }}</div>
-                        <div class="text-xs text-white/50">{{ new Date(item.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }}</div>
+                        <div class="font-medium text-xs">{{ formatDate(item.created_at) }}</div>
+                      </div>
+                    </div>
+
+                    <!-- Source Date -->
+                    <div v-if="visibleColumns.sourceDate" class="col-span-1">
+                      <div class="text-white/70">
+                        <div v-if="item.source_date" class="font-medium text-xs">{{ formatDate(item.source_date) }}</div>
+                        <div v-else class="text-xs text-white/40 italic">Not set</div>
                       </div>
                     </div>
 
                     <!-- Files Count -->
-                    <div class="col-span-1 text-center">
+                    <div v-if="visibleColumns.files" class="col-span-1 text-center">
                       <div class="flex items-center justify-center">
                         <svg class="w-4 h-4 mr-1 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
@@ -278,25 +417,8 @@
                       </div>
                     </div>
 
-                    <!-- Status -->
-                    <div class="col-span-1 text-center">
-                      <div class="flex items-center justify-center">
-                        <div v-if="item.visibility === 'public'" class="flex items-center text-green-400">
-                          <svg class="w-4 h-4 shadow-[0_0_5px_rgba(34,197,94,0.3)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                          </svg>
-                        </div>
-                        <div v-else class="flex items-center text-white/40">
-                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21"></path>
-                          </svg>
-                        </div>
-                      </div>
-                    </div>
-
                     <!-- Actions -->
-                    <div class="col-span-1">
+                    <div v-if="visibleColumns.actions" class="col-span-1">
                       <div class="flex items-center justify-center space-x-2">
                         <button
                           @click.stop="editResearchItem(item)"
@@ -666,7 +788,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { Head, Link, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import Dropdown from '@/Components/Dropdown.vue'
@@ -730,12 +852,32 @@ const selectAllDocuments = ref(false)
 const isEditingResearch = ref(false)
 const editingResearchId = ref(null)
 
+// Column visibility and filtering
+const showColumnControls = ref(false)
+const visibleColumns = ref({
+  title: true,
+  category: true,
+  created: false,
+  sourceDate: true,
+  files: true,
+  actions: true
+})
+
+// Research filtering
+const researchFilters = ref({
+  search: '',
+  category: '',
+  visibility: '',
+  dateRange: ''
+})
+
 // Forms
 const researchForm = ref({
   title: '',
   content: '',
   company_id: null,
   category_id: '',
+  source_date: '',
   visibility: 'private',
   uploadType: 'file',
   files: [],
@@ -812,6 +954,48 @@ const tabs = computed(() => {
 const page = usePage()
 const isAuthenticated = computed(() => {
   return !!page.props.auth.user
+})
+
+// Filtered research items
+const filteredResearchItems = computed(() => {
+  if (!company.value?.researchItems) return []
+
+  return company.value.researchItems.filter(item => {
+    // Search filter
+    if (researchFilters.value.search) {
+      const searchLower = researchFilters.value.search.toLowerCase()
+      const matchesSearch = item.title?.toLowerCase().includes(searchLower) ||
+                           item.content?.toLowerCase().includes(searchLower)
+      if (!matchesSearch) return false
+    }
+
+    // Category filter
+    if (researchFilters.value.category) {
+      const itemCategoryId = item.category?.id?.toString()
+      if (itemCategoryId !== researchFilters.value.category) return false
+    }
+
+    // Visibility filter
+    if (researchFilters.value.visibility) {
+      if (item.visibility !== researchFilters.value.visibility) return false
+    }
+
+    return true
+  })
+})
+
+// Available categories for filter dropdown
+const availableCategories = computed(() => {
+  if (!company.value?.researchItems) return []
+
+  const categories = new Map()
+  company.value.researchItems.forEach(item => {
+    if (item.category) {
+      categories.set(item.category.id, item.category)
+    }
+  })
+
+  return Array.from(categories.values()).sort((a, b) => a.name.localeCompare(b.name))
 })
 
 // Methods
@@ -1000,6 +1184,38 @@ const updateSelectAllState = () => {
 const clearSelection = () => {
   selectedResearchItems.value.clear()
   selectAll.value = false
+}
+
+// Filter and column methods
+const resetFilters = () => {
+  researchFilters.value = {
+    search: '',
+    category: '',
+    visibility: '',
+    dateRange: ''
+  }
+}
+
+const toggleColumn = (columnName) => {
+  visibleColumns.value[columnName] = !visibleColumns.value[columnName]
+}
+
+const resetColumns = () => {
+  visibleColumns.value = {
+    title: true,
+    category: true,
+    created: false,
+    sourceDate: true,
+    files: true,
+    actions: true
+  }
+}
+
+// Click outside handler for column dropdown
+const handleClickOutside = (event) => {
+  if (showColumnControls.value && !event.target.closest('.relative')) {
+    showColumnControls.value = false
+  }
 }
 
 const deleteSelectedResearchItems = () => {
@@ -1527,6 +1743,7 @@ const editResearchItem = (item) => {
     content: item.content || '',
     company_id: item.company_id || company.value?.id,
     category_id: item.category_id || '',
+    source_date: item.source_date || '',
     visibility: item.visibility || 'private',
     uploadType: 'file',
     files: [],
@@ -1549,6 +1766,7 @@ const resetResearchForm = () => {
     content: '',
     company_id: company.value?.id || null,
     category_id: '',
+    source_date: '',
     visibility: 'private',
     uploadType: 'file',
     files: [],
@@ -1595,6 +1813,9 @@ const handleResearchSave = async () => {
     formData.append('company_id', researchForm.value.company_id)
     formData.append('category_id', researchForm.value.category_id || '')
     formData.append('visibility', researchForm.value.visibility)
+
+    // Always send source_date, even if empty (to allow clearing)
+    formData.append('source_date', researchForm.value.source_date || '')
 
     // Add uploaded files
     if (researchForm.value.files && researchForm.value.files.length > 0) {
@@ -1861,5 +2082,12 @@ watch(isAuthenticated, (newValue) => {
 onMounted(() => {
   fetchCompanyData()
   fetchCategories()
+  // Add click outside listener for column dropdown
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  // Remove click outside listener
+  document.removeEventListener('click', handleClickOutside)
 })
 </script>
