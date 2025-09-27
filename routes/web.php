@@ -75,7 +75,6 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 // API Routes
 Route::prefix('api')->group(function () {
     // Public endpoints (accessible to everyone)
-    Route::get('companies', [CompanyController::class, 'index']);
     Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
     Route::get('git-info', [\App\Http\Controllers\GitInfoController::class, 'index']);
 
@@ -97,6 +96,7 @@ Route::prefix('api')->group(function () {
 
     Route::middleware('auth')->group(function () {
         // Protected endpoints (require authentication)
+        Route::get('companies', [CompanyController::class, 'index']);
         Route::post('companies', [CompanyController::class, 'store']);
         Route::get('companies/{company}', [CompanyController::class, 'show']);
         Route::put('companies/{company}', [CompanyController::class, 'update']);
@@ -203,24 +203,26 @@ Route::middleware('auth')->prefix('my-blog')->name('blog.')->group(function () {
     Route::delete('/{blogPost}', [BlogPostController::class, 'destroy'])->name('destroy');
 });
 
-// Public Company Routes
-Route::get('/companies', function () {
-    return Inertia::render('CompanyListing', [
-        'auth' => auth()->check() ? [
-            'user' => auth()->user()->load('roles', 'permissions')
-        ] : ['user' => null]
-    ]);
-})->name('companies.index');
+// Company Routes (require authentication)
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/companies', function () {
+        return Inertia::render('CompanyListing', [
+            'auth' => [
+                'user' => auth()->user()->load('roles', 'permissions')
+            ]
+        ]);
+    })->name('companies.index');
 
-Route::get('/companies/{ticker}', function ($ticker) {
-    return Inertia::render('CompanyProfile', [
-        'ticker' => $ticker,
-        'tab' => request('tab', 'overview'),
-        'auth' => auth()->check() ? [
-            'user' => auth()->user()->load('roles', 'permissions')
-        ] : ['user' => null]
-    ]);
-})->name('company.profile');
+    Route::get('/companies/{ticker}', function ($ticker) {
+        return Inertia::render('CompanyProfile', [
+            'ticker' => $ticker,
+            'tab' => request('tab', 'overview'),
+            'auth' => [
+                'user' => auth()->user()->load('roles', 'permissions')
+            ]
+        ]);
+    })->name('company.profile');
+});
 
 // Public Blog Routes
 Route::get('/users/{username}/blog', [BlogPostController::class, 'userBlog'])->name('user.blog');
