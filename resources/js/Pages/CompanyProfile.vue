@@ -347,11 +347,51 @@
                       class="w-4 h-4 text-blue-600 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
                     />
                   </div>
-                  <div v-if="visibleColumns.title" class="col-span-5">Research Title</div>
-                  <div v-if="visibleColumns.category" class="col-span-2">Category</div>
-                  <div v-if="visibleColumns.created" class="col-span-1">Created</div>
-                  <div v-if="visibleColumns.sourceDate" class="col-span-1">Source Date</div>
-                  <div v-if="visibleColumns.files" class="col-span-1 text-center">Files</div>
+                  <div v-if="visibleColumns.title" class="col-span-5">
+                    <button @click="sortBy('title')" class="flex items-center space-x-1 hover:text-white transition-colors">
+                      <span>Research Title</span>
+                      <svg v-if="sortConfig.field === 'title'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="sortConfig.direction === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path>
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-if="visibleColumns.category" class="col-span-2">
+                    <button @click="sortBy('category')" class="flex items-center space-x-1 hover:text-white transition-colors">
+                      <span>Category</span>
+                      <svg v-if="sortConfig.field === 'category'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="sortConfig.direction === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path>
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-if="visibleColumns.created" class="col-span-1">
+                    <button @click="sortBy('created_at')" class="flex items-center space-x-1 hover:text-white transition-colors">
+                      <span>Created</span>
+                      <svg v-if="sortConfig.field === 'created_at'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="sortConfig.direction === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path>
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-if="visibleColumns.sourceDate" class="col-span-1">
+                    <button @click="sortBy('source_date')" class="flex items-center space-x-1 hover:text-white transition-colors">
+                      <span>Source Date</span>
+                      <svg v-if="sortConfig.field === 'source_date'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="sortConfig.direction === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path>
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div v-if="visibleColumns.files" class="col-span-1 text-center">
+                    <button @click="sortBy('files')" class="flex items-center space-x-1 hover:text-white transition-colors">
+                      <span>Files</span>
+                      <svg v-if="sortConfig.field === 'files'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path v-if="sortConfig.direction === 'asc'" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7l4-4m0 0l4 4m-4-4v18"></path>
+                        <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 17l-4 4m0 0l-4-4m4 4V3"></path>
+                      </svg>
+                    </button>
+                  </div>
                   <div v-if="visibleColumns.actions" class="col-span-1 text-center">Actions</div>
                 </div>
               </div>
@@ -871,6 +911,12 @@ const researchFilters = ref({
   dateRange: ''
 })
 
+// Research sorting
+const sortConfig = ref({
+  field: 'created_at',
+  direction: 'desc'
+})
+
 // Forms
 const researchForm = ref({
   title: '',
@@ -960,7 +1006,7 @@ const isAuthenticated = computed(() => {
 const filteredResearchItems = computed(() => {
   if (!company.value?.researchItems) return []
 
-  return company.value.researchItems.filter(item => {
+  let filtered = company.value.researchItems.filter(item => {
     // Search filter
     if (researchFilters.value.search) {
       const searchLower = researchFilters.value.search.toLowerCase()
@@ -982,6 +1028,48 @@ const filteredResearchItems = computed(() => {
 
     return true
   })
+
+  // Apply sorting
+  if (sortConfig.value.field) {
+    filtered.sort((a, b) => {
+      let aValue, bValue
+
+      switch (sortConfig.value.field) {
+        case 'title':
+          aValue = a.title?.toLowerCase() || ''
+          bValue = b.title?.toLowerCase() || ''
+          break
+        case 'category':
+          aValue = a.category?.name?.toLowerCase() || ''
+          bValue = b.category?.name?.toLowerCase() || ''
+          break
+        case 'created_at':
+          aValue = new Date(a.created_at)
+          bValue = new Date(b.created_at)
+          break
+        case 'source_date':
+          aValue = a.source_date ? new Date(a.source_date) : new Date(0)
+          bValue = b.source_date ? new Date(b.source_date) : new Date(0)
+          break
+        case 'files':
+          aValue = a.attachments?.length || 0
+          bValue = b.attachments?.length || 0
+          break
+        default:
+          return 0
+      }
+
+      if (aValue < bValue) {
+        return sortConfig.value.direction === 'asc' ? -1 : 1
+      }
+      if (aValue > bValue) {
+        return sortConfig.value.direction === 'asc' ? 1 : -1
+      }
+      return 0
+    })
+  }
+
+  return filtered
 })
 
 // Available categories for filter dropdown
@@ -1215,6 +1303,18 @@ const resetColumns = () => {
 const handleClickOutside = (event) => {
   if (showColumnControls.value && !event.target.closest('.relative')) {
     showColumnControls.value = false
+  }
+}
+
+// Sort function
+const sortBy = (field) => {
+  if (sortConfig.value.field === field) {
+    // Toggle direction if same field
+    sortConfig.value.direction = sortConfig.value.direction === 'asc' ? 'desc' : 'asc'
+  } else {
+    // Set new field with default direction
+    sortConfig.value.field = field
+    sortConfig.value.direction = 'asc'
   }
 }
 
