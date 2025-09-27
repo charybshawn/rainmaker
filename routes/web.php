@@ -8,8 +8,12 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-// Main Investment Research Dashboard - requires authentication
+// Main Investment Research Dashboard - shows login modal if not authenticated
 Route::get('/', function () {
+    $auth = auth()->check() ? [
+        'user' => auth()->user()->load('roles', 'permissions')
+    ] : ['user' => null];
+
     // Get recent published blog posts for community feed
     $recentPosts = \App\Models\BlogPost::where('status', 'published')
         ->with('user:id,name')
@@ -18,12 +22,10 @@ Route::get('/', function () {
         ->get(['id', 'title', 'slug', 'content', 'published_at', 'user_id']);
 
     return Inertia::render('InvestmentDashboard', [
-        'auth' => [
-            'user' => auth()->user()->load('roles', 'permissions')
-        ],
+        'auth' => $auth,
         'recentBlogPosts' => $recentPosts
     ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->name('dashboard');
 
 // Authenticated Dashboard - same as main but shows user context
 Route::get('/dashboard', function () {
@@ -199,26 +201,28 @@ Route::middleware('auth')->prefix('my-blog')->name('blog.')->group(function () {
     Route::delete('/{blogPost}', [BlogPostController::class, 'destroy'])->name('destroy');
 });
 
-// Company Routes (require authentication)
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/companies', function () {
-        return Inertia::render('CompanyListing', [
-            'auth' => [
-                'user' => auth()->user()->load('roles', 'permissions')
-            ]
-        ]);
-    })->name('companies.index');
+// Company Routes - show login modal if not authenticated
+Route::get('/companies', function () {
+    $auth = auth()->check() ? [
+        'user' => auth()->user()->load('roles', 'permissions')
+    ] : ['user' => null];
 
-    Route::get('/companies/{ticker}', function ($ticker) {
-        return Inertia::render('CompanyProfile', [
-            'ticker' => $ticker,
-            'tab' => request('tab', 'overview'),
-            'auth' => [
-                'user' => auth()->user()->load('roles', 'permissions')
-            ]
-        ]);
-    })->name('company.profile');
-});
+    return Inertia::render('CompanyListing', [
+        'auth' => $auth
+    ]);
+})->name('companies.index');
+
+Route::get('/companies/{ticker}', function ($ticker) {
+    $auth = auth()->check() ? [
+        'user' => auth()->user()->load('roles', 'permissions')
+    ] : ['user' => null];
+
+    return Inertia::render('CompanyProfile', [
+        'ticker' => $ticker,
+        'tab' => request('tab', 'overview'),
+        'auth' => $auth
+    ]);
+})->name('company.profile');
 
 // Blog Routes (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
