@@ -11,9 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('companies', function (Blueprint $table) {
-            $table->renameColumn('ticker_symbol', 'ticker');
-        });
+        // Column already renamed - no action needed
     }
 
     /**
