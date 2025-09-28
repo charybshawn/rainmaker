@@ -23,7 +23,74 @@ class DocumentController extends Controller
         $perPage = $request->get('limit', 15);
         $page = $request->get('page', 1);
 
-        // Query all assets from the dedicated assets table
+        // Determine if we should return actual Documents or Assets
+        $useDocuments = $request->get('use_documents', false);
+
+        if ($useDocuments) {
+            // Query actual Documents with their relationships
+            $query = Document::query()
+                ->with(['company', 'category', 'tags', 'user', 'assets']);
+
+            // Filter by company if provided
+            if ($request->has('company_id') && ! empty($request->company_id)) {
+                $query->where('company_id', $request->company_id);
+            }
+
+            // Filter by category if provided
+            if ($request->has('category_id') && ! empty($request->category_id)) {
+                $query->where('category_id', $request->category_id);
+            }
+
+            // Filter by visibility if provided
+            if ($request->has('visibility') && ! empty($request->visibility)) {
+                $query->where('visibility', $request->visibility);
+            }
+
+            // Filter by tags if provided
+            if ($request->has('tag_ids') && ! empty($request->tag_ids)) {
+                $tagIds = is_array($request->tag_ids) ? $request->tag_ids : [$request->tag_ids];
+                $query->whereHas('tags', function ($tagQuery) use ($tagIds) {
+                    $tagQuery->whereIn('tags.id', $tagIds);
+                });
+            }
+
+            // Search functionality (includes title, description, company names, and tags)
+            if ($request->has('search') && ! empty($request->search)) {
+                $searchTerm = $request->search;
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->where('title', 'like', '%'.$searchTerm.'%')
+                        ->orWhere('description', 'like', '%'.$searchTerm.'%')
+                        ->orWhereHas('company', function ($companyQuery) use ($searchTerm) {
+                            $companyQuery->where('name', 'like', '%'.$searchTerm.'%')
+                                ->orWhere('ticker', 'like', '%'.$searchTerm.'%');
+                        })
+                        ->orWhereHas('tags', function ($tagQuery) use ($searchTerm) {
+                            $tagQuery->where('name', 'like', '%'.$searchTerm.'%');
+                        });
+                });
+            }
+
+            $documents = $query->latest()->paginate($perPage, ['*'], 'page', $page);
+
+            $documentsData = $documents->map(function ($document) {
+                return $this->transformDocument($document);
+            });
+
+            return response()->json([
+                'data' => $documentsData,
+                'pagination' => [
+                    'current_page' => $documents->currentPage(),
+                    'total_pages' => $documents->lastPage(),
+                    'has_more_pages' => $documents->hasMorePages(),
+                    'total_items' => $documents->total(),
+                    'per_page' => $documents->perPage(),
+                    'from' => $documents->firstItem(),
+                    'to' => $documents->lastItem(),
+                ],
+            ]);
+        }
+
+        // Default behavior: Query all assets from the dedicated assets table
         $query = \App\Models\Asset::query()
             ->with(['company', 'user']);
 
@@ -115,6 +182,11 @@ class DocumentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        \Log::info('Document creation started', [
+            'request_data' => $request->all(),
+            'user_id' => auth()->id(),
+        ]);
+
         // Check if user has permission to upload documents
         if (!auth()->user()->can('upload documents')) {
             return response()->json(['message' => 'You do not have permission to upload documents.'], 403);
@@ -143,10 +215,20 @@ class DocumentController extends Controller
 
         // Attach assets if provided
         if (isset($validated['asset_ids'])) {
+            \Log::info('Attaching assets to document', [
+                'document_id' => $document->id,
+                'asset_ids' => $validated['asset_ids'],
+            ]);
             $document->assets()->sync($validated['asset_ids']);
         }
 
         $document->load(['company', 'category', 'tags', 'user', 'assets']);
+
+        \Log::info('Document created successfully', [
+            'document_id' => $document->id,
+            'asset_count' => $document->assets->count(),
+            'tag_count' => $document->tags->count(),
+        ]);
 
         return response()->json($this->transformDocument($document), 201);
     }

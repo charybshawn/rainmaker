@@ -82,9 +82,13 @@ Route::prefix('api')->middleware('auth')->group(function () {
         Route::get('categories', function() {
             return response()->json(\App\Models\Category::all(['id', 'name', 'color']));
         });
-        Route::get('tags', function() {
-            return response()->json(\App\Models\Tag::all(['id', 'name', 'color']));
-        });
+
+        // Tag management
+        Route::get('tags', [\App\Http\Controllers\Api\TagController::class, 'index']);
+        Route::post('tags', [\App\Http\Controllers\Api\TagController::class, 'store']);
+        Route::get('tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'show']);
+        Route::put('tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'update']);
+        Route::delete('tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'destroy']);
 
         // Search endpoints
         Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);

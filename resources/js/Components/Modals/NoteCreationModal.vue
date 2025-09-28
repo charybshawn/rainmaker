@@ -266,6 +266,17 @@
           </div>
         </div>
 
+        <!-- Tags Section -->
+        <div>
+          <label class="block text-sm font-medium text-white mb-2">Tags</label>
+          <TagSelector
+            v-model="form.selectedTags"
+            placeholder="Search or create tags..."
+            help-text="Add tags to categorize and organize your research"
+          />
+          <div v-if="errors.tag_ids" class="text-red-400 text-sm mt-1">{{ errors.tag_ids }}</div>
+        </div>
+
         <!-- Research Files Section -->
         <div class="space-y-4">
           <label class="block text-sm font-medium text-white mb-3">Research Files (optional)</label>
@@ -693,6 +704,7 @@ import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
 import { Markdown } from 'tiptap-markdown'
+import TagSelector from '@/Components/TagSelector.vue'
 
 const props = defineProps({
   show: {

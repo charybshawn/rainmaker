@@ -308,6 +308,14 @@
                       </select>
                     </div>
                   </div>
+
+                  <!-- Tag Filter -->
+                  <div class="mt-3">
+                    <TagFilter
+                      v-model="researchFilters.tags"
+                      placeholder="Filter by tags..."
+                    />
+                  </div>
                 </div>
 
                 <!-- Controls Row -->
@@ -687,6 +695,55 @@
             </button>
           </div>
 
+          <!-- Document Filters -->
+          <div v-if="company?.documents && company.documents.length > 0" class="mb-6 backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-6 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)]">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Search Input -->
+              <div class="col-span-1 md:col-span-1">
+                <input
+                  v-model="documentFilters.search"
+                  type="text"
+                  placeholder="Search documents..."
+                  class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                />
+              </div>
+
+              <!-- Category Filter -->
+              <div class="col-span-1 md:col-span-1">
+                <select
+                  v-model="documentFilters.category"
+                  class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Categories</option>
+                  <option v-for="category in availableCategories" :key="category.id" :value="category.id.toString()">
+                    {{ category.name }}
+                  </option>
+                </select>
+              </div>
+
+              <!-- Visibility Filter -->
+              <div class="col-span-1 md:col-span-1">
+                <select
+                  v-model="documentFilters.visibility"
+                  class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">All Visibility</option>
+                  <option value="public">Public</option>
+                  <option value="team">Team</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Tag Filter -->
+            <div class="mt-3">
+              <TagFilter
+                v-model="documentFilters.tags"
+                placeholder="Filter by tags..."
+              />
+            </div>
+          </div>
+
           <!-- Research Assets Data Table -->
           <div v-if="company?.documents && company.documents.length > 0">
             <!-- Bulk Actions Toolbar -->
@@ -734,7 +791,7 @@
               <!-- Table Body -->
               <div class="divide-y divide-white/5">
                 <div
-                  v-for="(doc, index) in company.documents"
+                  v-for="(doc, index) in filteredDocuments"
                   :key="doc.id"
                   :class="[
                     'group px-6 py-4 hover:bg-gradient-to-br hover:from-blue-500/5 hover:via-transparent hover:to-blue-400/5 transition-all duration-300',
@@ -1024,6 +1081,7 @@ import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 import DeleteConfirmationModal from '@/Components/Modals/DeleteConfirmationModal.vue'
 import ToastNotification from '@/Components/ToastNotification.vue'
+import TagFilter from '@/Components/TagFilter.vue'
 
 const props = defineProps({
   ticker: {
@@ -1092,7 +1150,16 @@ const researchFilters = ref({
   search: '',
   category: '',
   visibility: '',
-  dateRange: ''
+  dateRange: '',
+  tags: []
+})
+
+// Document filters
+const documentFilters = ref({
+  search: '',
+  category: '',
+  visibility: '',
+  tags: []
 })
 
 // Research sorting
@@ -1113,7 +1180,8 @@ const researchForm = ref({
   files: [],
   urls: [],
   newUrl: '',
-  selectedExistingFiles: []
+  selectedExistingFiles: [],
+  selectedTags: []
 })
 
 const documentForm = ref({
@@ -1191,11 +1259,12 @@ const filteredResearchItems = computed(() => {
   if (!company.value?.researchItems) return []
 
   let filtered = company.value.researchItems.filter(item => {
-    // Search filter
+    // Search filter (includes title, content, and tag names)
     if (researchFilters.value.search) {
       const searchLower = researchFilters.value.search.toLowerCase()
       const matchesSearch = item.title?.toLowerCase().includes(searchLower) ||
-                           item.content?.toLowerCase().includes(searchLower)
+                           item.content?.toLowerCase().includes(searchLower) ||
+                           (item.tags && item.tags.some(tag => tag.name.toLowerCase().includes(searchLower)))
       if (!matchesSearch) return false
     }
 
@@ -1208,6 +1277,14 @@ const filteredResearchItems = computed(() => {
     // Visibility filter
     if (researchFilters.value.visibility) {
       if (item.visibility !== researchFilters.value.visibility) return false
+    }
+
+    // Tag filter
+    if (researchFilters.value.tags && researchFilters.value.tags.length > 0) {
+      const selectedTagIds = researchFilters.value.tags.map(tag => tag.id)
+      const itemTagIds = item.tags ? item.tags.map(tag => tag.id) : []
+      const hasMatchingTag = selectedTagIds.some(tagId => itemTagIds.includes(tagId))
+      if (!hasMatchingTag) return false
     }
 
     return true
@@ -1252,6 +1329,48 @@ const filteredResearchItems = computed(() => {
       return 0
     })
   }
+
+  return filtered
+})
+
+// Filtered documents
+const filteredDocuments = computed(() => {
+  if (!company.value?.documents) return []
+
+  let filtered = company.value.documents.filter(doc => {
+    // Search filter (includes title, description, and tag names)
+    if (documentFilters.value.search) {
+      const searchLower = documentFilters.value.search.toLowerCase()
+      const matchesSearch = doc.title?.toLowerCase().includes(searchLower) ||
+                           doc.description?.toLowerCase().includes(searchLower) ||
+                           (doc.tags && doc.tags.some(tag => tag.name.toLowerCase().includes(searchLower)))
+      if (!matchesSearch) return false
+    }
+
+    // Category filter
+    if (documentFilters.value.category) {
+      const docCategoryId = doc.category?.id?.toString()
+      if (docCategoryId !== documentFilters.value.category) return false
+    }
+
+    // Visibility filter
+    if (documentFilters.value.visibility) {
+      if (doc.visibility !== documentFilters.value.visibility) return false
+    }
+
+    // Tag filter
+    if (documentFilters.value.tags && documentFilters.value.tags.length > 0) {
+      const selectedTagIds = documentFilters.value.tags.map(tag => tag.id)
+      const docTagIds = doc.tags ? doc.tags.map(tag => tag.id) : []
+      const hasMatchingTag = selectedTagIds.some(tagId => docTagIds.includes(tagId))
+      if (!hasMatchingTag) return false
+    }
+
+    return true
+  })
+
+  // Sort by creation date (newest first)
+  filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
 
   return filtered
 })
@@ -1470,7 +1589,8 @@ const resetFilters = () => {
     search: '',
     category: '',
     visibility: '',
-    dateRange: ''
+    dateRange: '',
+    tags: []
   }
 }
 
@@ -2039,7 +2159,8 @@ const editResearchItem = (item) => {
     files: [],
     urls: [],
     newUrl: '',
-    selectedExistingFiles: []
+    selectedExistingFiles: [],
+    selectedTags: item.tags || []
   }
 
   // Set edit state
@@ -2062,7 +2183,8 @@ const resetResearchForm = () => {
     files: [],
     urls: [],
     newUrl: '',
-    selectedExistingFiles: []
+    selectedExistingFiles: [],
+    selectedTags: []
   }
   researchErrors.value = {}
 
@@ -2126,6 +2248,13 @@ const handleResearchSave = async () => {
     if (researchForm.value.selectedExistingFiles && researchForm.value.selectedExistingFiles.length > 0) {
       researchForm.value.selectedExistingFiles.forEach((file, index) => {
         formData.append(`existing_files[${index}]`, file.id)
+      })
+    }
+
+    // Add selected tags
+    if (researchForm.value.selectedTags && researchForm.value.selectedTags.length > 0) {
+      researchForm.value.selectedTags.forEach((tag, index) => {
+        formData.append(`tag_ids[${index}]`, tag.id)
       })
     }
 

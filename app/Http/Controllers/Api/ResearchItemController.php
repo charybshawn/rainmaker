@@ -49,7 +49,20 @@ class ResearchItemController extends Controller
             $query->where('company_id', $request->company_id);
         }
 
-        // Search functionality (enhanced to also search company names)
+        // Filter by tags if provided
+        if ($request->has('tag_ids') && ! empty($request->tag_ids)) {
+            $tagIds = is_array($request->tag_ids) ? $request->tag_ids : [$request->tag_ids];
+            $query->whereHas('tags', function ($tagQuery) use ($tagIds) {
+                $tagQuery->whereIn('tags.id', $tagIds);
+            });
+        }
+
+        // Filter by category if provided
+        if ($request->has('category_id') && ! empty($request->category_id)) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Enhanced search functionality (includes company names and tags)
         if ($request->has('search') && ! empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
@@ -58,6 +71,9 @@ class ResearchItemController extends Controller
                     ->orWhereHas('company', function ($companyQuery) use ($searchTerm) {
                         $companyQuery->where('name', 'like', '%'.$searchTerm.'%')
                             ->orWhere('ticker', 'like', '%'.$searchTerm.'%');
+                    })
+                    ->orWhereHas('tags', function ($tagQuery) use ($searchTerm) {
+                        $tagQuery->where('name', 'like', '%'.$searchTerm.'%');
                     });
             });
         }

@@ -180,10 +180,125 @@
             </select>
           </div>
         </div>
+
+        <!-- Tags Section -->
+        <div>
+          <label class="block text-sm font-medium text-white mb-3">Tags</label>
+          <div class="dark">
+            <TagSelector
+              v-model="selectedTags"
+              placeholder="Search or create tags..."
+              help-text="Add tags to categorize and organize your research document"
+            />
+          </div>
+        </div>
+
+        <!-- Error Display Section -->
+        <div v-if="hasErrors || criticalError" class="mt-6 space-y-3">
+          <!-- Critical Error -->
+          <div v-if="criticalError" class="p-4 rounded-xl bg-red-500/20 border border-red-400/30">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                <span class="text-red-200 font-medium">Critical Error</span>
+              </div>
+            </div>
+            <p class="text-red-100 text-sm mt-2">{{ criticalError }}</p>
+          </div>
+
+          <!-- Upload Errors -->
+          <div v-for="error in uploadErrors" :key="error.id"
+               :class="[
+                 'p-4 rounded-xl border flex items-center justify-between',
+                 error.type === 'validation' ? 'bg-yellow-500/20 border-yellow-400/30' :
+                 error.type === 'upload' ? 'bg-red-500/20 border-red-400/30' :
+                 error.type === 'network' ? 'bg-blue-500/20 border-blue-400/30' :
+                 'bg-red-500/20 border-red-400/30'
+               ]">
+            <div class="flex items-center space-x-3 flex-1">
+              <div :class="[
+                'w-2 h-2 rounded-full',
+                error.type === 'validation' ? 'bg-yellow-400' :
+                error.type === 'upload' ? 'bg-red-400' :
+                error.type === 'network' ? 'bg-blue-400' : 'bg-red-400'
+              ]"></div>
+              <div class="flex-1">
+                <p :class="[
+                  'text-sm font-medium',
+                  error.type === 'validation' ? 'text-yellow-200' :
+                  error.type === 'upload' ? 'text-red-200' :
+                  error.type === 'network' ? 'text-blue-200' : 'text-red-200'
+                ]">{{ error.message }}</p>
+                <p class="text-xs text-gray-400 mt-1">{{ new Date(error.timestamp).toLocaleTimeString() }}</p>
+              </div>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button v-if="error.retryable" @click="retryOperation(error)"
+                      class="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                Retry
+              </button>
+              <button @click="removeError(error.id)"
+                      class="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- File Upload Progress -->
+        <div v-if="uploading && Object.keys(uploadProgress).length > 0" class="mt-6 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-medium text-white">Upload Progress</h4>
+            <button @click="uploadProgress = {}" class="text-xs text-gray-400 hover:text-white">Clear</button>
+          </div>
+          <div v-for="(progress, fileName) in uploadProgress" :key="fileName"
+               class="p-3 rounded-lg bg-white/5 border border-white/10">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm text-white truncate">{{ fileName }}</span>
+              <span class="text-xs text-gray-400">{{ progress.status }}</span>
+            </div>
+            <div class="w-full bg-gray-700 rounded-full h-2">
+              <div :class="[
+                'h-2 rounded-full transition-all duration-300',
+                progress.status === 'completed' ? 'bg-green-500' :
+                progress.status === 'failed' ? 'bg-red-500' :
+                progress.status === 'uploading' ? 'bg-blue-500' :
+                'bg-yellow-500'
+              ]" :style="{ width: progress.progress + '%' }"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-400 mt-1">
+              <span>{{ progress.progress }}%</span>
+              <span v-if="progress.status === 'completed'">✓ Complete</span>
+              <span v-else-if="progress.status === 'failed'">✗ Failed</span>
+              <span v-else-if="progress.status === 'uploading'">⏳ Uploading</span>
+              <span v-else>⏸ {{ progress.status }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Modal Footer -->
       <div class="sticky bottom-0 bg-gray-900 border-t border-white/20 px-6 py-4 rounded-b-2xl">
+        <!-- Error Summary -->
+        <div v-if="hasErrors" class="mb-4 flex items-center justify-between p-3 rounded-lg bg-red-500/10 border border-red-400/20">
+          <div class="flex items-center space-x-2">
+            <div class="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+            <span class="text-red-200 text-sm font-medium">
+              {{ uploadErrors.length }} error{{ uploadErrors.length > 1 ? 's' : '' }} occurred
+            </span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button v-if="canRetry" @click="saveDocument"
+                    class="px-3 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-200 rounded-lg transition-colors">
+              Retry All
+            </button>
+            <button @click="clearErrors"
+                    class="px-3 py-1 text-xs bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors">
+              Clear All
+            </button>
+          </div>
+        </div>
+
         <div class="flex items-center justify-between">
           <button
             @click="emit('close')"
@@ -195,13 +310,17 @@
             @click="saveDocument"
             :disabled="!canSave || uploading"
             :class="[
-              'px-6 py-3 font-medium rounded-xl transition-all duration-300',
+              'px-6 py-3 font-medium rounded-xl transition-all duration-300 flex items-center space-x-2',
               canSave && !uploading
-                ? 'bg-green-500/20 hover:bg-green-500/30 text-green-200 hover:text-white border border-green-400/30'
+                ? hasErrors
+                  ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-200 hover:text-white border border-orange-400/30'
+                  : 'bg-green-500/20 hover:bg-green-500/30 text-green-200 hover:text-white border border-green-400/30'
                 : 'bg-gray-500/20 text-gray-400 border border-gray-400/30 cursor-not-allowed'
             ]"
           >
+            <div v-if="uploading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
             <span v-if="uploading">Creating...</span>
+            <span v-else-if="hasErrors && canRetry">Retry Upload</span>
             <span v-else>{{ saveButtonText }}</span>
           </button>
         </div>
@@ -214,6 +333,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import axios from 'axios'
+import TagSelector from '@/Components/TagSelector.vue'
 
 const props = defineProps({
   show: {
@@ -255,6 +375,17 @@ const uploading = ref(false)
 const selectedFiles = ref([])
 const availableAssets = ref([])
 const selectedAssets = ref([])
+const selectedTags = ref([])
+
+// Enhanced error handling
+const uploadErrors = ref([])
+const uploadProgress = ref({})
+const retryAttempts = ref({})
+const criticalError = ref(null)
+
+// Error handling states
+const hasErrors = computed(() => uploadErrors.value.length > 0)
+const canRetry = computed(() => uploadErrors.value.some(error => error.retryable))
 
 // File selection handler - simplified for direct asset creation
 const handleFileSelect = async (event) => {
@@ -302,75 +433,330 @@ const fetchAvailableAssets = async () => {
   }
 }
 
-// Create assets directly and then create document
+// Error handling utilities
+const clearErrors = () => {
+  uploadErrors.value = []
+  criticalError.value = null
+}
+
+const addError = (error) => {
+  uploadErrors.value.push({
+    id: Date.now(),
+    message: error.message,
+    type: error.type || 'error',
+    retryable: error.retryable !== false,
+    timestamp: new Date(),
+    context: error.context || {}
+  })
+}
+
+const removeError = (errorId) => {
+  uploadErrors.value = uploadErrors.value.filter(error => error.id !== errorId)
+}
+
+const getFileProgress = (fileName) => {
+  return uploadProgress.value[fileName] || { progress: 0, status: 'pending' }
+}
+
+const setFileProgress = (fileName, progress, status = 'uploading') => {
+  uploadProgress.value[fileName] = { progress, status, timestamp: Date.now() }
+}
+
+const getRetryCount = (context) => {
+  const key = typeof context === 'string' ? context : JSON.stringify(context)
+  return retryAttempts.value[key] || 0
+}
+
+const incrementRetryCount = (context) => {
+  const key = typeof context === 'string' ? context : JSON.stringify(context)
+  retryAttempts.value[key] = (retryAttempts.value[key] || 0) + 1
+}
+
+const resetRetryCount = (context) => {
+  const key = typeof context === 'string' ? context : JSON.stringify(context)
+  delete retryAttempts.value[key]
+}
+
+// Robust document creation with comprehensive error handling
 const saveDocument = async () => {
-  if (!props.selectedCompany || (selectedFiles.value.length === 0 && selectedAssets.value.length === 0)) {
+  console.log('saveDocument called', {
+    selectedCompany: props.selectedCompany?.name,
+    selectedFiles: selectedFiles.value.length,
+    selectedAssets: selectedAssets.value.length,
+    selectedTags: selectedTags.value.length,
+    documentTitle: documentTitle.value
+  })
+
+  // Clear previous errors
+  clearErrors()
+
+  // Validation checks
+  if (!props.selectedCompany) {
+    addError({
+      message: 'Please select a company before creating a document.',
+      type: 'validation',
+      retryable: false
+    })
+    return
+  }
+
+  if (selectedFiles.value.length === 0 && selectedAssets.value.length === 0) {
+    addError({
+      message: 'Please select at least one file to upload or one existing asset to attach.',
+      type: 'validation',
+      retryable: false
+    })
+    return
+  }
+
+  if (!documentTitle.value?.trim()) {
+    addError({
+      message: 'Document title is required.',
+      type: 'validation',
+      retryable: false
+    })
     return
   }
 
   uploading.value = true
+  let assetIds = []
 
   try {
-    let assetIds = []
-
     // Step 1: Create new assets if files are selected
     if (selectedFiles.value.length > 0) {
-      const formData = new FormData()
-      formData.append('title', documentTitle.value || selectedFiles.value[0].name)
-      formData.append('description', `Research asset: ${selectedFiles.value.map(f => f.name).join(', ')}`)
-      formData.append('company_id', props.selectedCompany.id)
-      formData.append('visibility', props.form.visibility || 'private')
+      try {
+        console.log('Creating assets from files:', selectedFiles.value.map(f => f.name))
 
-      selectedFiles.value.forEach(file => {
-        formData.append('files[]', file)
-      })
+        // Initialize progress for each file
+        selectedFiles.value.forEach(file => {
+          setFileProgress(file.name, 0, 'preparing')
+        })
 
-      const assetResponse = await axios.post('/api/assets', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+        // Validate file sizes and types
+        const maxFileSize = 10 * 1024 * 1024 // 10MB
+        const allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg']
+
+        for (const file of selectedFiles.value) {
+          if (file.size > maxFileSize) {
+            throw new Error(`File "${file.name}" is too large. Maximum size is 10MB.`)
+          }
+
+          const extension = file.name.split('.').pop()?.toLowerCase()
+          if (!allowedTypes.includes(extension)) {
+            throw new Error(`File "${file.name}" has an unsupported format. Allowed formats: ${allowedTypes.join(', ')}`)
+          }
+
+          setFileProgress(file.name, 25, 'validated')
         }
-      })
 
-      const newAssets = assetResponse.data.assets || []
-      assetIds = newAssets.map(asset => asset.id)
+        const formData = new FormData()
+        formData.append('title', documentTitle.value.trim())
+        formData.append('description', `Research asset: ${selectedFiles.value.map(f => f.name).join(', ')}`)
+        formData.append('company_id', props.selectedCompany.id)
+        formData.append('visibility', props.form.visibility || 'private')
+
+        selectedFiles.value.forEach(file => {
+          formData.append('files[]', file)
+          setFileProgress(file.name, 50, 'uploading')
+        })
+
+        console.log('FormData prepared for', selectedFiles.value.length, 'files')
+
+        const assetResponse = await axios.post('/api/assets', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 60000, // 60 second timeout
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            selectedFiles.value.forEach(file => {
+              setFileProgress(file.name, Math.min(50 + (percentCompleted / 2), 90), 'uploading')
+            })
+          }
+        })
+
+        console.log('Asset creation response:', assetResponse.data)
+
+        // Handle partial failures
+        if (assetResponse.data.errors && assetResponse.data.errors.length > 0) {
+          assetResponse.data.errors.forEach(error => {
+            addError({
+              message: `Failed to upload "${error.filename}": ${error.error}`,
+              type: 'upload',
+              retryable: true,
+              context: { filename: error.filename }
+            })
+          })
+        }
+
+        const newAssets = assetResponse.data.assets || []
+        if (newAssets.length === 0 && selectedFiles.value.length > 0) {
+          throw new Error('No assets were created successfully. Please check file formats and try again.')
+        }
+
+        assetIds = newAssets.map(asset => asset.id)
+        console.log('Generated asset IDs:', assetIds)
+
+        // Mark successful uploads
+        selectedFiles.value.forEach(file => {
+          const wasSuccessful = newAssets.some(asset =>
+            asset.file_name === file.name || asset.title === documentTitle.value
+          )
+          if (wasSuccessful) {
+            setFileProgress(file.name, 100, 'completed')
+          }
+        })
+
+      } catch (fileError) {
+        const retryCount = getRetryCount('asset_creation')
+
+        if (retryCount < 3 && !fileError.message.includes('too large') && !fileError.message.includes('unsupported format')) {
+          addError({
+            message: `Asset creation failed: ${fileError.message}. Retry ${retryCount + 1}/3 available.`,
+            type: 'upload',
+            retryable: true,
+            context: { operation: 'asset_creation', attempt: retryCount + 1 }
+          })
+          incrementRetryCount('asset_creation')
+        } else {
+          addError({
+            message: `Asset creation failed: ${fileError.message}`,
+            type: 'upload',
+            retryable: false
+          })
+        }
+
+        selectedFiles.value.forEach(file => {
+          setFileProgress(file.name, 0, 'failed')
+        })
+
+        throw fileError
+      }
     }
 
     // Step 2: Add selected existing assets
     assetIds = assetIds.concat(selectedAssets.value.map(asset => asset.id))
 
     // Step 3: Create document and link assets
-    const documentData = {
-      title: documentTitle.value || 'Research Document',
-      description: `Research document with ${assetIds.length} linked assets`,
-      company_id: props.selectedCompany.id,
-      category_id: props.form.category_id || null,
-      visibility: props.form.visibility || 'private',
-      asset_ids: assetIds
+    try {
+      const documentData = {
+        title: documentTitle.value.trim(),
+        description: `Research document with ${assetIds.length} linked assets`,
+        company_id: props.selectedCompany.id,
+        category_id: props.form.category_id || null,
+        visibility: props.form.visibility || 'private',
+        asset_ids: assetIds,
+        tag_ids: selectedTags.value.map(tag => tag.id)
+      }
+
+      console.log('Creating document with data:', documentData)
+      const documentResponse = await axios.post('/api/documents', documentData, {
+        timeout: 30000 // 30 second timeout
+      })
+      console.log('Document creation response:', documentResponse.data)
+
+      // Success - emit success event with the created document
+      emit('document-saved', documentResponse.data)
+
+      // Reset form and close modal
+      resetForm()
+      emit('close')
+
+    } catch (docError) {
+      const retryCount = getRetryCount('document_creation')
+
+      if (retryCount < 2) {
+        addError({
+          message: `Document creation failed: ${docError.response?.data?.message || docError.message}. Retry ${retryCount + 1}/2 available.`,
+          type: 'creation',
+          retryable: true,
+          context: { operation: 'document_creation', attempt: retryCount + 1 }
+        })
+        incrementRetryCount('document_creation')
+      } else {
+        addError({
+          message: `Document creation failed: ${docError.response?.data?.message || docError.message}`,
+          type: 'creation',
+          retryable: false
+        })
+      }
+
+      throw docError
     }
 
-    const documentResponse = await axios.post('/api/documents', documentData)
-
-    // Reset form
-    selectedFiles.value = []
-    selectedAssets.value = []
-    documentTitle.value = ''
-    uploadMethod.value = 'file'
-
-    // Emit success
-    emit('document-saved', documentResponse.data)
-    emit('close')
-
   } catch (error) {
-    console.error('Failed to create research asset:', error)
-    // Handle error display
+    console.error('Document creation failed:', error)
+
+    // Handle network errors
+    if (!error.response) {
+      addError({
+        message: 'Network error - please check your connection and try again.',
+        type: 'network',
+        retryable: true
+      })
+    }
+    // Handle server errors
+    else if (error.response.status >= 500) {
+      addError({
+        message: 'Server error - please try again in a few moments.',
+        type: 'server',
+        retryable: true
+      })
+    }
+    // Handle validation errors
+    else if (error.response.status === 422) {
+      const validationErrors = error.response.data.errors || {}
+      Object.entries(validationErrors).forEach(([field, messages]) => {
+        messages.forEach(message => {
+          addError({
+            message: `${field}: ${message}`,
+            type: 'validation',
+            retryable: false
+          })
+        })
+      })
+    }
+    // Handle other client errors
+    else {
+      addError({
+        message: error.response?.data?.message || 'An unexpected error occurred.',
+        type: 'error',
+        retryable: false
+      })
+    }
   } finally {
     uploading.value = false
   }
 }
 
+// Reset form function
+const resetForm = () => {
+  selectedFiles.value = []
+  selectedAssets.value = []
+  selectedTags.value = []
+  documentTitle.value = ''
+  uploadMethod.value = 'file'
+  clearErrors()
+  uploadProgress.value = {}
+  retryAttempts.value = {}
+}
+
+// Retry failed operations
+const retryOperation = async (error) => {
+  if (!error.retryable) return
+
+  removeError(error.id)
+
+  if (error.context?.operation === 'asset_creation' || error.context?.operation === 'document_creation') {
+    await saveDocument()
+  }
+}
+
 // Computed properties
 const canSave = computed(() => {
-  return props.selectedCompany && (selectedFiles.value.length > 0 || selectedAssets.value.length > 0)
+  return props.selectedCompany &&
+         (selectedFiles.value.length > 0 || selectedAssets.value.length > 0) &&
+         documentTitle.value?.trim()
 })
 
 const saveButtonText = computed(() => {
@@ -390,10 +776,7 @@ watch(() => props.show, (newValue) => {
     fetchAvailableAssets()
   } else {
     // Reset state when modal closes
-    selectedFiles.value = []
-    selectedAssets.value = []
-    documentTitle.value = ''
-    uploadMethod.value = 'file'
+    resetForm()
   }
 })
 

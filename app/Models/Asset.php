@@ -46,8 +46,12 @@ class Asset extends Model
             }
         }
 
-        // Fallback to storage URL
-        return \Storage::url($this->file_path);
+        // For files stored in public disk, use the public URL
+        if ($this->file_path) {
+            return \Storage::disk('public')->url($this->file_path);
+        }
+
+        return '#';
     }
 
     public function documents(): BelongsToMany

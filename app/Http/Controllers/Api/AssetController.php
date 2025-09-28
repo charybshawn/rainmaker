@@ -17,22 +17,38 @@ class AssetController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'company_id' => 'required|exists:companies,id',
-            'visibility' => 'required|in:public,team,private',
-            'files' => 'required|array',
-            'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+        \Log::info('Asset upload started', [
+            'files_count' => count($request->file('files') ?? []),
+            'has_files' => $request->hasFile('files'),
+            'user_id' => auth()->id(),
         ]);
+
+        try {
+            $validated = $request->validate([
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'company_id' => 'required|exists:companies,id',
+                'visibility' => 'required|in:public,team,private',
+                'files' => 'required|array',
+                'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Asset validation failed', [
+                'errors' => $e->errors(),
+                'request_keys' => array_keys($request->all()),
+                'files_key_exists' => $request->has('files'),
+                'files_value' => $request->file('files'),
+            ]);
+            throw $e;
+        }
 
         $assets = [];
         $errors = [];
 
-        foreach ($request->file('files') as $file) {
+        foreach ($request->file('files') ?? [] as $file) {
             try {
-                // Store file in the unified location
-                $path = $file->store('research-assets', 'local');
+                // Store file in the public location for documents
+                $path = $file->store('research-assets', 'public');
 
                 $asset = Asset::create([
                     'title' => $validated['title'],
@@ -42,13 +58,20 @@ class AssetController extends Controller
                     'mime_type' => $file->getMimeType(),
                     'size' => $file->getSize(),
                     'source_type' => 'document',
-                    'source_id' => null, // No source model for direct uploads
+                    'source_id' => 0, // Use 0 for direct uploads since NULL is not allowed
                     'media_id' => null, // No media library for direct uploads
                     'company_id' => $validated['company_id'],
                     'user_id' => auth()->id(),
                     'visibility' => $validated['visibility'],
                     'created_via' => 'document',
                     'is_orphaned' => false,
+                ]);
+
+                \Log::info('Asset created successfully', [
+                    'asset_id' => $asset->id,
+                    'file_name' => $asset->file_name,
+                    'file_path' => $asset->file_path,
+                    'url' => $asset->url,
                 ]);
 
                 $assets[] = [
@@ -61,6 +84,11 @@ class AssetController extends Controller
                 ];
 
             } catch (\Exception $e) {
+                \Log::error('Asset creation failed', [
+                    'filename' => $file->getClientOriginalName(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                ]);
                 $errors[] = [
                     'filename' => $file->getClientOriginalName(),
                     'error' => $e->getMessage()
