@@ -6,8 +6,7 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/js/app.js',
-                'resources/js/Pages/InvestmentDashboard.vue'
+                'resources/js/app.js'
             ],
             refresh: true,
         }),

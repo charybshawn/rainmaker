@@ -45,7 +45,7 @@ const switchToLogin = () => {
 <template>
     <div
         v-if="show"
-        class="fixed inset-0 z-50 overflow-y-auto"
+        class="fixed inset-0 z-[10000] overflow-y-auto"
         @click="closeModal"
     >
         <div class="flex items-center justify-center min-h-screen p-4">

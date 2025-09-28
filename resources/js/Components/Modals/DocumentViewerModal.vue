@@ -1,6 +1,6 @@
 <template>
   <div
-    v-show="show"
+    v-if="show"
     class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 lg:p-6 z-[9999]"
     @click.self="$emit('close')"
   >
@@ -19,7 +19,7 @@
                 <span v-if="!isEditing.category"
                       class="inline-flex items-center px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md text-xs group cursor-pointer hover:bg-blue-500/30 transition-colors"
                       @click="canEdit && startEditing('category')">
-                  {{ document.category?.name || 'No category' }}
+                  {{ document?.category?.name || 'No category' }}
                   <svg v-if="canEdit" class="w-3 h-3 ml-1 opacity-0 group-hover:opacity-70 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                   </svg>
@@ -48,7 +48,7 @@
                 <span v-if="!isEditing.visibility"
                       class="inline-flex items-center px-2 py-1 bg-purple-500/20 text-purple-300 rounded-md text-xs capitalize group cursor-pointer hover:bg-purple-500/30 transition-colors"
                       @click="canEdit && startEditing('visibility')">
-                  {{ document.visibility || 'private' }}
+                  {{ document?.visibility || 'private' }}
                   <svg v-if="canEdit" class="w-3 h-3 ml-1 opacity-0 group-hover:opacity-70 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                   </svg>
@@ -74,10 +74,10 @@
               </div>
 
               <span v-if="document?.user" class="inline-flex items-center px-2 py-1 bg-green-500/20 text-green-300 rounded-md text-xs">
-                👤 {{ document.user.name }}
+                👤 {{ document?.user?.name }}
               </span>
               <span v-if="document?.created_at" class="inline-flex items-center px-2 py-1 bg-gray-500/20 text-gray-300 rounded-md text-xs">
-                {{ formatDate(document.created_at) }}
+                {{ formatDate(document?.created_at) }}
               </span>
             </div>
           </div>
@@ -97,7 +97,7 @@
         <div class="p-4 sm:p-6 lg:p-8 space-y-6">
 
           <!-- Tags -->
-          <div v-if="document?.tags && document.tags.length > 0" class="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
+          <div v-if="document?.tags && document?.tags?.length > 0" class="bg-white/5 rounded-xl p-4 sm:p-6 border border-white/10">
             <button
               @click="toggleSection('tags')"
               class="w-full flex items-center justify-between text-left"
@@ -120,7 +120,7 @@
             </button>
             <div v-if="openSections.tags" class="mt-4 flex flex-wrap gap-2">
               <span
-                v-for="tag in document.tags"
+                v-for="tag in document?.tags"
                 :key="tag.id"
                 class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                 :style="{ backgroundColor: tag.color + '20', color: tag.color, borderColor: tag.color + '40' }"
@@ -132,9 +132,9 @@
           </div>
 
           <!-- Document Content -->
-          <div v-if="document?.attachments && document.attachments.length > 0" class="space-y-4">
+          <div v-if="document?.attachments && document?.attachments?.length > 0" class="space-y-4">
             <div
-              v-for="attachment in document.attachments"
+              v-for="attachment in document?.attachments"
               :key="attachment.id"
               class="bg-white/5 rounded-xl border border-white/10"
             >
@@ -246,7 +246,7 @@
       <div class="bg-gradient-to-r from-gray-900/50 to-gray-800/50 px-4 sm:px-6 lg:px-8 py-4 border-t border-white/20">
         <div class="flex flex-wrap items-center justify-between gap-4">
           <div class="text-sm text-gray-400">
-            <span v-if="document?.company">📈 {{ document.company.name }} ({{ document.company.ticker }})</span>
+            <span v-if="document?.company">📈 {{ document?.company?.name }} ({{ document?.company?.ticker }})</span>
           </div>
           <div class="flex items-center space-x-3">
             <button
@@ -335,7 +335,7 @@ const saveField = async (field) => {
 
   // Emit update event to parent component
   emit('update', {
-    id: props.document.id,
+    id: props.document?.id,
     field,
     value: editValues.value[field],
     data: updateData

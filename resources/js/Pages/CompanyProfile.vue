@@ -957,13 +957,6 @@
       </div>
     </div>
 
-    <!-- Modals -->
-    <LoginModal
-      :show="showLoginModal"
-      :can-reset-password="true"
-      @close="showLoginModal = false"
-    />
-
     <!-- Delete Confirmation Modal -->
     <DeleteConfirmationModal
       :show="showDeleteModal"

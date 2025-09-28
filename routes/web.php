@@ -27,21 +27,9 @@ Route::get('/', function () {
     ]);
 })->name('dashboard');
 
-// Authenticated Dashboard - same as main but shows user context
+// Authenticated Dashboard - redirects to main dashboard
 Route::get('/dashboard', function () {
-    // Get recent published blog posts for community feed
-    $recentPosts = \App\Models\BlogPost::where('status', 'published')
-        ->with('user:id,name')
-        ->latest('published_at')
-        ->take(5)
-        ->get(['id', 'title', 'slug', 'content', 'published_at', 'user_id']);
-
-    return Inertia::render('InvestmentDashboard', [
-        'auth' => [
-            'user' => auth()->user()->load('roles', 'permissions')
-        ],
-        'recentBlogPosts' => $recentPosts
-    ]);
+    return redirect()->route('dashboard');
 })->middleware(['auth', 'verified'])->name('auth.dashboard');
 
 // Profile Routes
@@ -73,7 +61,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
 });
 
 // API Routes - All require authentication
-Route::prefix('api')->middleware('auth')->group(function () {
+Route::prefix('api')->middleware(['auth', 'verified'])->group(function () {
         // Application data endpoints
         Route::get('quotes', [\App\Http\Controllers\Api\BlogPostController::class, 'quotes']);
         Route::get('git-info', [\App\Http\Controllers\GitInfoController::class, 'index']);
@@ -198,35 +186,31 @@ Route::prefix('api')->middleware('auth')->group(function () {
 });
 
 // Blog Routes - SPA-friendly (no separate create/edit pages)
-Route::middleware('auth')->prefix('my-blog')->name('blog.')->group(function () {
+Route::middleware(['auth', 'verified'])->prefix('my-blog')->name('blog.')->group(function () {
     Route::get('/', [BlogPostController::class, 'index'])->name('index');
     Route::post('/', [BlogPostController::class, 'store'])->name('store');
     Route::put('/{blogPost}', [BlogPostController::class, 'update'])->name('update');
     Route::delete('/{blogPost}', [BlogPostController::class, 'destroy'])->name('destroy');
 });
 
-// Company Routes - show login modal if not authenticated
+// Company Routes - require authentication
 Route::get('/companies', function () {
-    $auth = auth()->check() ? [
-        'user' => auth()->user()->load('roles', 'permissions')
-    ] : ['user' => null];
-
     return Inertia::render('CompanyListing', [
-        'auth' => $auth
+        'auth' => [
+            'user' => auth()->user()->load('roles', 'permissions')
+        ]
     ]);
-})->name('companies.index');
+})->middleware(['auth', 'verified'])->name('companies.index');
 
 Route::get('/companies/{ticker}', function ($ticker) {
-    $auth = auth()->check() ? [
-        'user' => auth()->user()->load('roles', 'permissions')
-    ] : ['user' => null];
-
     return Inertia::render('CompanyProfile', [
         'ticker' => $ticker,
         'tab' => request('tab', 'overview'),
-        'auth' => $auth
+        'auth' => [
+            'user' => auth()->user()->load('roles', 'permissions')
+        ]
     ]);
-})->name('company.profile');
+})->middleware(['auth', 'verified'])->name('company.profile');
 
 // Blog Routes (require authentication)
 Route::middleware(['auth', 'verified'])->group(function () {
