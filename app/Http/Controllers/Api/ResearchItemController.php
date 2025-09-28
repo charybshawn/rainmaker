@@ -21,6 +21,11 @@ class ResearchItemController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        // Check if user has permission to view research items
+        if (!auth()->user()->can('view research items')) {
+            return response()->json(['message' => 'You do not have permission to view research items.'], 403);
+        }
+
         // Pagination parameters
         $perPage = $request->get('limit', 5);
         $page = $request->get('page', 1);
@@ -104,6 +109,11 @@ class ResearchItemController extends Controller
 
     public function store(FileUploadRequest $request): JsonResponse
     {
+        // Check if user has permission to create research items
+        if (!auth()->user()->can('create research items')) {
+            return response()->json(['message' => 'You do not have permission to create research items.'], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -172,6 +182,11 @@ class ResearchItemController extends Controller
 
     public function show(ResearchItem $researchItem): JsonResponse
     {
+        // Check if user has permission to view research items
+        if (!auth()->user()->can('view research items')) {
+            return response()->json(['message' => 'You do not have permission to view research items.'], 403);
+        }
+
         // Check visibility permissions
         if (auth()->check()) {
             // If authenticated, allow viewing own items + public items
@@ -228,9 +243,15 @@ class ResearchItemController extends Controller
                 'request_data' => $request->all(),
             ]);
 
-            // Only allow updating own research items
-            if ($researchItem->user_id !== auth()->id()) {
-                return response()->json(['message' => 'Forbidden'], 403);
+            // Check permissions: admin can edit all, users can only edit their own research items
+            $user = auth()->user();
+            if (!$user->hasRole('admin') && !$user->can('edit research items')) {
+                return response()->json(['message' => 'You do not have permission to edit research items.'], 403);
+            }
+
+            // Non-admin users can only edit research items they created
+            if (!$user->hasRole('admin') && $researchItem->user_id !== $user->id) {
+                return response()->json(['message' => 'You can only edit research items that you created.'], 403);
             }
 
             $validated = $request->validate([
@@ -315,9 +336,15 @@ class ResearchItemController extends Controller
 
     public function destroy(ResearchItem $researchItem): JsonResponse
     {
-        // Only allow deleting own research items
-        if ($researchItem->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        // Check permissions: admin can delete all, users can only delete their own research items
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->can('delete research items')) {
+            return response()->json(['message' => 'You do not have permission to delete research items.'], 403);
+        }
+
+        // Non-admin users can only delete research items they created
+        if (!$user->hasRole('admin') && $researchItem->user_id !== $user->id) {
+            return response()->json(['message' => 'You can only delete research items that you created.'], 403);
         }
 
         // Mark associated assets as orphaned before deletion

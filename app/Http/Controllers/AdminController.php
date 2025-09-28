@@ -31,7 +31,7 @@ class AdminController extends Controller
 
         return Inertia::render('Admin/Users', [
             'users' => User::with('roles')->get(),
-            'roles' => Role::all(),
+            'roles' => Role::with('permissions')->get(),
         ]);
     }
 

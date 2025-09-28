@@ -22,7 +22,18 @@
     <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 shadow-[0_5px_16px_0_rgba(31,38,135,0.2)]">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
         <!-- Top Navigation Bar -->
-        <div class="flex items-center justify-end mb-6">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center space-x-4">
+            <Link
+              :href="route('dashboard')"
+              class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 backdrop-blur-xl border border-white/10"
+            >
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+              </svg>
+              Back to Dashboard
+            </Link>
+          </div>
 
           <!-- User Menu (Hidden on mobile) -->
           <div v-if="$page.props.auth.user" class="relative hidden sm:block">
@@ -37,6 +48,12 @@
               </template>
               <template #content>
                 <DropdownLink :href="route('profile.edit')">Profile</DropdownLink>
+                <DropdownLink
+                  v-if="$page.props.auth.user?.roles?.some(role => role.name === 'admin')"
+                  :href="route('admin.dashboard')"
+                >
+                  Admin Panel
+                </DropdownLink>
                 <DropdownLink :href="route('logout')" method="post" as="button">Log Out</DropdownLink>
               </template>
             </Dropdown>

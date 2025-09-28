@@ -15,6 +15,11 @@ class DocumentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // Check if user has permission to download documents
+        if (!auth()->user()->can('download documents')) {
+            return response()->json(['message' => 'You do not have permission to view documents.'], 403);
+        }
+
         $perPage = $request->get('limit', 15);
         $page = $request->get('page', 1);
 
@@ -110,6 +115,11 @@ class DocumentController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // Check if user has permission to upload documents
+        if (!auth()->user()->can('upload documents')) {
+            return response()->json(['message' => 'You do not have permission to upload documents.'], 403);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -146,6 +156,11 @@ class DocumentController extends Controller
      */
     public function show(Document $document): JsonResponse
     {
+        // Check if user has permission to download documents
+        if (!auth()->user()->can('download documents')) {
+            return response()->json(['message' => 'You do not have permission to view documents.'], 403);
+        }
+
         $document->load(['company', 'category', 'tags', 'user', 'assets']);
 
         return response()->json($this->transformDocument($document));
@@ -156,9 +171,15 @@ class DocumentController extends Controller
      */
     public function update(Request $request, Document $document): JsonResponse
     {
-        // Only allow updating own documents
-        if ($document->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        // Check permissions: admin can edit all, users can only edit their own documents
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->can('upload documents')) {
+            return response()->json(['message' => 'You do not have permission to edit documents.'], 403);
+        }
+
+        // Non-admin users can only edit documents they created
+        if (!$user->hasRole('admin') && $document->user_id !== $user->id) {
+            return response()->json(['message' => 'You can only edit documents that you created.'], 403);
         }
 
         $validated = $request->validate([
@@ -195,9 +216,15 @@ class DocumentController extends Controller
      */
     public function destroy(Document $document): JsonResponse
     {
-        // Only allow deleting own documents
-        if ($document->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Forbidden'], 403);
+        // Check permissions: admin can delete all, users can only delete their own documents
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->can('upload documents')) {
+            return response()->json(['message' => 'You do not have permission to delete documents.'], 403);
+        }
+
+        // Non-admin users can only delete documents they created
+        if (!$user->hasRole('admin') && $document->user_id !== $user->id) {
+            return response()->json(['message' => 'You can only delete documents that you created.'], 403);
         }
 
         // Remove asset associations (but keep the assets themselves)

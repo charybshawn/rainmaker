@@ -12,6 +12,11 @@ class CompanyController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
+        // Check if user has permission to view companies
+        if (!auth()->user()->can('view companies')) {
+            return response()->json(['message' => 'You do not have permission to view companies.'], 403);
+        }
+
         // Pagination parameters
         $perPage = $request->get('limit', 10);
         $page = $request->get('page', 1);
@@ -82,6 +87,11 @@ class CompanyController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        // Check if user has permission to create companies
+        if (!auth()->user()->can('create companies')) {
+            return response()->json(['message' => 'You do not have permission to create companies.'], 403);
+        }
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
@@ -140,6 +150,11 @@ class CompanyController extends Controller
 
     public function show(Company $company): JsonResponse
     {
+        // Check if user has permission to view companies
+        if (!auth()->user()->can('view companies')) {
+            return response()->json(['message' => 'You do not have permission to view companies.'], 403);
+        }
+
         $company->load(['researchItems.tags', 'researchItems.category', 'researchItems.media', 'researchItems.user', 'documents.tags', 'documents.user', 'documents.assets', 'creator']);
 
         return response()->json([
@@ -216,6 +231,17 @@ class CompanyController extends Controller
 
     public function update(Request $request, Company $company): JsonResponse
     {
+        // Check permissions: admin can edit all, users can only edit their own companies
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->can('edit companies')) {
+            return response()->json(['message' => 'You do not have permission to edit companies.'], 403);
+        }
+
+        // Non-admin users can only edit companies they created
+        if (!$user->hasRole('admin') && $company->created_by !== $user->id) {
+            return response()->json(['message' => 'You can only edit companies that you created.'], 403);
+        }
+
         try {
             \Log::info('Company update started', [
                 'company_id' => $company->id,
@@ -308,6 +334,17 @@ class CompanyController extends Controller
 
     public function destroy(Company $company): JsonResponse
     {
+        // Check permissions: admin can delete all, users can only delete their own companies
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->can('delete companies')) {
+            return response()->json(['message' => 'You do not have permission to delete companies.'], 403);
+        }
+
+        // Non-admin users can only delete companies they created
+        if (!$user->hasRole('admin') && $company->created_by !== $user->id) {
+            return response()->json(['message' => 'You can only delete companies that you created.'], 403);
+        }
+
         try {
             \Log::info('Company deletion started', [
                 'company_id' => $company->id,
