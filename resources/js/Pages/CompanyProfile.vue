@@ -5,8 +5,8 @@
     'min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
     { 'blur-sm pointer-events-none': !isAuthenticated }
   ]">
-    <!-- Fixed Hamburger Menu -->
-    <div class="fixed top-4 left-4 z-40">
+    <!-- Fixed Hamburger Menu (Mobile Only) -->
+    <div class="fixed top-4 left-4 z-40 sm:hidden">
       <button
         @click="showFullScreenMenu = true"
         class="p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all duration-200 backdrop-blur-xl border border-white/10 shadow-lg"
@@ -152,6 +152,29 @@
 
     <!-- Main Content -->
     <div v-if="company" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+      <!-- Desktop Tab Navigation -->
+      <div class="hidden sm:block border-b border-white/20 mb-8">
+        <nav class="flex space-x-8" aria-label="Tabs">
+          <button
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="handleTabClick(tab.id)"
+            :class="[
+              'py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300',
+              activeTab === tab.id
+                ? 'border-blue-400 text-blue-300'
+                : 'border-transparent text-gray-400 hover:text-white hover:border-white/30'
+            ]"
+          >
+            <div class="flex items-center space-x-2">
+              <span>{{ tab.name }}</span>
+              <span v-if="tab.count" class="bg-white/10 text-gray-300 py-1 px-2 rounded-full text-xs backdrop-blur-xl border border-white/10">
+                {{ tab.count }}
+              </span>
+            </div>
+          </button>
+        </nav>
+      </div>
 
       <!-- Tab Content -->
       <div class="min-h-[600px]">
