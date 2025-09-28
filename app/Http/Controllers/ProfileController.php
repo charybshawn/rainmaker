@@ -23,13 +23,16 @@ class ProfileController extends Controller
     {
         $user = $request->user();
         $adminStats = [];
-        
+
         // Only load admin stats if user has admin permissions
         if ($user && ($user->hasRole('admin') || $user->hasAnyPermission(['manage users', 'manage roles', 'manage permissions']))) {
             $adminStats = [
-                'totalUsers' => User::count(),
-                'totalRoles' => Role::count(),
-                'totalPermissions' => Permission::count(),
+                'users_count' => User::count(),
+                'roles_count' => Role::count(),
+                'permissions_count' => Permission::count(),
+                'users' => User::with('roles.permissions')->get(),
+                'roles' => Role::with('permissions')->get(),
+                'permissions' => Permission::with('roles')->get(),
             ];
         }
 
