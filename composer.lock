@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "da9103813d12744c48b79ed712e1aba9",
+    "content-hash": "4242854ac05208dc3ddfdfb91317fd34",
     "packages": [
         {
             "name": "brick/math",
@@ -7103,6 +7103,67 @@
                 "source": "https://github.com/webmozarts/assert/tree/1.11.0"
             },
             "time": "2022-06-03T18:03:27+00:00"
+        },
+        {
+            "name": "xslain/laravel-offline-sync",
+            "version": "1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ogoungaemmanuel/webconnect.git",
+                "reference": "c251f626a8923e67628802feb50c7a70fedae48e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ogoungaemmanuel/webconnect/zipball/c251f626a8923e67628802feb50c7a70fedae48e",
+                "reference": "c251f626a8923e67628802feb50c7a70fedae48e",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/console": "^10.0|^11.0|^12.0",
+                "illuminate/database": "^10.0|^11.0|^12.0",
+                "illuminate/queue": "^10.0|^11.0|^12.0",
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^8.0|^9.0|^10.0",
+                "phpunit/phpunit": "^10.0|^11.0"
+            },
+            "suggest": {
+                "ext-pdo_mysql": "Required for MySQL database connections",
+                "ext-pdo_pgsql": "Required for PostgreSQL database connections",
+                "ext-pdo_sqlsrv": "Required for SQL Server database connections",
+                "ext-sqlsrv": "Required for SQL Server database connections"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Xslain\\OfflineSync\\OfflineSyncServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Xslain\\OfflineSync\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Xslain Team",
+                    "email": "info@xslain.com"
+                }
+            ],
+            "description": "A Laravel package for synchronizing offline and online databases with bidirectional sync capabilities",
+            "support": {
+                "issues": "https://github.com/ogoungaemmanuel/webconnect/issues",
+                "source": "https://github.com/ogoungaemmanuel/webconnect/tree/1.0.0"
+            },
+            "time": "2025-09-23T20:09:27+00:00"
         }
     ],
     "packages-dev": [

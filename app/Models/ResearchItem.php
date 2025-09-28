@@ -9,10 +9,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Xslain\OfflineSync\Traits\Syncable;
+use Xslain\OfflineSync\Contracts\SyncableModelInterface;
 
-class ResearchItem extends Model implements HasMedia
+class ResearchItem extends Model implements HasMedia, SyncableModelInterface
 {
-    use InteractsWithMedia, TracksActivity, HasFileUploads;
+    use InteractsWithMedia, TracksActivity, HasFileUploads, Syncable;
     protected $fillable = [
         'title',
         'content',
