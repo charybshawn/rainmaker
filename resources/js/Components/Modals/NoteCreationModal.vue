@@ -1,12 +1,12 @@
 <template>
   <Teleport to="body">
-    <div v-show="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="$emit('close')">
+    <div v-show="show" class="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-0 sm:p-4" @click.self="$emit('close')">
       <!-- Backdrop with Dark Mode Context -->
       <div class="fixed inset-0 bg-black/70 backdrop-blur-md dark:bg-black/80"></div>
       <!-- Modal Container with Dark Mode Context -->
-      <div class="relative dark bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 w-[66%] max-h-[80vh] overflow-y-auto shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
+      <div class="relative dark bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-none sm:rounded-2xl border-0 sm:border sm:border-white/10 w-full h-full sm:h-auto sm:w-[66%] sm:max-h-[80vh] overflow-y-auto shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
       <!-- Modal Header -->
-      <div class="sticky top-0 bg-gray-900 border-b border-white/20 px-8 py-6 rounded-t-2xl z-10">
+      <div class="sticky top-0 bg-gray-900 border-b border-white/20 px-4 sm:px-8 py-4 sm:py-6 rounded-t-none sm:rounded-t-2xl z-10">
         <div class="flex items-center justify-between">
           <div>
             <h2 class="text-3xl font-semibold text-white">{{ props.isEditing ? '✏️ Edit Research Post' : '📝 Create Research Post' }}</h2>
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Modal Content -->
-      <div class="px-8 py-6">
+      <div class="px-4 sm:px-8 py-4 sm:py-6">
 
       <form class="space-y-6">
         <!-- General Error Message -->

@@ -5,23 +5,27 @@
     'min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900',
     { 'blur-sm pointer-events-none': !isAuthenticated }
   ]">
+    <!-- Fixed Hamburger Menu -->
+    <div class="fixed top-4 left-4 z-40">
+      <button
+        @click="showFullScreenMenu = true"
+        class="p-3 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all duration-200 backdrop-blur-xl border border-white/10 shadow-lg"
+        aria-label="Open navigation menu"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+
     <!-- Header Section -->
     <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 shadow-[0_5px_16px_0_rgba(31,38,135,0.2)]">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <!-- Back Button and Company Header -->
-        <div class="flex items-center justify-between mb-6">
-          <Link
-            :href="route('dashboard')"
-            class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-white/10 hover:bg-white/20 rounded-lg transition-all duration-200 backdrop-blur-xl border border-white/10"
-          >
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-            Back to Dashboard
-          </Link>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
+        <!-- Top Navigation Bar -->
+        <div class="flex items-center justify-end mb-6">
 
-          <!-- User Menu -->
-          <div v-if="$page.props.auth.user" class="relative">
+          <!-- User Menu (Hidden on mobile) -->
+          <div v-if="$page.props.auth.user" class="relative hidden sm:block">
             <Dropdown align="right" width="48">
               <template #trigger>
                 <button class="flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-300 hover:text-white focus:outline-none transition ease-in-out duration-150">
@@ -37,7 +41,7 @@
               </template>
             </Dropdown>
           </div>
-          <div v-else class="flex items-center gap-3">
+          <div v-else class="hidden sm:flex items-center gap-3">
             <button
               @click="showLoginModal = true"
               class="px-4 py-2 bg-blue-500/20 text-blue-200 rounded-lg hover:bg-blue-500/30 transition-colors"
@@ -48,29 +52,26 @@
         </div>
 
         <!-- Company Header -->
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-6">
-            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent backdrop-blur-xl border border-white/10 flex items-center justify-center text-white font-bold text-2xl">
-              {{ company?.name?.charAt(0)?.toUpperCase() || 'C' }}
-            </div>
-            <div>
-              <h1 class="text-4xl font-bold text-white mb-2">{{ company?.name || 'Loading...' }}</h1>
-              <p class="text-xl text-gray-300">{{ company?.ticker || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
-            </div>
+        <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent backdrop-blur-xl border border-white/10 flex items-center justify-center text-white font-bold text-xl sm:text-2xl mx-auto sm:mx-0">
+            {{ company?.name?.charAt(0)?.toUpperCase() || 'C' }}
           </div>
-
-          <!-- Edit Company Button -->
-          <button
-            v-if="$page.props.auth.user"
-            @click="openEditCompanyModal"
-            class="group backdrop-blur-3xl bg-gradient-to-br from-yellow-500/20 via-yellow-400/10 to-transparent hover:from-yellow-500/30 hover:via-yellow-400/15 hover:to-yellow-300/5 text-yellow-200 hover:text-white font-medium py-3 px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(245,158,11,0.2)] border border-white/10"
-            style="backdrop-filter: blur(20px) saturate(180%);"
-          >
-            <svg class="w-5 h-5 shadow-[0_0_5px_rgba(245,158,11,0.3)] group-hover:shadow-[0_0_8px_rgba(245,158,11,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-            </svg>
-            <span>Edit Company</span>
-          </button>
+          <div class="text-center sm:text-left">
+            <div class="flex items-center justify-center sm:justify-start space-x-2 mb-2">
+              <h1 class="text-2xl sm:text-4xl font-bold text-white">{{ company?.name || 'Loading...' }}</h1>
+              <button
+                v-if="$page.props.auth.user"
+                @click="openEditCompanyModal"
+                class="group p-2 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white transition-all duration-200 border border-white/10"
+                title="Edit Company"
+              >
+                <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+              </button>
+            </div>
+            <p class="text-lg sm:text-xl text-gray-300">{{ company?.ticker || 'N/A' }} • {{ company?.sector || 'Unknown Sector' }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -80,31 +81,77 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
     </div>
 
-    <!-- Main Content -->
-    <div v-else-if="company" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Tab Navigation -->
-      <div class="border-b border-white/20 mb-8">
-        <nav class="flex space-x-8" aria-label="Tabs">
-          <button
-            v-for="tab in tabs"
-            :key="tab.id"
-            @click="handleTabClick(tab.id)"
-            :class="[
-              'py-4 px-1 border-b-2 font-medium text-sm transition-all duration-300',
-              activeTab === tab.id
-                ? 'border-blue-400 text-blue-300'
-                : 'border-transparent text-gray-400 hover:text-white hover:border-white/30'
-            ]"
-          >
-            <div class="flex items-center space-x-2">
-              <span>{{ tab.name }}</span>
-              <span v-if="tab.count" class="bg-white/10 text-gray-300 py-1 px-2 rounded-full text-xs backdrop-blur-xl border border-white/10">
-                {{ tab.count }}
-              </span>
+    <!-- Full-Screen Navigation Menu -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-all duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-all duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="showFullScreenMenu"
+          class="fixed inset-0 z-50 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"
+          @click="showFullScreenMenu = false"
+        >
+          <div class="flex flex-col h-full">
+            <!-- Header with Close Button -->
+            <div class="flex items-center justify-between p-6">
+              <h2 class="text-2xl font-bold text-white">Navigation</h2>
+              <button
+                @click="showFullScreenMenu = false"
+                class="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-all duration-200"
+                aria-label="Close navigation menu"
+              >
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
             </div>
-          </button>
-        </nav>
-      </div>
+
+            <!-- Navigation Links -->
+            <div class="flex-1 flex flex-col justify-center px-6 space-y-6">
+              <!-- Back to Dashboard -->
+              <Link
+                :href="route('dashboard')"
+                class="flex items-center justify-center py-6 text-2xl font-semibold text-white bg-white/10 hover:bg-white/20 rounded-2xl transition-all duration-200 backdrop-blur-xl border border-white/10"
+                @click="showFullScreenMenu = false"
+              >
+                <svg class="w-8 h-8 mr-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                </svg>
+                Back to Dashboard
+              </Link>
+
+              <!-- Tab Navigation Items -->
+              <div class="space-y-4">
+                <button
+                  v-for="tab in tabs"
+                  :key="tab.id"
+                  @click="handleFullScreenTabClick(tab.id)"
+                  :class="[
+                    'w-full flex items-center justify-between py-6 px-6 text-xl font-semibold rounded-2xl transition-all duration-200 backdrop-blur-xl border border-white/10',
+                    activeTab === tab.id
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
+                      : 'text-white bg-white/10 hover:bg-white/20'
+                  ]"
+                >
+                  <span>{{ tab.name }}</span>
+                  <span v-if="tab.count" class="bg-white/10 text-gray-300 py-2 px-3 rounded-full text-sm">
+                    {{ tab.count }}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <!-- Main Content -->
+    <div v-if="company" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-8">
 
       <!-- Tab Content -->
       <div class="min-h-[600px]">
@@ -158,7 +205,7 @@
 
         <!-- Research Tab -->
         <div v-show="activeTab === 'research'" class="space-y-6">
-          <div class="flex items-center justify-between">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 class="text-2xl font-bold text-white mb-2">Research Notes</h2>
               <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker }})</p>
@@ -166,25 +213,25 @@
             <button
               v-if="$page.props.auth.user"
               @click="openCreateResearchModal"
-              class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-3 px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10"
+              class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-2 sm:py-3 px-4 sm:px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center justify-center sm:justify-start space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10 w-full sm:w-auto"
               style="backdrop-filter: blur(20px) saturate(180%);"
             >
-              <svg class="w-5 h-5 shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
-              <span>Add Research Note</span>
+              <span class="text-sm sm:text-base">Add Research Note</span>
             </button>
           </div>
 
           <!-- Research Items Data Table -->
           <div v-if="company?.researchItems && company.researchItems.length > 0">
             <!-- Filters and Column Controls -->
-            <div class="mb-4 backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-4">
-              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="mb-4 backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-3 sm:p-4">
+              <div class="flex flex-col gap-3 sm:gap-4">
                 <!-- Filters Row -->
-                <div class="flex flex-col sm:flex-row gap-3 flex-1">
+                <div class="flex flex-col gap-3">
                   <!-- Search Filter -->
-                  <div class="flex-1 min-w-0">
+                  <div class="w-full">
                     <input
                       v-model="researchFilters.search"
                       type="text"
@@ -193,45 +240,48 @@
                     />
                   </div>
 
-                  <!-- Category Filter -->
-                  <div class="min-w-0 sm:w-40">
-                    <select
-                      v-model="researchFilters.category"
-                      class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
-                    >
-                      <option value="">All Categories</option>
-                      <option v-for="category in availableCategories" :key="category.id" :value="category.id.toString()">
-                        {{ category.name }}
-                      </option>
-                    </select>
-                  </div>
+                  <!-- Mobile filters row -->
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <!-- Category Filter -->
+                    <div class="w-full sm:w-40">
+                      <select
+                        v-model="researchFilters.category"
+                        class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
+                      >
+                        <option value="">All Categories</option>
+                        <option v-for="category in availableCategories" :key="category.id" :value="category.id.toString()">
+                          {{ category.name }}
+                        </option>
+                      </select>
+                    </div>
 
-                  <!-- Visibility Filter -->
-                  <div class="min-w-0 sm:w-32">
-                    <select
-                      v-model="researchFilters.visibility"
-                      class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
-                    >
-                      <option value="">All Visibility</option>
-                      <option value="public">Public</option>
-                      <option value="team">Team</option>
-                      <option value="private">Private</option>
-                    </select>
+                    <!-- Visibility Filter -->
+                    <div class="w-full sm:w-32">
+                      <select
+                        v-model="researchFilters.visibility"
+                        class="w-full px-3 py-2 rounded-lg bg-white/5 border border-white/20 text-white focus:border-blue-400/50 focus:ring-1 focus:ring-blue-400/20 transition-colors text-sm"
+                      >
+                        <option value="">All Visibility</option>
+                        <option value="public">Public</option>
+                        <option value="team">Team</option>
+                        <option value="private">Private</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
 
                 <!-- Controls Row -->
-                <div class="flex items-center gap-2">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <!-- Reset Filters -->
                   <button
                     @click="resetFilters"
-                    class="px-3 py-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg transition-colors"
+                    class="px-3 py-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg transition-colors w-full sm:w-auto"
                   >
                     Reset Filters
                   </button>
 
-                  <!-- Column Controls -->
-                  <div class="relative">
+                  <!-- Column Controls - Hidden on mobile -->
+                  <div class="relative hidden sm:block">
                     <button
                       @click="showColumnControls = !showColumnControls"
                       class="px-3 py-2 text-xs text-gray-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/20 rounded-lg transition-colors flex items-center space-x-1"
@@ -335,7 +385,8 @@
               </div>
             </div>
 
-            <div class="backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 overflow-hidden" style="backdrop-filter: blur(20px) saturate(180%);">
+            <!-- Desktop Table -->
+            <div class="hidden sm:block backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-3xl shadow-[0_5px_16px_0_rgba(31,38,135,0.2)] border border-white/10 overflow-hidden" style="backdrop-filter: blur(20px) saturate(180%);">
               <!-- Table Header -->
               <div class="bg-gradient-to-r from-white/5 to-white/2 px-6 py-4 border-b border-white/10">
                 <div class="grid grid-cols-12 gap-4 text-sm font-semibold text-white/80">
@@ -484,6 +535,74 @@
                 </div>
               </div>
             </div>
+
+            <!-- Mobile Card Layout -->
+            <div class="sm:hidden space-y-3">
+              <div
+                v-for="(item, index) in filteredResearchItems"
+                :key="item.id"
+                :class="[
+                  'backdrop-blur-3xl bg-gradient-to-br from-white/5 via-transparent to-white/5 rounded-2xl border border-white/10 p-4 transition-all duration-300',
+                  selectedResearchItems.has(item.id) ? 'bg-blue-500/10 border-blue-500/50' : ''
+                ]"
+                @click="viewResearchItem(item)"
+              >
+                <!-- Card Header -->
+                <div class="flex items-start justify-between mb-3">
+                  <div class="flex-1 min-w-0">
+                    <h3 class="text-sm font-medium text-white/90 line-clamp-2 mb-1" :title="item.title">{{ item.title }}</h3>
+                    <div class="flex items-center space-x-2">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-200 border border-blue-500/30">
+                        {{ item.category?.name || 'Uncategorized' }}
+                      </span>
+                      <div class="flex items-center text-xs text-white/50">
+                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        {{ item.attachments?.length || 0 }}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center space-x-2 ml-2">
+                    <input
+                      type="checkbox"
+                      :checked="selectedResearchItems.has(item.id)"
+                      @change="toggleItemSelection(item.id)"
+                      @click.stop
+                      class="w-4 h-4 text-blue-600 bg-white/10 border-white/30 rounded focus:ring-blue-500 focus:ring-2"
+                    />
+                  </div>
+                </div>
+
+                <!-- Card Footer -->
+                <div class="flex items-center justify-between text-xs text-white/60">
+                  <div class="flex items-center space-x-4">
+                    <span>{{ formatDate(item.created_at) }}</span>
+                    <span v-if="item.source_date">Source: {{ formatDate(item.source_date) }}</span>
+                  </div>
+                  <div class="flex items-center space-x-1">
+                    <button
+                      @click.stop="editResearchItem(item)"
+                      class="p-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-200 hover:text-white transition-colors"
+                      title="Edit Research Note"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                    </button>
+                    <button
+                      @click.stop="deleteResearchItem(item)"
+                      class="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-200 hover:text-white transition-colors"
+                      title="Delete Research Note"
+                    >
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1-1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Empty State -->
@@ -510,18 +629,21 @@
         <!-- Research Assets Tab -->
         <div v-show="activeTab === 'documents'" class="space-y-6">
           <!-- Header with Upload Button -->
-          <div class="flex items-center justify-between">
-            <h2 class="text-2xl font-semibold text-white">Research Assets</h2>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-white mb-2">Research Assets</h2>
+              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker }})</p>
+            </div>
             <button
               v-if="$page.props.auth.user"
               @click="showUploadDocumentModal = true"
-              class="group backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-green-200 font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10"
+              class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-2 sm:py-3 px-4 sm:px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center justify-center sm:justify-start space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10 w-full sm:w-auto"
               style="backdrop-filter: blur(20px) saturate(180%);"
             >
-              <svg class="w-5 h-5 shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
               </svg>
-              <span>Create Research Asset</span>
+              <span class="text-sm sm:text-base">Add Research Asset</span>
             </button>
           </div>
 
@@ -685,10 +807,13 @@
               <button
                 v-if="$page.props.auth.user"
                 @click="showUploadDocumentModal = true"
-                class="group backdrop-blur-3xl bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent hover:from-green-500/30 hover:via-green-400/15 hover:to-green-300/5 text-green-200 font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10"
+                class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-4 px-8 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center justify-center space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10"
                 style="backdrop-filter: blur(20px) saturate(180%);"
               >
-                <span class="shadow-[0_0_5px_rgba(34,197,94,0.3)] group-hover:shadow-[0_0_8px_rgba(34,197,94,0.4)]">🚀 Create First Research Asset</span>
+                <svg class="w-5 h-5 shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span>Create First Research Asset</span>
               </button>
             </div>
           </div>
@@ -696,8 +821,25 @@
 
         <!-- Documents Tab -->
         <div v-show="activeTab === 'insights'" class="space-y-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-2xl font-bold text-white mb-2">Research Assets</h2>
+              <p class="text-gray-300" v-if="company">for {{ company.name }} ({{ company.ticker }})</p>
+            </div>
+            <button
+              v-if="$page.props.auth.user"
+              @click="showUploadDocumentModal = true"
+              class="group backdrop-blur-3xl bg-gradient-to-br from-blue-500/20 via-blue-400/10 to-transparent hover:from-blue-500/30 hover:via-blue-400/15 hover:to-blue-300/5 text-white font-medium py-2 sm:py-3 px-4 sm:px-6 rounded-2xl transition-all duration-500 hover:scale-105 flex items-center justify-center sm:justify-start space-x-2 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] border border-white/10 w-full sm:w-auto"
+              style="backdrop-filter: blur(20px) saturate(180%);"
+            >
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 shadow-[0_0_5px_rgba(59,130,246,0.3)] group-hover:shadow-[0_0_8px_rgba(59,130,246,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span class="text-sm sm:text-base">Add Research Asset</span>
+            </button>
+          </div>
+
           <div class="bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-            <h2 class="text-2xl font-semibold text-white mb-6">Research Assets</h2>
             <p class="text-gray-400">Company research assets will be displayed here.</p>
           </div>
         </div>
@@ -861,6 +1003,8 @@ const error = ref(null)
 const showLoginModal = ref(false)
 const showRegisterModal = ref(false)
 const activeTab = ref(props.tab)
+const showMobileMenu = ref(false)
+const showFullScreenMenu = ref(false)
 
 // Modal states
 const showCreateResearchModal = ref(false)
@@ -1089,6 +1233,12 @@ const availableCategories = computed(() => {
 // Methods
 const handleTabClick = (tabId) => {
   activeTab.value = tabId
+  showMobileMenu.value = false // Close mobile menu after selection
+}
+
+const handleFullScreenTabClick = (tabId) => {
+  activeTab.value = tabId
+  showFullScreenMenu.value = false // Close full-screen menu after selection
 }
 
 const fetchCompanyData = async () => {

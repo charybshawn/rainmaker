@@ -1,17 +1,11 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 z-[60]" @click.self="$emit('close')">
-    <div class="bg-gradient-to-br from-white/10 via-white/15 to-white/10 backdrop-blur-xl rounded-2xl border border-white/20 w-full lg:w-[66%] max-w-6xl h-full overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.25)] flex flex-col">
+  <div v-if="show" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-start sm:items-center justify-center p-0 sm:p-4 z-[60]" @click.self="$emit('close')">
+    <div class="bg-gradient-to-br from-white/10 via-white/15 to-white/10 backdrop-blur-xl rounded-none sm:rounded-2xl border-0 sm:border sm:border-white/20 w-full h-full sm:h-auto sm:w-[66%] sm:max-w-6xl overflow-hidden shadow-[0_8px_32px_0_rgba(31,38,135,0.25)] flex flex-col">
       <!-- Header -->
       <div class="bg-gradient-to-r from-gray-900 to-gray-800 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-white/20">
         <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-3 sm:space-x-4">
-            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center backdrop-blur-xl">
-              <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-            </div>
-            <div class="min-w-0 flex-1">
-              <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-white truncate">{{ researchNote?.title || 'Research Note' }}</h2>
+          <div class="min-w-0 flex-1">
+              <h2 class="text-lg sm:text-xl lg:text-2xl font-bold text-white leading-tight">{{ researchNote?.title || 'Research Note' }}</h2>
               <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
                 <span v-if="researchNote?.category" class="inline-flex items-center px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md text-xs">
                   {{ researchNote.category.name }}
@@ -44,13 +38,13 @@
                   Updated {{ formatDate(researchNote.updated_at) }}
                 </span>
               </div>
-            </div>
           </div>
           <button
             @click="$emit('close')"
-            class="p-2 hover:bg-white/10 rounded-xl transition-colors group flex-shrink-0"
+            class="p-2 sm:p-2 hover:bg-white/10 rounded-xl transition-colors group flex-shrink-0 bg-white/5 sm:bg-transparent"
+            aria-label="Close modal"
           >
-            <svg class="w-5 h-5 sm:w-6 sm:h-6 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-6 h-6 sm:w-6 sm:h-6 text-white sm:text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
           </button>
@@ -83,7 +77,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
-          <div v-if="!collapsedSections.company" class="mt-4 pl-14 sm:pl-16 space-y-2">
+          <div v-if="!collapsedSections.company" class="mt-4 space-y-2">
             <div v-if="researchNote.company.description" class="text-sm text-gray-300">
               {{ researchNote.company.description }}
             </div>
@@ -142,16 +136,9 @@
             @click="toggleSection('content')"
             class="w-full flex items-center justify-between text-left group hover:bg-white/5 -m-2 p-2 rounded-lg transition-colors"
           >
-            <div class="flex items-center space-x-3">
-              <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-                <svg class="w-5 h-5 sm:w-6 sm:h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-base sm:text-lg font-semibold text-white">Content</h3>
-                <p class="text-sm text-gray-400">Research details and analysis</p>
-              </div>
+            <div>
+              <h3 class="text-base sm:text-lg font-semibold text-white">Content</h3>
+              <p class="text-sm text-gray-400">Research details and analysis</p>
             </div>
             <svg
               :class="['w-5 h-5 text-gray-400 transition-transform', collapsedSections.content ? 'rotate-0' : 'rotate-90']"
@@ -160,7 +147,7 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
           </button>
-          <div v-if="!collapsedSections.content" class="mt-4 pl-14 sm:pl-16">
+          <div v-if="!collapsedSections.content" class="mt-4">
             <!-- Professional content display without background -->
             <div v-if="researchNote.content" class="text-gray-100">
               <!-- Research content with professional blog styling -->
