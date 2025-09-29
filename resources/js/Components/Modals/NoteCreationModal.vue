@@ -699,7 +699,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
@@ -766,6 +766,37 @@ const selectedImage = ref(null)
 const includeMainImage = ref(true)
 const selectedImageIndices = ref([])
 
+// Create reactive local form reference to enable template binding with fallback
+const form = computed(() => {
+  console.log('NoteCreationModal form computed called with props.form:', props.form)
+  console.log('props.form specific fields:', {
+    title: props.form?.title,
+    category_id: props.form?.category_id,
+    source_date: props.form?.source_date,
+    selectedTags: props.form?.selectedTags,
+    visibility: props.form?.visibility
+  })
+  const result = props.form || {
+    title: '',
+    content: '',
+    company_id: null,
+    category_id: '',
+    source_date: '',
+    visibility: 'private',
+    selectedTags: [],
+    newUrl: '',
+    selectedExistingFiles: []
+  }
+  console.log('NoteCreationModal form computed result specific fields:', {
+    title: result.title,
+    category_id: result.category_id,
+    source_date: result.source_date,
+    selectedTags: result.selectedTags,
+    visibility: result.visibility
+  })
+  return result
+})
+
 // Tiptap Editor Setup
 const editor = useEditor({
   content: props.form?.content || '',
@@ -810,6 +841,14 @@ watch(() => props.form?.content, (newContent) => {
     editor.value.commands.setContent(newContent || '')
   }
 })
+
+// Debug: Watch for form prop changes
+watch(() => props.form, (newForm, oldForm) => {
+  console.log('NoteCreationModal props.form changed:', {
+    old: oldForm,
+    new: newForm
+  })
+}, { deep: true, immediate: true })
 
 // Utility functions
 const formatFileSize = (bytes) => {

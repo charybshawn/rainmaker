@@ -197,6 +197,13 @@ class CompanyController extends Controller
                         'name' => $item->category->name,
                         'color' => $item->category->color,
                     ] : null,
+                    'tags' => $item->tags->map(function ($tag) {
+                        return [
+                            'id' => $tag->id,
+                            'name' => $tag->name,
+                            'color' => $tag->color,
+                        ];
+                    }),
                     'source_date' => $item->source_date ? $item->source_date->format('Y-m-d') : null,
                     'created_at' => $item->created_at->format('Y-m-d H:i:s'),
                 ];

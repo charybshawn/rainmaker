@@ -13,6 +13,155 @@ use Illuminate\Support\Facades\Storage;
 class AssetController extends Controller
 {
     /**
+     * Get available assets that can be linked to documents
+     */
+    public function getAvailable(): JsonResponse
+    {
+        \Log::info('AssetController::getAvailable called', [
+            'user_id' => auth()->id(),
+            'user_email' => auth()->user()?->email,
+            'timestamp' => now(),
+            'request_ip' => request()->ip(),
+            'user_agent' => request()->userAgent(),
+        ]);
+
+        try {
+            \Log::info('Starting asset query...');
+
+            // Get assets that are not orphaned and can be linked to documents
+            $query = Asset::where('is_orphaned', false)
+                ->whereNotNull('file_path');
+
+            \Log::info('Base query built', [
+                'query_sql' => $query->toSql(),
+                'query_bindings' => $query->getBindings(),
+            ]);
+
+            $assetsWithCompany = $query->with(['company:id,name'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            \Log::info('Query executed successfully', [
+                'assets_count' => $assetsWithCompany->count(),
+                'assets_ids' => $assetsWithCompany->pluck('id')->toArray(),
+            ]);
+
+            try {
+                $mappedAssets = $assetsWithCompany->map(function ($asset) {
+                    \Log::debug('Mapping asset', [
+                        'asset_id' => $asset->id,
+                        'file_name' => $asset->file_name,
+                        'has_company' => $asset->company ? true : false,
+                        'company_id' => $asset->company_id,
+                    ]);
+
+                    try {
+                        $url = $asset->url;
+                        \Log::debug('Generated URL for asset', [
+                            'asset_id' => $asset->id,
+                            'url' => $url,
+                        ]);
+                    } catch (\Exception $urlException) {
+                        \Log::error('Failed to generate URL for asset', [
+                            'asset_id' => $asset->id,
+                            'error' => $urlException->getMessage(),
+                            'trace' => $urlException->getTraceAsString(),
+                        ]);
+                        $url = '#error-generating-url';
+                    }
+
+                    try {
+                        $companyData = null;
+                        if ($asset->company) {
+                            $companyData = [
+                                'id' => $asset->company->id,
+                                'name' => $asset->company->name
+                            ];
+                        }
+
+                        return [
+                            'id' => $asset->id,
+                            'title' => $asset->title,
+                            'description' => $asset->description,
+                            'file_name' => $asset->file_name,
+                            'mime_type' => $asset->mime_type,
+                            'size' => $asset->size,
+                            'url' => $url,
+                            'source_type' => $asset->source_type,
+                            'source_id' => $asset->source_id,
+                            'company' => $companyData,
+                            'created_at' => $asset->created_at,
+                            'visibility' => $asset->visibility,
+                        ];
+                    } catch (\Exception $mappingException) {
+                        \Log::error('Failed to map asset data', [
+                            'asset_id' => $asset->id,
+                            'error' => $mappingException->getMessage(),
+                            'trace' => $mappingException->getTraceAsString(),
+                        ]);
+                        throw $mappingException;
+                    }
+                });
+
+                \Log::info('Asset mapping completed successfully', [
+                    'mapped_count' => $mappedAssets->count(),
+                ]);
+
+                $response = response()->json($mappedAssets);
+
+                \Log::info('Response generated successfully', [
+                    'response_status' => $response->getStatusCode(),
+                    'response_size' => strlen($response->getContent()),
+                    'first_asset_id' => $mappedAssets->first()['id'] ?? null,
+                ]);
+
+                return $response;
+
+            } catch (\Exception $mappingException) {
+                \Log::error('Asset mapping failed', [
+                    'error' => $mappingException->getMessage(),
+                    'trace' => $mappingException->getTraceAsString(),
+                    'raw_assets_count' => $assetsWithCompany->count(),
+                ]);
+                throw $mappingException;
+            }
+
+        } catch (\Illuminate\Database\QueryException $dbException) {
+            \Log::error('Database query failed in getAvailable', [
+                'error' => $dbException->getMessage(),
+                'sql' => $dbException->getSql() ?? 'N/A',
+                'bindings' => $dbException->getBindings() ?? [],
+                'trace' => $dbException->getTraceAsString(),
+            ]);
+            return response()->json([
+                'message' => 'Database error while fetching available assets',
+                'error' => $dbException->getMessage(),
+                'debug_info' => [
+                    'sql' => $dbException->getSql() ?? 'N/A',
+                    'bindings' => $dbException->getBindings() ?? [],
+                ]
+            ], 500);
+        } catch (\Exception $e) {
+            \Log::error('Unexpected error in getAvailable', [
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+                'user_id' => auth()->id(),
+            ]);
+            return response()->json([
+                'message' => 'Failed to fetch available assets',
+                'error' => $e->getMessage(),
+                'debug_info' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'user_id' => auth()->id(),
+                ]
+            ], 500);
+        }
+    }
+
+    /**
      * Create a new asset directly (for document uploads)
      */
     public function store(Request $request): JsonResponse

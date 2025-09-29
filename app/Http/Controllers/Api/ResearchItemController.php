@@ -142,11 +142,11 @@ class ResearchItemController extends Controller
             'source_date' => 'nullable|date',
             // Support legacy existing file formats for compatibility
             'existing_file_ids' => 'nullable|array',
-            'existing_file_ids.*' => 'integer|exists:media,id',
+            'existing_file_ids.*' => 'integer|exists:assets,id',
             'existing_files' => 'nullable|array',
-            'existing_files.*' => 'integer|exists:media,id',
+            'existing_files.*' => 'integer|exists:assets,id',
             'existing_attachment_ids' => 'nullable|array',
-            'existing_attachment_ids.*' => 'integer|exists:media,id',
+            'existing_attachment_ids.*' => 'integer|exists:assets,id',
         ]);
 
         $validated['user_id'] = auth()->id();
@@ -282,11 +282,11 @@ class ResearchItemController extends Controller
                 'source_date' => 'nullable|date',
                 // Support legacy existing file formats for compatibility
                 'existing_file_ids' => 'nullable|array',
-                'existing_file_ids.*' => 'integer|exists:media,id',
+                'existing_file_ids.*' => 'integer|exists:assets,id',
                 'existing_files' => 'nullable|array',
-                'existing_files.*' => 'integer|exists:media,id',
+                'existing_files.*' => 'integer|exists:assets,id',
                 'existing_attachment_ids' => 'nullable|array',
-                'existing_attachment_ids.*' => 'integer|exists:media,id',
+                'existing_attachment_ids.*' => 'integer|exists:assets,id',
             ]);
 
             // Convert empty string category_id to null
@@ -352,23 +352,73 @@ class ResearchItemController extends Controller
 
     public function destroy(ResearchItem $researchItem): JsonResponse
     {
-        // Check permissions: admin can delete all, users can only delete their own research items
-        $user = auth()->user();
-        if (!$user->hasRole('admin') && !$user->can('delete research items')) {
-            return response()->json(['message' => 'You do not have permission to delete research items.'], 403);
+        try {
+            \Log::info('Starting research item deletion', [
+                'research_item_id' => $researchItem->id,
+                'user_id' => auth()->id(),
+                'research_item_title' => $researchItem->title,
+            ]);
+
+            // Check permissions: admin can delete all, users can only delete their own research items
+            $user = auth()->user();
+            if (!$user->hasRole('admin') && !$user->can('delete research items')) {
+                return response()->json(['message' => 'You do not have permission to delete research items.'], 403);
+            }
+
+            // Non-admin users can only delete research items they created
+            if (!$user->hasRole('admin') && $researchItem->user_id !== $user->id) {
+                return response()->json(['message' => 'You can only delete research items that you created.'], 403);
+            }
+
+            \Log::info('Permissions validated, starting media cleanup', [
+                'research_item_id' => $researchItem->id,
+            ]);
+
+            // Mark associated assets as orphaned before deletion
+            try {
+                $this->fileUploadService->removeMediaFromModel($researchItem);
+                \Log::info('Media cleanup completed successfully', [
+                    'research_item_id' => $researchItem->id,
+                ]);
+            } catch (\Exception $mediaException) {
+                \Log::error('Media cleanup failed', [
+                    'research_item_id' => $researchItem->id,
+                    'error' => $mediaException->getMessage(),
+                    'trace' => $mediaException->getTraceAsString(),
+                ]);
+                // Continue with deletion even if media cleanup fails
+            }
+
+            \Log::info('Starting research item deletion from database', [
+                'research_item_id' => $researchItem->id,
+            ]);
+
+            $researchItem->delete();
+
+            \Log::info('Research item deleted successfully', [
+                'research_item_id' => $researchItem->id,
+            ]);
+
+            return response()->json(null, 204);
+
+        } catch (\Exception $e) {
+            \Log::error('Research item deletion failed', [
+                'research_item_id' => $researchItem->id,
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to delete research item',
+                'error' => $e->getMessage(),
+                'debug_info' => [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]
+            ], 500);
         }
-
-        // Non-admin users can only delete research items they created
-        if (!$user->hasRole('admin') && $researchItem->user_id !== $user->id) {
-            return response()->json(['message' => 'You can only delete research items that you created.'], 403);
-        }
-
-        // Mark associated assets as orphaned before deletion
-        $this->fileUploadService->removeMediaFromModel($researchItem);
-
-        $researchItem->delete();
-
-        return response()->json(null, 204);
     }
 
     /**
@@ -410,22 +460,22 @@ class ResearchItemController extends Controller
 
             // Get files from user's own documents
             $userDocuments = \App\Models\Document::where('user_id', auth()->id())
-                ->with('media')
+                ->with('assets')
                 ->get();
 
             foreach ($userDocuments as $document) {
-                foreach ($document->getMedia('attachments') as $media) {
+                foreach ($document->assets as $asset) {
                     $userFiles->push([
-                        'id' => $media->id,
-                        'name' => $media->name,
-                        'file_name' => $media->file_name,
-                        'mime_type' => $media->mime_type,
-                        'size' => $media->size,
-                        'url' => $media->getUrl(),
+                        'id' => $asset->id,
+                        'name' => $asset->title,
+                        'file_name' => $asset->file_name,
+                        'mime_type' => $asset->mime_type,
+                        'size' => $asset->size,
+                        'url' => $asset->url,
                         'source_type' => 'document',
                         'source_id' => $document->id,
                         'source_title' => $document->title,
-                        'created_at' => $media->created_at,
+                        'created_at' => $asset->created_at,
                     ]);
                 }
             }

@@ -224,38 +224,59 @@ class FileUploadService
         $existingIds = array_filter($existingIds);
         $results['existing']['expected'] = count($existingIds);
 
-        foreach ($existingIds as $mediaId) {
+        foreach ($existingIds as $assetId) {
             try {
-                $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($mediaId);
+                // First try to find as an asset (new system)
+                $asset = \App\Models\Asset::find($assetId);
 
-                if ($originalMedia && file_exists($originalMedia->getPath())) {
-                    $model->addMedia($originalMedia->getPath())
-                        ->usingName($originalMedia->name)
-                        ->usingFileName($originalMedia->file_name)
-                        ->toMediaCollection($collection);
+                if ($asset && $asset->file_path) {
+                    // Get the full file path
+                    $filePath = null;
 
-                    $results['existing']['successful']++;
+                    if ($asset->media_id) {
+                        // Asset has media - get path from media
+                        $media = \Spatie\MediaLibrary\MediaCollections\Models\Media::find($asset->media_id);
+                        if ($media && file_exists($media->getPath())) {
+                            $filePath = $media->getPath();
+                        }
+                    } else {
+                        // Direct file path - construct full path
+                        $fullPath = storage_path('app/public/' . $asset->file_path);
+                        if (file_exists($fullPath)) {
+                            $filePath = $fullPath;
+                        }
+                    }
 
-                    Log::info('Existing file attached successfully', [
-                        'model' => get_class($model),
-                        'model_id' => $model->id,
-                        'original_media_id' => $mediaId,
-                        'filename' => $originalMedia->file_name
-                    ]);
+                    if ($filePath) {
+                        $model->addMedia($filePath)
+                            ->usingName($asset->title)
+                            ->usingFileName($asset->file_name)
+                            ->toMediaCollection($collection);
+
+                        $results['existing']['successful']++;
+
+                        Log::info('Existing asset attached successfully', [
+                            'model' => get_class($model),
+                            'model_id' => $model->id,
+                            'asset_id' => $assetId,
+                            'filename' => $asset->file_name,
+                            'collection' => $collection
+                        ]);
                 } else {
                     throw new Exception('Original file not found or inaccessible');
                 }
+            }
 
             } catch (Exception $e) {
                 $results['existing']['failed'][] = [
-                    'media_id' => $mediaId,
+                    'asset_id' => $assetId,
                     'error' => $e->getMessage()
                 ];
 
-                Log::error('Failed to attach existing file', [
+                Log::error('Failed to attach existing asset', [
                     'model' => get_class($model),
                     'model_id' => $model->id,
-                    'media_id' => $mediaId,
+                    'asset_id' => $assetId,
                     'error' => $e->getMessage()
                 ]);
             }

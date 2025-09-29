@@ -115,6 +115,7 @@ Route::prefix('api')->middleware(['auth', 'verified'])->group(function () {
         Route::delete('documents/{document}', [\App\Http\Controllers\Api\DocumentController::class, 'destroy']);
 
         // Assets (for direct creation and deletion)
+        Route::get('media/available', [\App\Http\Controllers\Api\AssetController::class, 'getAvailable']);
         Route::post('assets', [\App\Http\Controllers\Api\AssetController::class, 'store']);
         Route::delete('assets/{asset}', [\App\Http\Controllers\Api\AssetController::class, 'destroy']);
 

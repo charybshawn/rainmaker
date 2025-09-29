@@ -1419,6 +1419,13 @@ const fetchCompanyData = async () => {
     const response = await axios.get(`/api/companies/${foundCompany.id}`)
     company.value = response.data
 
+    // Debug: Check if research items have tags loaded
+    console.log('DEBUG fetchCompanyData: Loaded company data:', response.data)
+    if (response.data.researchItems && response.data.researchItems.length > 0) {
+      console.log('DEBUG fetchCompanyData: First research item:', response.data.researchItems[0])
+      console.log('DEBUG fetchCompanyData: First research item tags:', response.data.researchItems[0].tags)
+    }
+
     // Load unified documents list (includes both direct documents and research note attachments)
     const documentsResponse = await axios.get('/api/documents', {
       params: { company_id: foundCompany.id }
@@ -1806,12 +1813,20 @@ const deleteDocument = async (doc) => {
 
 const performDeleteDocument = async (doc) => {
   try {
-    // Use the appropriate endpoint based on whether it's orphaned or not
-    const endpoint = doc.is_orphaned
-      ? `/api/assets/${doc.id}`             // Direct asset deletion for orphaned files
-      : `/api/documents/${doc.source_id}`   // Original document endpoint for non-orphaned
+    // Determine the correct endpoint based on the document type
+    let endpoint;
 
+    if (doc.source_type === 'document' && doc.source_id) {
+      // This is a direct document - use the document endpoint
+      endpoint = `/api/documents/${doc.source_id}`;
+    } else {
+      // This is an asset (research item attachment, orphaned file, or document without source_id) - use asset endpoint
+      endpoint = `/api/assets/${doc.id}`;
+    }
+
+    console.log(`Deleting ${doc.source_type} with endpoint: ${endpoint} (doc.id: ${doc.id}, source_id: ${doc.source_id}, has_source_id: ${!!doc.source_id})`);
     await axios.delete(endpoint)
+
     // Remove from company data
     if (company.value.documents) {
       const index = company.value.documents.findIndex(d => d.id === doc.id)
@@ -1819,9 +1834,23 @@ const performDeleteDocument = async (doc) => {
         company.value.documents.splice(index, 1)
       }
     }
+
+    window.showToast('Document deleted successfully', 'success')
   } catch (error) {
-    console.error('Error deleting document:', error)
-    window.showToast('Failed to delete document', 'error')
+    if (error.response?.status === 404) {
+      console.log(`Document ${doc.id} already deleted (404), removing from UI`)
+      // Remove from company data even if the API returns 404 (already deleted)
+      if (company.value.documents) {
+        const index = company.value.documents.findIndex(d => d.id === doc.id)
+        if (index !== -1) {
+          company.value.documents.splice(index, 1)
+        }
+      }
+      window.showToast('Document was already deleted', 'info')
+    } else {
+      console.error('Error deleting document:', error)
+      window.showToast('Failed to delete document', 'error')
+    }
   }
 }
 
@@ -1838,12 +1867,99 @@ const handleDocumentRemoveUrl = (index) => {
 }
 
 const handleDocumentLoadExistingFiles = async () => {
+  console.log('🔄 [handleDocumentLoadExistingFiles] Starting request...', {
+    timestamp: new Date().toISOString(),
+    url: '/api/media/available',
+    baseURL: axios.defaults.baseURL,
+    currentURL: window.location.href,
+    userAgent: navigator.userAgent,
+  })
+
   try {
-    const response = await axios.get('/api/media/available')
+    console.log('📡 [handleDocumentLoadExistingFiles] Making axios request...')
+
+    const requestStart = performance.now()
+    const response = await axios.get('/api/media/available', {
+      timeout: 30000, // 30 second timeout
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    const requestEnd = performance.now()
+
+    console.log('✅ [handleDocumentLoadExistingFiles] Request successful!', {
+      status: response.status,
+      statusText: response.statusText,
+      headers: response.headers,
+      responseTime: `${Math.round(requestEnd - requestStart)}ms`,
+      dataType: typeof response.data,
+      dataLength: Array.isArray(response.data) ? response.data.length : 'not an array',
+      firstItem: Array.isArray(response.data) ? response.data[0] : null,
+    })
+
+    if (!Array.isArray(response.data)) {
+      console.warn('⚠️ [handleDocumentLoadExistingFiles] Response data is not an array:', response.data)
+    }
+
     availableFiles.value = Array.isArray(response.data) ? response.data : []
+
+    console.log('📝 [handleDocumentLoadExistingFiles] Updated availableFiles:', {
+      count: availableFiles.value.length,
+      files: availableFiles.value.map(f => ({ id: f.id, title: f.title, file_name: f.file_name }))
+    })
+
   } catch (error) {
-    console.error('Error loading existing files:', error)
+    console.error('❌ [handleDocumentLoadExistingFiles] Request failed:', error)
+    console.error('🔍 [handleDocumentLoadExistingFiles] Error analysis:', {
+      errorType: error.constructor.name,
+      message: error.message,
+      stack: error.stack,
+      request: error.request ? {
+        url: error.request.responseURL || error.config?.url,
+        method: error.config?.method,
+        timeout: error.config?.timeout,
+        headers: error.config?.headers,
+      } : 'No request object',
+      response: error.response ? {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        headers: error.response.headers,
+        data: error.response.data,
+        contentType: error.response.headers?.['content-type'],
+      } : 'No response object',
+      code: error.code,
+      isAxiosError: error.isAxiosError,
+      config: error.config ? {
+        url: error.config.url,
+        method: error.config.method,
+        baseURL: error.config.baseURL,
+        timeout: error.config.timeout,
+      } : 'No config object'
+    })
+
     availableFiles.value = []
+
+    // Detailed error analysis
+    if (error.response?.status === 401) {
+      console.warn('🔐 [handleDocumentLoadExistingFiles] Authentication required')
+    } else if (error.response?.status === 403) {
+      console.warn('🚫 [handleDocumentLoadExistingFiles] Access forbidden')
+    } else if (error.response?.status === 404) {
+      console.warn('🔍 [handleDocumentLoadExistingFiles] Endpoint not found')
+    } else if (error.response?.status === 500) {
+      console.error('🔥 [handleDocumentLoadExistingFiles] Server error:', {
+        serverError: error.response?.data,
+        debugging: error.response?.data?.debug_info
+      })
+    } else if (error.code === 'ECONNABORTED') {
+      console.error('⏱️ [handleDocumentLoadExistingFiles] Request timeout')
+    } else if (error.code === 'ERR_NETWORK') {
+      console.error('🌐 [handleDocumentLoadExistingFiles] Network error')
+    } else {
+      console.error('❓ [handleDocumentLoadExistingFiles] Unknown error type')
+    }
   }
 }
 
@@ -1929,6 +2045,24 @@ const clearDocumentSelection = () => {
   selectAllDocuments.value = false
 }
 
+// Helper function to check if a research item has been deleted or is inaccessible
+const isResearchItemDeleted = async (researchItemId) => {
+  if (!researchItemId) return false;
+
+  try {
+    const response = await axios.get(`/api/research-items/${researchItemId}`);
+    return false; // Research item exists and is accessible
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.log(`Research item ${researchItemId} not found - allowing asset deletion`);
+      return true; // Research item doesn't exist, treat as deleted
+    }
+    // For other errors (403, 500, etc.), assume research item still exists
+    console.warn(`Error checking research item ${researchItemId}:`, error.response?.status);
+    return false;
+  }
+};
+
 const bulkDeleteDocuments = () => {
   const selectedCount = selectedDocuments.value.size
   if (selectedCount === 0) return
@@ -1946,13 +2080,30 @@ const performBulkDeleteDocuments = async () => {
     for (const docId of selectedIds) {
       const doc = company.value.documents.find(d => d.id === docId)
 
-      if (doc && (doc.source_type === 'document' || doc.is_orphaned)) {
-        try {
-          // Use the appropriate endpoint based on whether it's orphaned or not
-          const endpoint = doc.is_orphaned
-            ? `/api/assets/${doc.id}`            // Direct asset deletion for orphaned files
-            : `/api/documents/${doc.source_id}`  // Original document endpoint for non-orphaned
+      // Check if document can be deleted:
+      // 1. Direct documents (source_type === 'document')
+      // 2. Orphaned files (is_orphaned === true)
+      // 3. Research items that have been deleted/are no longer accessible
+      const canDelete = doc && (
+        doc.source_type === 'document' ||
+        doc.is_orphaned ||
+        (doc.source_type === 'research_item' && await isResearchItemDeleted(doc.source_id))
+      );
 
+      if (canDelete) {
+        try {
+          // Determine the correct endpoint based on the document type
+          let endpoint;
+
+          if (doc.source_type === 'document' && doc.source_id) {
+            // This is a direct document - use the document endpoint
+            endpoint = `/api/documents/${doc.source_id}`;
+          } else {
+            // This is an asset (research item attachment, orphaned file, or document without source_id) - use asset endpoint
+            endpoint = `/api/assets/${doc.id}`;
+          }
+
+          console.log(`Deleting ${doc.source_type} with endpoint: ${endpoint} (doc.id: ${doc.id}, source_id: ${doc.source_id}, has_source_id: ${!!doc.source_id})`);
           await axios.delete(endpoint)
           deletedCount++
 
@@ -1964,11 +2115,30 @@ const performBulkDeleteDocuments = async () => {
             }
           }
         } catch (error) {
-          console.error(`Error deleting document ${docId}:`, error)
+          console.error(`Error deleting ${doc.source_type} ${docId} (${doc.title}):`, error?.response?.status, error?.response?.data?.message || error.message)
+
+          // If it's a 404, the item might already be deleted - don't count it as an error
+          if (error?.response?.status === 404) {
+            console.log(`${doc.source_type} ${docId} not found - may have been already deleted`)
+            deletedCount++ // Count as successful since it's no longer there
+
+            // Remove from company data
+            if (company.value.documents) {
+              const index = company.value.documents.findIndex(d => d.id === docId)
+              if (index !== -1) {
+                company.value.documents.splice(index, 1)
+              }
+            }
+          }
         }
       } else {
-        // Skip non-orphaned research note attachments
+        // Skip non-orphaned research note attachments that still have active research items
         skippedCount++
+        if (doc.source_type === 'research_item') {
+          console.log(`Skipping document ${doc.title} - this is a research note attachment (source_type: ${doc.source_type}, source_id: ${doc.source_id}, orphaned: ${doc.is_orphaned}). The parent research item still exists and must be deleted first.`)
+        } else {
+          console.log(`Skipping document ${doc.title} - reason: source_type: ${doc.source_type}, orphaned: ${doc.is_orphaned}`)
+        }
       }
 
       selectedDocuments.value.delete(docId)
@@ -1976,9 +2146,9 @@ const performBulkDeleteDocuments = async () => {
 
     // Show result message
     if (skippedCount > 0) {
-      window.showToast(`Deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''} successfully.\n${skippedCount} research note attachment${skippedCount !== 1 ? 's' : ''} were skipped (cannot be deleted from here).`, 'info')
+      window.showToast(`Deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''} successfully.\n${skippedCount} file${skippedCount !== 1 ? 's' : ''} were skipped - these belong to active research items and must be deleted from the Research tab first.`, 'info')
     } else if (deletedCount > 0) {
-      console.log(`Successfully deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''}`)
+      window.showToast(`Successfully deleted ${deletedCount} document${deletedCount !== 1 ? 's' : ''}`, 'success')
     }
 
     updateDocumentSelectAllState()
@@ -2140,12 +2310,26 @@ const openCreateResearchModal = () => {
 }
 
 const editResearchItem = (item) => {
+  // Debug: log the item data to see what we're receiving in CompanyProfile
+  console.log('CompanyProfile editResearchItem called with item:', item)
+  console.log('CompanyProfile item.category_id:', item.category_id)
+  console.log('CompanyProfile item.category:', item.category)
+  console.log('CompanyProfile item.source_date:', item.source_date)
+  console.log('CompanyProfile item.tags:', item.tags)
+  console.log('CompanyProfile item.tags type:', typeof item.tags)
+  console.log('CompanyProfile item.tags length:', item.tags?.length)
+  if (item.tags && item.tags.length > 0) {
+    console.log('CompanyProfile first tag:', item.tags[0])
+    console.log('CompanyProfile first tag keys:', Object.keys(item.tags[0]))
+  }
+  console.log('CompanyProfile all item keys:', Object.keys(item))
+
   // Populate form with existing data
   researchForm.value = {
     title: item.title || '',
     content: item.content || '',
     company_id: item.company_id || company.value?.id,
-    category_id: item.category_id || '',
+    category_id: item.category?.id || item.category_id || '',
     source_date: item.source_date || '',
     visibility: item.visibility || 'private',
     uploadType: 'file',
@@ -2155,6 +2339,9 @@ const editResearchItem = (item) => {
     selectedExistingFiles: [],
     selectedTags: item.tags || []
   }
+
+  // Debug: log the researchForm after assignment
+  console.log('CompanyProfile researchForm after assignment:', researchForm.value)
 
   // Set edit state
   isEditingResearch.value = true
@@ -2245,10 +2432,15 @@ const handleResearchSave = async () => {
     }
 
     // Add selected tags
+    console.log('Debug: selectedTags in save function:', researchForm.value.selectedTags)
     if (researchForm.value.selectedTags && researchForm.value.selectedTags.length > 0) {
+      console.log('Debug: Adding tags to FormData:', researchForm.value.selectedTags)
       researchForm.value.selectedTags.forEach((tag, index) => {
+        console.log(`Debug: Adding tag_ids[${index}] = ${tag.id}`)
         formData.append(`tag_ids[${index}]`, tag.id)
       })
+    } else {
+      console.log('Debug: No tags to add - selectedTags is empty or undefined')
     }
 
     // Debug: Log the form data being sent

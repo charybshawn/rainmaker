@@ -2111,6 +2111,7 @@ const noteForm = ref({
   category_id: '',
   source_date: '',
   visibility: 'private',
+  selectedTags: [],
   files: []
 })
 
@@ -2972,6 +2973,7 @@ const viewCompanyDetails = async (company) => {
     noteForm.value.content = ''
     noteForm.value.category_id = ''
     noteForm.value.visibility = 'public'
+    noteForm.value.selectedTags = []
     noteForm.value.files = []
     
     // Initialize upload form with company ID
@@ -3103,6 +3105,7 @@ const openNoteModal = (company) => {
   noteForm.value.content = ''
   noteForm.value.category_id = ''
   noteForm.value.visibility = 'private'
+  noteForm.value.selectedTags = []
   noteForm.value.files = []
   errors.value = {}
   showNoteModal.value = true
@@ -3226,6 +3229,7 @@ const createNote = async (eventData = {}) => {
       category_id: '',
       source_date: '',
       visibility: 'private',
+      selectedTags: [],
       files: [],
       urls: [],
       uploadType: 'file'
@@ -3347,6 +3351,12 @@ const removeUrlFromList = (index) => {
 }
 
 const editResearchItem = (item) => {
+  // Debug: log the item data to see what we're receiving
+  console.log('editResearchItem called with item:', item)
+  console.log('item.category_id:', item.category_id)
+  console.log('item.source_date:', item.source_date)
+  console.log('item.tags:', item.tags)
+
   // Populate the note form with existing research item data
   noteForm.value = {
     id: item.id,
@@ -3356,8 +3366,12 @@ const editResearchItem = (item) => {
     category_id: item.category_id || '',
     source_date: item.source_date || '',
     visibility: item.visibility || 'private',
+    selectedTags: item.tags || [],
     files: [] // Files will be handled separately as they're already uploaded
   }
+
+  // Debug: log the noteForm after assignment
+  console.log('noteForm after assignment:', noteForm.value)
 
   // Set edit mode
   isEditingResearchItem.value = true
