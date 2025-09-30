@@ -782,9 +782,18 @@
       :tags="tags"
       :user="$page.props.auth.user"
       :is-editing="isEditing"
+      :available-files="availableFiles"
+      :loading-existing-files="loadingExistingFiles"
       @close="handleCreateModalClose"
       @save="handleSave"
       @category-created="handleCategoryCreated"
+      @file-upload="handleFileUpload"
+      @add-url="handleAddUrl"
+      @remove-url="handleRemoveUrl"
+      @remove-file="handleRemoveFile"
+      @search-existing-files="handleSearchExistingFiles"
+      @load-existing-files="handleLoadExistingFiles"
+      @toggle-file-selection="handleToggleFileSelection"
     />
 
     <ResearchNoteModal
@@ -884,9 +893,19 @@ const createForm = ref({
   tag_ids: [],
   visibility: 'private',
   ai_synopsis: '',
-  source_date: ''
+  source_date: '',
+  files: [],
+  urls: [],
+  selectedTags: [],
+  selectedExistingFiles: [],
+  uploadType: 'file',
+  newUrl: ''
 })
 const createErrors = ref({})
+
+// File upload related data
+const availableFiles = ref([])
+const loadingExistingFiles = ref(false)
 
 // Computed properties
 const visiblePages = computed(() => {
@@ -1109,7 +1128,13 @@ const handleCreateModalClose = () => {
     tag_ids: [],
     visibility: 'private',
     ai_synopsis: '',
-    source_date: ''
+    source_date: '',
+    files: [],
+    urls: [],
+    selectedTags: [],
+    selectedExistingFiles: [],
+    uploadType: 'file',
+    newUrl: ''
   }
   createErrors.value = {}
 }
@@ -1125,7 +1150,63 @@ const handleSave = async () => {
 
     const method = editingItem.value ? 'put' : 'post'
 
-    const response = await axios[method](url, createForm.value)
+    // Prepare data for submission
+    let submitData
+    const hasFiles = createForm.value.files && createForm.value.files.length > 0
+    const hasUrls = createForm.value.urls && createForm.value.urls.length > 0
+    const hasSelectedFiles = createForm.value.selectedExistingFiles && createForm.value.selectedExistingFiles.length > 0
+
+    if (hasFiles || hasUrls || hasSelectedFiles) {
+      // Use FormData for file uploads
+      submitData = new FormData()
+
+      // Add text fields
+      Object.keys(createForm.value).forEach(key => {
+        if (key !== 'files' && key !== 'urls' && key !== 'selectedExistingFiles' && key !== 'selectedTags') {
+          submitData.append(key, createForm.value[key] || '')
+        }
+      })
+
+      // Add selected tags
+      if (createForm.value.selectedTags && createForm.value.selectedTags.length > 0) {
+        createForm.value.selectedTags.forEach(tag => {
+          submitData.append('tag_ids[]', tag.id)
+        })
+      }
+
+      // Add files
+      if (hasFiles) {
+        createForm.value.files.forEach(file => {
+          submitData.append('files[]', file)
+        })
+      }
+
+      // Add URLs
+      if (hasUrls) {
+        createForm.value.urls.forEach(url => {
+          submitData.append('urls[]', url)
+        })
+      }
+
+      // Add selected existing files
+      if (hasSelectedFiles) {
+        createForm.value.selectedExistingFiles.forEach(file => {
+          submitData.append('existing_file_ids[]', file.id)
+        })
+      }
+    } else {
+      // Regular JSON submission
+      submitData = {
+        ...createForm.value,
+        tag_ids: createForm.value.selectedTags?.map(tag => tag.id) || []
+      }
+    }
+
+    const response = await axios[method](url, submitData, {
+      headers: hasFiles || hasUrls || hasSelectedFiles ? {
+        'Content-Type': 'multipart/form-data'
+      } : {}
+    })
 
     // Refresh the list
     await loadResearchItems(pagination.value?.current_page || 1)
@@ -1152,6 +1233,75 @@ const handleEdit = (item) => {
 const handleCategoryCreated = (newCategory) => {
   categories.value.push(newCategory)
   createForm.value.category_id = newCategory.id
+}
+
+// File upload event handlers
+const handleFileUpload = (event) => {
+  const files = Array.from(event.target.files)
+  if (files.length > 0) {
+    createForm.value.files = [...(createForm.value.files || []), ...files]
+  }
+}
+
+const handleAddUrl = (url) => {
+  if (url && !createForm.value.urls.includes(url)) {
+    createForm.value.urls = [...(createForm.value.urls || []), url]
+    createForm.value.newUrl = ''
+  }
+}
+
+const handleRemoveUrl = (index) => {
+  createForm.value.urls = createForm.value.urls.filter((_, i) => i !== index)
+}
+
+const handleRemoveFile = (index) => {
+  createForm.value.files = createForm.value.files.filter((_, i) => i !== index)
+}
+
+const handleSearchExistingFiles = async (searchTerm) => {
+  try {
+    loadingExistingFiles.value = true
+    const response = await axios.get('/api/assets', {
+      params: {
+        search: searchTerm,
+        per_page: 50
+      }
+    })
+    availableFiles.value = response.data.data || []
+  } catch (error) {
+    console.error('Error searching existing files:', error)
+    availableFiles.value = []
+  } finally {
+    loadingExistingFiles.value = false
+  }
+}
+
+const handleLoadExistingFiles = async () => {
+  try {
+    loadingExistingFiles.value = true
+    const response = await axios.get('/api/assets', {
+      params: {
+        per_page: 50
+      }
+    })
+    availableFiles.value = response.data.data || []
+  } catch (error) {
+    console.error('Error loading existing files:', error)
+    availableFiles.value = []
+  } finally {
+    loadingExistingFiles.value = false
+  }
+}
+
+const handleToggleFileSelection = (file) => {
+  const currentSelection = createForm.value.selectedExistingFiles || []
+  const isSelected = currentSelection.some(f => f.id === file.id)
+
+  if (isSelected) {
+    createForm.value.selectedExistingFiles = currentSelection.filter(f => f.id !== file.id)
+  } else {
+    createForm.value.selectedExistingFiles = [...currentSelection, file]
+  }
 }
 
 const deleteItem = async (item) => {

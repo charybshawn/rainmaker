@@ -64,7 +64,7 @@
           <label for="note_title" class="block text-sm font-medium text-white mb-2">Research Title</label>
           <input
             id="note_title"
-            v-model="form.title"
+            v-model="props.form.title"
             type="text"
             required
             class="w-full px-4 py-4 text-xl rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500 font-semibold"
@@ -234,7 +234,7 @@
             <div v-if="!showNewCategoryInput" class="relative">
               <select
                 id="note_category"
-                v-model="form.category_id"
+                v-model="props.form.category_id"
                 class="w-full px-4 py-3 pr-12 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
                 style="backdrop-filter: blur(20px) saturate(180%);"
               >
@@ -305,7 +305,7 @@
             <label for="note_visibility" class="block text-sm font-medium text-white mb-2">Visibility</label>
             <select
               id="note_visibility"
-              v-model="form.visibility"
+              v-model="props.form.visibility"
               class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
               style="backdrop-filter: blur(20px) saturate(180%);"
             >
@@ -320,7 +320,7 @@
             <label for="note_source_date" class="block text-sm font-medium text-white mb-2">Source Date</label>
             <input
               id="note_source_date"
-              v-model="form.source_date"
+              v-model="props.form.source_date"
               type="date"
               class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
               style="backdrop-filter: blur(20px) saturate(180%);"
@@ -337,7 +337,7 @@
         <div>
           <label class="block text-sm font-medium text-white mb-2">Tags</label>
           <TagSelector
-            v-model="form.selectedTags"
+            v-model="props.form.selectedTags"
             placeholder="Search or create tags..."
             help-text="Add tags to categorize and organize your research"
           />
@@ -352,10 +352,10 @@
           <div class="flex space-x-2 mb-4">
             <button
               type="button"
-              @click="form.uploadType = 'file'"
+              @click="props.form.uploadType = 'file'"
               :class="[
                 'px-4 py-2 text-sm rounded-lg font-medium transition-all duration-300',
-                (!form.uploadType || form.uploadType === 'file')
+                (!props.form.uploadType || props.form.uploadType === 'file')
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
                   : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
               ]"
@@ -364,10 +364,10 @@
             </button>
             <button
               type="button"
-              @click="form.uploadType = 'url'"
+              @click="props.form.uploadType = 'url'"
               :class="[
                 'px-4 py-2 text-sm rounded-lg font-medium transition-all duration-300',
-                form.uploadType === 'url'
+                props.form.uploadType === 'url'
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
                   : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
               ]"
@@ -376,10 +376,10 @@
             </button>
             <button
               type="button"
-              @click="form.uploadType = 'existing'; $emit('load-existing-files')"
+              @click="props.form.uploadType = 'existing'; $emit('load-existing-files')"
               :class="[
                 'px-4 py-2 text-sm rounded-lg font-medium transition-all duration-300',
-                form.uploadType === 'existing'
+                props.form.uploadType === 'existing'
                   ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
                   : 'bg-white/5 text-gray-300 border border-white/10 hover:bg-white/10'
               ]"
@@ -389,37 +389,44 @@
           </div>
 
           <!-- File Upload Area -->
-          <div v-if="!form.uploadType || form.uploadType === 'file'"
-               class="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-white/30 transition-colors backdrop-blur-xl bg-white/5">
+          <div v-if="!props.form.uploadType || props.form.uploadType === 'file'"
+               @click="triggerFileInput"
+               class="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-white/30 transition-colors backdrop-blur-xl bg-white/5 cursor-pointer">
             <svg class="mx-auto h-12 w-12 text-gray-300" stroke="currentColor" fill="none" viewBox="0 0 48 48">
               <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             <div class="mt-4">
-              <label for="research-file-upload" class="cursor-pointer">
-                <span class="mt-2 block text-sm font-medium text-white">
-                  Click to upload files or drag and drop
-                </span>
-                <span class="mt-1 block text-xs text-gray-400">
-                  PDF, DOC, XLS, PPT, Images, TXT, CSV (max 10MB each)
-                </span>
-              </label>
+              <span class="mt-2 block text-sm font-medium text-white">
+                Click to upload files or drag and drop
+              </span>
+              <span class="mt-1 block text-xs text-gray-400">
+                PDF, DOC, XLS, PPT, Images, TXT, CSV (max 10MB each)
+              </span>
               <input
+                ref="fileInput"
                 id="research-file-upload"
                 name="research-file-upload"
                 type="file"
                 multiple
                 accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.jpg,.jpeg,.png,.gif,.webp,.svg"
-                @change="$emit('file-upload', $event)"
+                @change="(event) => {
+                  const files = Array.from(event.target.files);
+                  if (files.length > 0) {
+                    if (!props.form.files) props.form.files = [];
+                    props.form.files = [...props.form.files, ...files];
+                  }
+                  $emit('file-upload', event);
+                }"
                 class="sr-only"
               />
             </div>
           </div>
 
           <!-- URL Download Area -->
-          <div v-if="form.uploadType === 'url'" class="space-y-4">
+          <div v-if="props.form.uploadType === 'url'" class="space-y-4">
             <div class="flex items-center space-x-2">
               <input
-                v-model="form.newUrl"
+                v-model="props.form.newUrl"
                 type="url"
                 placeholder="https://example.com/article-to-extract.html"
                 class="flex-1 px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
@@ -621,9 +628,9 @@
             </div>
 
             <!-- Added URLs List -->
-            <div v-if="form.urls && form.urls.length > 0" class="mt-4 space-y-2">
+            <div v-if="props.form.urls && props.form.urls.length > 0" class="mt-4 space-y-2">
               <h4 class="text-sm font-medium text-white">URLs to Download:</h4>
-              <div v-for="(url, index) in form.urls" :key="index"
+              <div v-for="(url, index) in props.form.urls" :key="index"
                    class="flex items-center justify-between p-3 bg-blue-500/10 border border-blue-400/30 rounded-xl backdrop-blur-xl">
                 <div class="flex items-center flex-1 min-w-0">
                   <svg class="w-5 h-5 text-blue-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -645,7 +652,7 @@
           </div>
 
           <!-- Existing Files Selection Area -->
-          <div v-if="form.uploadType === 'existing'" class="space-y-4">
+          <div v-if="props.form.uploadType === 'existing'" class="space-y-4">
             <div class="flex items-center space-x-2">
               <input
                 v-model="existingFilesSearch"
@@ -688,14 +695,14 @@
                     @click="$emit('toggle-file-selection', file)"
                     class="cursor-pointer transition-all duration-300 hover:bg-white/10"
                     :class="{
-                      'bg-blue-500/20': form.selectedExistingFiles?.some(f => f.id === file.id),
-                      'bg-transparent': !form.selectedExistingFiles?.some(f => f.id === file.id)
+                      'bg-blue-500/20': props.form.selectedExistingFiles?.some(f => f.id === file.id),
+                      'bg-transparent': !props.form.selectedExistingFiles?.some(f => f.id === file.id)
                     }"
                   >
                     <td class="px-4 py-3">
                       <input
                         type="checkbox"
-                        :checked="form.selectedExistingFiles?.some(f => f.id === file.id)"
+                        :checked="props.form.selectedExistingFiles?.some(f => f.id === file.id)"
                         @click.stop
                         @change="$emit('toggle-file-selection', file)"
                         class="rounded bg-white/10 border-white/20 text-blue-400 focus:ring-blue-400/20"
@@ -726,14 +733,15 @@
             </div>
 
             <!-- Selected files count -->
-            <div v-if="form.selectedExistingFiles?.length > 0" class="text-sm text-blue-400">
-              {{ form.selectedExistingFiles.length }} file(s) selected
+            <div v-if="props.form.selectedExistingFiles?.length > 0" class="text-sm text-blue-400">
+              {{ props.form.selectedExistingFiles.length }} file(s) selected
             </div>
           </div>
 
+
           <!-- File List -->
-          <div v-if="form.files && form.files.length > 0" class="mt-4 space-y-2">
-            <div v-for="(file, index) in form.files" :key="index"
+          <div v-if="props.form.files && props.form.files.length > 0" class="mt-4 space-y-2">
+            <div v-for="(file, index) in props.form.files" :key="index"
                  class="flex items-center justify-between p-3 bg-white/5 border border-white/10 rounded-xl backdrop-blur-xl">
               <div class="flex items-center">
                 <svg class="w-5 h-5 text-gray-300 mr-3" fill="currentColor" viewBox="0 0 20 20">
@@ -838,6 +846,9 @@ const emit = defineEmits([
 const existingFilesSearch = ref('')
 const extractingArticle = ref(false)
 
+// File input ref
+const fileInput = ref(null)
+
 // Category creation
 const showNewCategoryInput = ref(false)
 const newCategoryName = ref('')
@@ -851,15 +862,7 @@ const selectedImageIndices = ref([])
 
 // Create reactive local form reference to enable template binding with fallback
 const form = computed(() => {
-  console.log('NoteCreationModal form computed called with props.form:', props.form)
-  console.log('props.form specific fields:', {
-    title: props.form?.title,
-    category_id: props.form?.category_id,
-    source_date: props.form?.source_date,
-    selectedTags: props.form?.selectedTags,
-    visibility: props.form?.visibility
-  })
-  const result = props.form || {
+  return props.form || {
     title: '',
     content: '',
     company_id: null,
@@ -870,14 +873,6 @@ const form = computed(() => {
     newUrl: '',
     selectedExistingFiles: []
   }
-  console.log('NoteCreationModal form computed result specific fields:', {
-    title: result.title,
-    category_id: result.category_id,
-    source_date: result.source_date,
-    selectedTags: result.selectedTags,
-    visibility: result.visibility
-  })
-  return result
 })
 
 // Tiptap Editor Setup
@@ -925,12 +920,9 @@ watch(() => props.form?.content, (newContent) => {
   }
 })
 
-// Debug: Watch for form prop changes
+// Watch for form prop changes to update editor
 watch(() => props.form, (newForm, oldForm) => {
-  console.log('NoteCreationModal props.form changed:', {
-    old: oldForm,
-    new: newForm
-  })
+  // Form prop changed - could add any necessary reactive updates here if needed
 }, { deep: true, immediate: true })
 
 // Utility functions
@@ -1109,6 +1101,14 @@ const clearExtractedArticle = () => {
   showImageGallery.value = false
   selectedImage.value = null
 }
+
+// Trigger file input click
+const triggerFileInput = () => {
+  if (fileInput.value) {
+    fileInput.value.click()
+  }
+}
+
 
 </script>
 
