@@ -167,25 +167,6 @@
             <!-- Navigation Links -->
             <div class="p-4 space-y-2">
               <Link
-                :href="`/companies/${company.ticker}`"
-                :class="[
-                  'flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
-                  isOverviewTab
-                    ? 'bg-gray-700/50 text-white border border-gray-600/50'
-                    : 'text-gray-300 hover:text-white hover:bg-gray-800/30'
-                ]"
-                @click="sidebarOpen = false"
-              >
-                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
-                </svg>
-                <div class="flex-1 text-left">
-                  <div class="font-medium">Overview</div>
-                  <div class="text-xs text-gray-400">Company summary & metrics</div>
-                </div>
-              </Link>
-
-              <Link
                 :href="`/companies/${company.ticker}?tab=research`"
                 :class="[
                   'flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
@@ -236,152 +217,6 @@
         <!-- Main Content Area -->
         <div class="flex-1 min-w-0 space-y-8">
 
-      <!-- Overview Tab Content -->
-      <div v-if="isOverviewTab">
-        <!-- Recent Research Notes -->
-        <div v-if="company?.research_items?.length > 0" class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
-          <!-- Header -->
-          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-xl font-semibold text-white flex items-center">
-                <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Recent Research Notes
-              </h3>
-              <Link :href="`/companies/${company.ticker}?tab=research`" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-                View All →
-              </Link>
-            </div>
-          </div>
-
-          <!-- Research Notes List -->
-          <div class="divide-y divide-gray-700/30">
-            <div
-              v-for="item in company.research_items.slice(0, 3)"
-              :key="item.id"
-              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
-              @click="openResearchNoteModal(item)"
-            >
-              <!-- Note Header -->
-              <div class="flex items-start justify-between mb-2">
-                <h4 class="text-white font-medium text-lg group-hover:text-blue-200 transition-colors">{{ item.title }}</h4>
-                <span v-if="item.category" class="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md">{{ item.category.name }}</span>
-              </div>
-
-              <!-- Content Preview -->
-              <p class="text-gray-300 text-sm mb-3 line-clamp-2 leading-relaxed">{{ getContentPreview(item.content) }}</p>
-
-              <!-- Tags -->
-              <div v-if="item.tags && item.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
-                <div
-                  v-for="tag in item.tags.slice(0, 3)"
-                  :key="tag.id"
-                  class="px-2 py-1 rounded-lg text-xs"
-                  :style="{
-                    backgroundColor: tag.color + '20',
-                    borderColor: tag.color + '40',
-                    color: tag.color
-                  }"
-                  style="border-width: 1px;"
-                >
-                  {{ tag.name }}
-                </div>
-                <span v-if="item.tags.length > 3" class="text-xs text-gray-400 px-2 py-1 bg-gray-700/20 rounded-lg">
-                  +{{ item.tags.length - 3 }} more
-                </span>
-              </div>
-
-              <!-- Footer -->
-              <div class="flex items-center justify-between text-xs text-gray-400">
-                <span class="flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  {{ formatDate(item.created_at) }}
-                </span>
-                <span v-if="item.user" class="flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                  </svg>
-                  {{ item.user.name }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Documents -->
-        <div v-if="company?.documents?.length > 0" class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
-          <!-- Header -->
-          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h3 class="text-xl font-semibold text-white flex items-center">
-                <svg class="w-5 h-5 text-orange-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                Recent Documents
-              </h3>
-              <Link :href="`/companies/${company.ticker}?tab=documents`" class="text-orange-400 hover:text-orange-300 text-sm font-medium">
-                View All →
-              </Link>
-            </div>
-          </div>
-
-          <!-- Documents List -->
-          <div class="divide-y divide-gray-700/30">
-            <div
-              v-for="document in company.documents.slice(0, 3)"
-              :key="document.id"
-              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
-              @click="openDocumentModal(document)"
-            >
-              <!-- Document Header -->
-              <div class="flex items-start justify-between mb-2">
-                <h4 class="text-white font-medium text-lg group-hover:text-orange-200 transition-colors">{{ document.title }}</h4>
-                <span class="text-xs text-gray-400 capitalize px-2 py-1 bg-gray-700/30 rounded-md">{{ document.visibility }}</span>
-              </div>
-
-              <!-- Description -->
-              <p v-if="document.description" class="text-gray-300 text-sm mb-3 line-clamp-2 leading-relaxed">{{ document.description }}</p>
-
-              <!-- Attachments -->
-              <div v-if="document.attachments && document.attachments.length > 0" class="flex flex-wrap gap-2 mb-3">
-                <div
-                  v-for="attachment in document.attachments.slice(0, 2)"
-                  :key="attachment.id"
-                  class="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-400/20 rounded-lg text-xs hover:bg-orange-500/15 transition-colors"
-                >
-                  <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                  </svg>
-                  <span class="text-orange-300 font-medium">{{ attachment.file_name }}</span>
-                  <span class="text-gray-400">({{ formatFileSize(attachment.size) }})</span>
-                </div>
-                <span v-if="document.attachments.length > 2" class="text-xs text-gray-400 px-3 py-1.5 bg-gray-700/20 rounded-lg">
-                  +{{ document.attachments.length - 2 }} more
-                </span>
-              </div>
-
-              <!-- Footer -->
-              <div class="flex items-center justify-between text-xs text-gray-400">
-                <span class="flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                  {{ formatDate(document.created_at) }}
-                </span>
-                <span v-if="document.user" class="flex items-center gap-1">
-                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                  </svg>
-                  {{ document.user.name }}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Research Tab Content -->
       <div v-if="isResearchTab">
@@ -684,8 +519,7 @@ const editingResearchItem = ref(null)
 const isEditingResearchItem = computed(() => !!editingResearchItem.value)
 
 // Tab management
-const activeTab = computed(() => props.tab || 'overview')
-const isOverviewTab = computed(() => activeTab.value === 'overview')
+const activeTab = computed(() => props.tab || 'research')
 const isResearchTab = computed(() => activeTab.value === 'research')
 const isDocumentsTab = computed(() => activeTab.value === 'documents')
 
