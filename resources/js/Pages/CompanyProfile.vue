@@ -109,13 +109,6 @@
             </button>
             <button
               v-if="$page.props.auth.user"
-              @click="openDocumentUploadModal"
-              class="w-full bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 font-medium py-2 px-4 rounded-lg transition-all duration-200 border border-orange-400/20"
-            >
-              Upload Document
-            </button>
-            <button
-              v-if="$page.props.auth.user"
               @click="addToWatchlist"
               class="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-medium py-2 px-4 rounded-lg transition-all duration-200 border border-purple-400/20 flex items-center justify-center gap-2"
             >
@@ -134,29 +127,456 @@
         <p class="text-gray-300 leading-relaxed">{{ company.description }}</p>
       </div>
 
-      <!-- Recent Research Notes -->
-      <div v-if="company?.research_items?.length > 0" class="bg-gradient-to-br from-white/5 via-transparent to-white/5 backdrop-blur-xl rounded-xl p-6 border border-white/10">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-xl font-semibold text-white">Recent Research Notes</h3>
-          <Link :href="`/companies/${company.ticker}?tab=research`" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
-            View All →
-          </Link>
-        </div>
-        <div class="space-y-4">
-          <div
-            v-for="item in company.research_items.slice(0, 3)"
-            :key="item.id"
-            class="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-            @click="openResearchNoteModal(item)"
+      <!-- Main Content Layout with Sidebar -->
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Sidebar Toggle Button (Mobile) -->
+        <button
+          @click="toggleSidebar"
+          class="lg:hidden flex items-center justify-between w-full px-4 py-3 bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-xl border border-gray-700/30 text-white font-medium"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+            Navigation
+          </span>
+          <svg
+            :class="['w-5 h-5 transition-transform duration-200', sidebarOpen ? 'rotate-180' : '']"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
-            <h4 class="text-white font-medium mb-2">{{ item.title }}</h4>
-            <p class="text-gray-400 text-sm mb-2 line-clamp-2">{{ getContentPreview(item.content) }}</p>
-            <div class="flex items-center justify-between text-xs text-gray-500">
-              <span>{{ formatDate(item.created_at) }}</span>
-              <span v-if="item.category" class="px-2 py-1 bg-blue-500/20 text-blue-300 rounded">{{ item.category.name }}</span>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+
+        <!-- Collapsible Sidebar -->
+        <div :class="[
+          'transition-all duration-300 ease-in-out lg:w-80 lg:flex-shrink-0',
+          sidebarOpen ? 'block' : 'hidden lg:block'
+        ]">
+          <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl border-t border-b border-gray-700/30 overflow-hidden" style="backdrop-filter: blur(20px) saturate(180%);">
+            <!-- Sidebar Header -->
+            <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+              <h3 class="text-lg font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                Company Sections
+              </h3>
+            </div>
+
+            <!-- Navigation Links -->
+            <div class="p-4 space-y-2">
+              <Link
+                :href="`/companies/${company.ticker}`"
+                :class="[
+                  'flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+                  isOverviewTab
+                    ? 'bg-gray-700/50 text-white border border-gray-600/50'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/30'
+                ]"
+                @click="sidebarOpen = false"
+              >
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
+                </svg>
+                <div class="flex-1 text-left">
+                  <div class="font-medium">Overview</div>
+                  <div class="text-xs text-gray-400">Company summary & metrics</div>
+                </div>
+              </Link>
+
+              <Link
+                :href="`/companies/${company.ticker}?tab=research`"
+                :class="[
+                  'flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+                  isResearchTab
+                    ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/30'
+                ]"
+                @click="sidebarOpen = false"
+              >
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <div class="flex-1 text-left">
+                  <div class="font-medium">Research Notes</div>
+                  <div class="text-xs text-gray-400">{{ company?.research_items?.length || 0 }} notes available</div>
+                </div>
+                <span v-if="company?.research_items?.length > 0" class="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full text-xs font-medium">
+                  {{ company.research_items.length }}
+                </span>
+              </Link>
+
+              <Link
+                :href="`/companies/${company.ticker}?tab=documents`"
+                :class="[
+                  'flex items-center w-full px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200',
+                  isDocumentsTab
+                    ? 'bg-orange-500/20 text-orange-300 border border-orange-400/30'
+                    : 'text-gray-300 hover:text-white hover:bg-gray-800/30'
+                ]"
+                @click="sidebarOpen = false"
+              >
+                <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <div class="flex-1 text-left">
+                  <div class="font-medium">Documents</div>
+                  <div class="text-xs text-gray-400">{{ company?.documents?.length || 0 }} documents uploaded</div>
+                </div>
+                <span v-if="company?.documents?.length > 0" class="bg-orange-500/20 text-orange-300 px-2 py-1 rounded-full text-xs font-medium">
+                  {{ company.documents.length }}
+                </span>
+              </Link>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="flex-1 min-w-0 space-y-8">
+
+      <!-- Overview Tab Content -->
+      <div v-if="isOverviewTab">
+        <!-- Recent Research Notes -->
+        <div v-if="company?.research_items?.length > 0" class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+          <!-- Header -->
+          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Recent Research Notes
+              </h3>
+              <Link :href="`/companies/${company.ticker}?tab=research`" class="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                View All →
+              </Link>
+            </div>
+          </div>
+
+          <!-- Research Notes List -->
+          <div class="divide-y divide-gray-700/30">
+            <div
+              v-for="item in company.research_items.slice(0, 3)"
+              :key="item.id"
+              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
+              @click="openResearchNoteModal(item)"
+            >
+              <!-- Note Header -->
+              <div class="flex items-start justify-between mb-2">
+                <h4 class="text-white font-medium text-lg group-hover:text-blue-200 transition-colors">{{ item.title }}</h4>
+                <span v-if="item.category" class="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md">{{ item.category.name }}</span>
+              </div>
+
+              <!-- Content Preview -->
+              <p class="text-gray-300 text-sm mb-3 line-clamp-2 leading-relaxed">{{ getContentPreview(item.content) }}</p>
+
+              <!-- Tags -->
+              <div v-if="item.tags && item.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
+                <div
+                  v-for="tag in item.tags.slice(0, 3)"
+                  :key="tag.id"
+                  class="px-2 py-1 rounded-lg text-xs"
+                  :style="{
+                    backgroundColor: tag.color + '20',
+                    borderColor: tag.color + '40',
+                    color: tag.color
+                  }"
+                  style="border-width: 1px;"
+                >
+                  {{ tag.name }}
+                </div>
+                <span v-if="item.tags.length > 3" class="text-xs text-gray-400 px-2 py-1 bg-gray-700/20 rounded-lg">
+                  +{{ item.tags.length - 3 }} more
+                </span>
+              </div>
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  {{ formatDate(item.created_at) }}
+                </span>
+                <span v-if="item.user" class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  {{ item.user.name }}
+                </span>
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Recent Documents -->
+        <div v-if="company?.documents?.length > 0" class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+          <!-- Header -->
+          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-orange-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Recent Documents
+              </h3>
+              <Link :href="`/companies/${company.ticker}?tab=documents`" class="text-orange-400 hover:text-orange-300 text-sm font-medium">
+                View All →
+              </Link>
+            </div>
+          </div>
+
+          <!-- Documents List -->
+          <div class="divide-y divide-gray-700/30">
+            <div
+              v-for="document in company.documents.slice(0, 3)"
+              :key="document.id"
+              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
+              @click="openDocumentModal(document)"
+            >
+              <!-- Document Header -->
+              <div class="flex items-start justify-between mb-2">
+                <h4 class="text-white font-medium text-lg group-hover:text-orange-200 transition-colors">{{ document.title }}</h4>
+                <span class="text-xs text-gray-400 capitalize px-2 py-1 bg-gray-700/30 rounded-md">{{ document.visibility }}</span>
+              </div>
+
+              <!-- Description -->
+              <p v-if="document.description" class="text-gray-300 text-sm mb-3 line-clamp-2 leading-relaxed">{{ document.description }}</p>
+
+              <!-- Attachments -->
+              <div v-if="document.attachments && document.attachments.length > 0" class="flex flex-wrap gap-2 mb-3">
+                <div
+                  v-for="attachment in document.attachments.slice(0, 2)"
+                  :key="attachment.id"
+                  class="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-400/20 rounded-lg text-xs hover:bg-orange-500/15 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                  </svg>
+                  <span class="text-orange-300 font-medium">{{ attachment.file_name }}</span>
+                  <span class="text-gray-400">({{ formatFileSize(attachment.size) }})</span>
+                </div>
+                <span v-if="document.attachments.length > 2" class="text-xs text-gray-400 px-3 py-1.5 bg-gray-700/20 rounded-lg">
+                  +{{ document.attachments.length - 2 }} more
+                </span>
+              </div>
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  {{ formatDate(document.created_at) }}
+                </span>
+                <span v-if="document.user" class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  {{ document.user.name }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Research Tab Content -->
+      <div v-if="isResearchTab">
+        <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+          <!-- Header -->
+          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                All Research Notes ({{ company?.research_items?.length || 0 }})
+              </h3>
+              <button
+                v-if="$page.props.auth.user"
+                @click="openNoteCreationModal"
+                class="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-medium rounded-lg transition-all duration-200 border border-blue-400/20 flex items-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Add Research Note
+              </button>
+            </div>
+          </div>
+
+          <!-- All Research Notes List -->
+          <div v-if="company?.research_items?.length > 0" class="divide-y divide-gray-700/30">
+            <div
+              v-for="item in company.research_items"
+              :key="item.id"
+              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
+              @click="openResearchNoteModal(item)"
+            >
+              <!-- Note Header -->
+              <div class="flex items-start justify-between mb-2">
+                <h4 class="text-white font-medium text-lg group-hover:text-blue-200 transition-colors">{{ item.title }}</h4>
+                <span v-if="item.category" class="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md">{{ item.category.name }}</span>
+              </div>
+
+              <!-- Content Preview -->
+              <p class="text-gray-300 text-sm mb-3 line-clamp-2 leading-relaxed">{{ getContentPreview(item.content) }}</p>
+
+              <!-- Tags -->
+              <div v-if="item.tags && item.tags.length > 0" class="flex flex-wrap gap-2 mb-3">
+                <div
+                  v-for="tag in item.tags.slice(0, 5)"
+                  :key="tag.id"
+                  class="px-2 py-1 rounded-lg text-xs"
+                  :style="{
+                    backgroundColor: tag.color + '20',
+                    borderColor: tag.color + '40',
+                    color: tag.color
+                  }"
+                  style="border-width: 1px;"
+                >
+                  {{ tag.name }}
+                </div>
+                <span v-if="item.tags.length > 5" class="text-xs text-gray-400 px-2 py-1 bg-gray-700/20 rounded-lg">
+                  +{{ item.tags.length - 5 }} more
+                </span>
+              </div>
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  {{ formatDate(item.created_at) }}
+                </span>
+                <span v-if="item.user" class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  {{ item.user.name }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="px-6 py-12 text-center">
+            <svg class="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h4 class="text-lg font-medium text-gray-300 mb-2">No Research Notes</h4>
+            <p class="text-gray-400 mb-4">Start documenting your research and analysis for {{ company.name }}.</p>
+            <button
+              v-if="$page.props.auth.user"
+              @click="openNoteCreationModal"
+              class="px-4 py-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 font-medium rounded-lg transition-all duration-200 border border-blue-400/20"
+            >
+              Create First Research Note
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documents Tab Content -->
+      <div v-if="isDocumentsTab">
+        <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+          <!-- Header -->
+          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-semibold text-white flex items-center">
+                <svg class="w-5 h-5 text-orange-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                All Documents ({{ company?.documents?.length || 0 }})
+              </h3>
+              <button
+                v-if="$page.props.auth.user"
+                @click="openDocumentUploadModal"
+                class="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 font-medium rounded-lg transition-all duration-200 border border-orange-400/20 flex items-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Upload Document
+              </button>
+            </div>
+          </div>
+
+          <!-- All Documents List -->
+          <div v-if="company?.documents?.length > 0" class="divide-y divide-gray-700/30">
+            <div
+              v-for="document in company.documents"
+              :key="document.id"
+              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
+              @click="openDocumentModal(document)"
+            >
+              <!-- Document Header -->
+              <div class="flex items-start justify-between mb-2">
+                <h4 class="text-white font-medium text-lg group-hover:text-orange-200 transition-colors">{{ document.title }}</h4>
+                <span class="text-xs text-gray-400 capitalize px-2 py-1 bg-gray-700/30 rounded-md">{{ document.visibility }}</span>
+              </div>
+
+              <!-- Description -->
+              <p v-if="document.description" class="text-gray-300 text-sm mb-3 line-clamp-2 leading-relaxed">{{ document.description }}</p>
+
+              <!-- Attachments -->
+              <div v-if="document.attachments && document.attachments.length > 0" class="flex flex-wrap gap-2 mb-3">
+                <div
+                  v-for="attachment in document.attachments.slice(0, 3)"
+                  :key="attachment.id"
+                  class="flex items-center gap-2 px-3 py-1.5 bg-orange-500/10 border border-orange-400/20 rounded-lg text-xs hover:bg-orange-500/15 transition-colors"
+                >
+                  <svg class="w-3.5 h-3.5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                  </svg>
+                  <span class="text-orange-300 font-medium">{{ attachment.file_name }}</span>
+                  <span class="text-gray-400">({{ formatFileSize(attachment.size) }})</span>
+                </div>
+                <span v-if="document.attachments.length > 3" class="text-xs text-gray-400 px-3 py-1.5 bg-gray-700/20 rounded-lg">
+                  +{{ document.attachments.length - 3 }} more
+                </span>
+              </div>
+
+              <!-- Footer -->
+              <div class="flex items-center justify-between text-xs text-gray-400">
+                <span class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  {{ formatDate(document.created_at) }}
+                </span>
+                <span v-if="document.user" class="flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                  {{ document.user.name }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else class="px-6 py-12 text-center">
+            <svg class="w-16 h-16 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <h4 class="text-lg font-medium text-gray-300 mb-2">No Documents</h4>
+            <p class="text-gray-400 mb-4">Upload research documents, reports, and files for {{ company.name }}.</p>
+            <button
+              v-if="$page.props.auth.user"
+              @click="openDocumentUploadModal"
+              class="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 text-orange-300 font-medium rounded-lg transition-all duration-200 border border-orange-400/20"
+            >
+              Upload First Document
+            </button>
+          </div>
+        </div>
+        </div>
+      </div>
       </div>
     </div>
 
@@ -182,6 +602,8 @@
       :edit-form="editForm"
       :edit-errors="editErrors"
       :saving="savingCompany"
+      :edit-market-cap-input="editMarketCapInput"
+      :edit-market-cap-validation="editMarketCapValidation"
       @close="showEditCompanyModal = false"
       @save-edit="handleCompanySave"
     />
@@ -192,9 +614,19 @@
       :form="documentForm"
       :errors="documentErrors"
       :uploading="uploadingDocument"
+      :categories="categories"
       :format-file-size="formatFileSize"
       @close="showDocumentUploadModal = false"
       @save="handleDocumentSave"
+    />
+
+    <DocumentViewerModal
+      :show="showDocumentViewerModal"
+      :document="selectedDocument"
+      :categories="categories"
+      :can-edit="$page.props.auth.user && (selectedDocument?.user?.id === $page.props.auth.user.id || $page.props.auth.user.roles?.some(role => role.name === 'admin'))"
+      :can-delete="$page.props.auth.user && (selectedDocument?.user?.id === $page.props.auth.user.id || $page.props.auth.user.roles?.some(role => role.name === 'admin'))"
+      @close="showDocumentViewerModal = false"
     />
 
     <ResearchNoteModal
@@ -224,6 +656,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
+import DocumentViewerModal from '@/Components/Modals/DocumentViewerModal.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 import AddToWatchlistModal from '@/Components/Modals/AddToWatchlistModal.vue'
 import ToastNotification from '@/Components/ToastNotification.vue'
@@ -242,11 +675,25 @@ const error = ref(null)
 const showNoteCreationModal = ref(false)
 const showEditCompanyModal = ref(false)
 const showDocumentUploadModal = ref(false)
+const showDocumentViewerModal = ref(false)
 const showResearchNoteModal = ref(false)
 const showAddToWatchlistModal = ref(false)
 const selectedResearchItem = ref(null)
+const selectedDocument = ref(null)
 const editingResearchItem = ref(null)
 const isEditingResearchItem = computed(() => !!editingResearchItem.value)
+
+// Tab management
+const activeTab = computed(() => props.tab || 'overview')
+const isOverviewTab = computed(() => activeTab.value === 'overview')
+const isResearchTab = computed(() => activeTab.value === 'research')
+const isDocumentsTab = computed(() => activeTab.value === 'documents')
+
+// Sidebar management
+const sidebarOpen = ref(false)
+const toggleSidebar = () => {
+  sidebarOpen.value = !sidebarOpen.value
+}
 
 // Modal states
 const creatingNote = ref(false)
@@ -275,6 +722,10 @@ const editForm = ref({
 })
 
 const editErrors = ref({})
+
+// Market cap input handling for edit modal
+const editMarketCapInput = ref('')
+const editMarketCapValidation = ref({ state: 'neutral' })
 
 const documentForm = ref({
   title: '',
@@ -358,14 +809,35 @@ const openNoteCreationModal = () => {
 const openEditCompanyModal = () => {
   // Populate form with current company data
   if (company.value) {
+    // Convert market cap to a user-friendly format for editing
+    let marketCapDisplayValue = company.value.marketCap || company.value.market_cap || ''
+
+    // If we have a numeric market cap, convert it to a more readable format
+    if (marketCapDisplayValue && !isNaN(marketCapDisplayValue)) {
+      const numValue = parseFloat(marketCapDisplayValue)
+      if (numValue >= 1000000000000) {
+        marketCapDisplayValue = (numValue / 1000000000000).toFixed(1) + 'T'
+      } else if (numValue >= 1000000000) {
+        marketCapDisplayValue = (numValue / 1000000000).toFixed(1) + 'B'
+      } else if (numValue >= 1000000) {
+        marketCapDisplayValue = (numValue / 1000000).toFixed(1) + 'M'
+      } else if (numValue >= 1000) {
+        marketCapDisplayValue = (numValue / 1000).toFixed(1) + 'K'
+      }
+    }
+
     editForm.value = {
       name: company.value.name || '',
       ticker: company.value.ticker || '',
       sector: company.value.sector || '',
       industry: company.value.industry || '',
-      description: company.value.description || '',
-      market_cap: company.value.market_cap || ''
+      market_cap: company.value.marketCap || company.value.market_cap || '',
+      reports_financial_data_in: company.value.reports_financial_data_in || ''
     }
+
+    // Set the display value for the market cap input
+    editMarketCapInput.value = marketCapDisplayValue
+    editMarketCapValidation.value = { state: 'neutral' }
   }
   editErrors.value = {}
   showEditCompanyModal.value = true
@@ -387,6 +859,11 @@ const openDocumentUploadModal = () => {
 const openResearchNoteModal = (item) => {
   selectedResearchItem.value = item
   showResearchNoteModal.value = true
+}
+
+const openDocumentModal = (document) => {
+  selectedDocument.value = document
+  showDocumentViewerModal.value = true
 }
 
 const handleEditResearchNote = (item) => {
