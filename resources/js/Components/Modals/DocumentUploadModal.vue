@@ -10,7 +10,9 @@
       <div class="sticky top-0 bg-gray-900 border-b border-white/20 px-4 sm:px-6 py-3 sm:py-4 rounded-t-none sm:rounded-t-2xl z-10">
         <div class="flex items-center justify-between">
           <div>
-            <h2 class="text-2xl font-semibold text-white">📄 Create Research Asset</h2>
+            <h2 class="text-2xl font-semibold text-white">
+              {{ isEditing ? '📝 Edit Document' : '📄 Create Research Asset' }}
+            </h2>
             <p class="text-sm text-gray-300 mt-1" v-if="selectedCompany">
               for {{ selectedCompany.name }} ({{ selectedCompany.ticker }})
             </p>
@@ -36,7 +38,9 @@
 
         <!-- Upload Method Selection -->
         <div>
-          <label class="block text-sm font-medium text-white mb-3">Create Research Asset</label>
+          <label class="block text-sm font-medium text-white mb-3">
+            {{ isEditing ? 'Update Document' : 'Create Research Asset' }}
+          </label>
           <div class="flex space-x-2 mb-4">
             <button
               type="button"
@@ -319,7 +323,7 @@
             ]"
           >
             <div v-if="uploading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-            <span v-if="uploading">Creating...</span>
+            <span v-if="uploading">{{ isEditing ? 'Updating...' : 'Creating...' }}</span>
             <span v-else-if="hasErrors && canRetry">Retry Upload</span>
             <span v-else>{{ saveButtonText }}</span>
           </button>
@@ -359,6 +363,14 @@ const props = defineProps({
   categories: {
     type: Array,
     default: () => []
+  },
+  editingDocument: {
+    type: Object,
+    default: null
+  },
+  isEditing: {
+    type: Boolean,
+    default: false
   },
   formatFileSize: {
     type: Function,
@@ -760,14 +772,25 @@ const canSave = computed(() => {
 })
 
 const saveButtonText = computed(() => {
-  if (selectedFiles.value.length > 0 && selectedAssets.value.length > 0) {
-    return `Create ${selectedFiles.value.length} Assets & Link ${selectedAssets.value.length} Existing`
-  } else if (selectedFiles.value.length > 0) {
-    return `Create ${selectedFiles.value.length} Research Asset${selectedFiles.value.length > 1 ? 's' : ''}`
-  } else if (selectedAssets.value.length > 0) {
-    return `Link ${selectedAssets.value.length} Existing Asset${selectedAssets.value.length > 1 ? 's' : ''}`
+  if (props.isEditing) {
+    if (selectedFiles.value.length > 0 && selectedAssets.value.length > 0) {
+      return `Update & Add ${selectedFiles.value.length} Assets, Link ${selectedAssets.value.length} Existing`
+    } else if (selectedFiles.value.length > 0) {
+      return `Update & Add ${selectedFiles.value.length} Asset${selectedFiles.value.length > 1 ? 's' : ''}`
+    } else if (selectedAssets.value.length > 0) {
+      return `Update & Link ${selectedAssets.value.length} Asset${selectedAssets.value.length > 1 ? 's' : ''}`
+    }
+    return 'Update Document'
+  } else {
+    if (selectedFiles.value.length > 0 && selectedAssets.value.length > 0) {
+      return `Create ${selectedFiles.value.length} Assets & Link ${selectedAssets.value.length} Existing`
+    } else if (selectedFiles.value.length > 0) {
+      return `Create ${selectedFiles.value.length} Research Asset${selectedFiles.value.length > 1 ? 's' : ''}`
+    } else if (selectedAssets.value.length > 0) {
+      return `Link ${selectedAssets.value.length} Existing Asset${selectedAssets.value.length > 1 ? 's' : ''}`
+    }
+    return 'Create Research Asset'
   }
-  return 'Create Research Asset'
 })
 
 // Watch for modal show/hide and company changes

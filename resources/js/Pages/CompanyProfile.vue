@@ -450,9 +450,21 @@
       :errors="documentErrors"
       :uploading="uploadingDocument"
       :categories="categories"
+      :editing-document="editingDocument"
+      :is-editing="isEditingDocument"
       :format-file-size="formatFileSize"
-      @close="showDocumentUploadModal = false"
+      @close="handleDocumentModalClose"
       @save="handleDocumentSave"
+    />
+
+    <DocumentEditModal
+      :show="showDocumentEditModal"
+      :document="editingDocument"
+      :categories="categories"
+      :companies="companies"
+      :tags="tags"
+      @close="handleDocumentEditModalClose"
+      @updated="handleDocumentUpdated"
     />
 
     <DocumentViewerModal
@@ -462,6 +474,7 @@
       :can-edit="$page.props.auth.user && (selectedDocument?.user?.id === $page.props.auth.user.id || $page.props.auth.user.roles?.some(role => role.name === 'admin'))"
       :can-delete="$page.props.auth.user && (selectedDocument?.user?.id === $page.props.auth.user.id || $page.props.auth.user.roles?.some(role => role.name === 'admin'))"
       @close="showDocumentViewerModal = false"
+      @edit="handleEditDocument"
     />
 
     <ResearchNoteModal
@@ -491,6 +504,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
+import DocumentEditModal from '@/Components/Modals/DocumentEditModal.vue'
 import DocumentViewerModal from '@/Components/Modals/DocumentViewerModal.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
 import AddToWatchlistModal from '@/Components/Modals/AddToWatchlistModal.vue'
@@ -510,6 +524,7 @@ const error = ref(null)
 const showNoteCreationModal = ref(false)
 const showEditCompanyModal = ref(false)
 const showDocumentUploadModal = ref(false)
+const showDocumentEditModal = ref(false)
 const showDocumentViewerModal = ref(false)
 const showResearchNoteModal = ref(false)
 const showAddToWatchlistModal = ref(false)
@@ -517,6 +532,8 @@ const selectedResearchItem = ref(null)
 const selectedDocument = ref(null)
 const editingResearchItem = ref(null)
 const isEditingResearchItem = computed(() => !!editingResearchItem.value)
+const editingDocument = ref(null)
+const isEditingDocument = computed(() => !!editingDocument.value)
 
 // Tab management
 const activeTab = computed(() => props.tab || 'research')
@@ -574,6 +591,7 @@ const documentErrors = ref({})
 // Categories and other data
 const categories = ref([])
 const tags = ref([])
+const companies = ref([])
 
 // Fetch company data and other required data
 onMounted(async () => {
@@ -581,16 +599,18 @@ onMounted(async () => {
     loading.value = true
     console.log('Fetching company with ticker:', props.ticker)
 
-    // Fetch categories and tags in parallel with company data
-    const [companiesResponse, categoriesResponse, tagsResponse] = await Promise.all([
+    // Fetch categories, tags, and companies in parallel with company data
+    const [companiesResponse, categoriesResponse, tagsResponse, allCompaniesResponse] = await Promise.all([
       axios.get('/api/companies', { params: { search: props.ticker, limit: 100 } }),
       axios.get('/api/categories'),
-      axios.get('/api/tags')
+      axios.get('/api/tags'),
+      axios.get('/api/companies', { params: { limit: 1000 } }) // Get all companies for dropdown
     ])
 
-    // Load categories and tags
+    // Load categories, tags, and companies
     categories.value = categoriesResponse.data
     tags.value = tagsResponse.data
+    companies.value = allCompaniesResponse.data.data || allCompaniesResponse.data
 
     console.log('Companies API response:', companiesResponse.data)
 
@@ -723,6 +743,17 @@ const handleEditResearchNote = (item) => {
   showNoteCreationModal.value = true
 }
 
+const handleEditDocument = (document) => {
+  // Close the view modal
+  showDocumentViewerModal.value = false
+
+  // Set the document being edited
+  editingDocument.value = document
+
+  // Show the edit modal
+  showDocumentEditModal.value = true
+}
+
 const handleNoteModalClose = () => {
   showNoteCreationModal.value = false
   editingResearchItem.value = null
@@ -735,6 +766,39 @@ const handleNoteModalClose = () => {
     visibility: 'private',
     tag_ids: [],
     ai_synopsis: ''
+  }
+}
+
+const handleDocumentModalClose = () => {
+  showDocumentUploadModal.value = false
+  editingDocument.value = null
+  // Reset form if needed
+  documentForm.value = {
+    title: '',
+    description: '',
+    category_id: '',
+    visibility: 'private',
+    files: []
+  }
+}
+
+const handleDocumentEditModalClose = () => {
+  showDocumentEditModal.value = false
+  editingDocument.value = null
+}
+
+const handleDocumentUpdated = (updatedDocument) => {
+  // Update the document in the company's documents array
+  if (company.value?.documents) {
+    const index = company.value.documents.findIndex(doc => doc.id === updatedDocument.id)
+    if (index !== -1) {
+      company.value.documents[index] = updatedDocument
+    }
+  }
+
+  // Update selectedDocument if it's the same document
+  if (selectedDocument.value?.id === updatedDocument.id) {
+    selectedDocument.value = updatedDocument
   }
 }
 

@@ -15,63 +15,18 @@
               📄 {{ document?.title || 'Research Asset' }}
             </h1>
             <div class="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
-              <!-- Category - Inline Editable -->
-              <div v-if="document?.category || (canEdit && !isEditing.category)" class="inline-flex items-center">
-                <span v-if="!isEditing.category"
-                      class="inline-flex items-center px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md text-xs group cursor-pointer hover:bg-blue-500/30 transition-colors"
-                      @click="canEdit && startEditing('category')">
-                  {{ document?.category?.name || 'No category' }}
-                  <svg v-if="canEdit" class="w-3 h-3 ml-1 opacity-0 group-hover:opacity-70 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
+              <!-- Category - Display Only -->
+              <div v-if="document?.category" class="inline-flex items-center">
+                <span class="inline-flex items-center px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md text-xs">
+                  {{ document?.category?.name }}
                 </span>
-                <div v-else class="inline-flex items-center gap-1">
-                  <select v-model="editValues.category"
-                          class="text-xs px-2 py-1 bg-blue-500/20 text-blue-300 rounded-md border border-blue-400/30 focus:border-blue-400 focus:ring-1 focus:ring-blue-400/50">
-                    <option value="">No category</option>
-                    <option v-for="cat in categories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
-                  </select>
-                  <button @click="saveField('category')" class="text-green-400 hover:text-green-300 p-0.5">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                  </button>
-                  <button @click="cancelEditing('category')" class="text-red-400 hover:text-red-300 p-0.5">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </button>
-                </div>
               </div>
 
-              <!-- Visibility - Inline Editable -->
-              <div v-if="document?.visibility || canEdit" class="inline-flex items-center">
-                <span v-if="!isEditing.visibility"
-                      class="inline-flex items-center px-2 py-1 bg-purple-500/20 text-purple-300 rounded-md text-xs capitalize group cursor-pointer hover:bg-purple-500/30 transition-colors"
-                      @click="canEdit && startEditing('visibility')">
-                  {{ document?.visibility || 'private' }}
-                  <svg v-if="canEdit" class="w-3 h-3 ml-1 opacity-0 group-hover:opacity-70 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                  </svg>
+              <!-- Visibility - Display Only -->
+              <div v-if="document?.visibility" class="inline-flex items-center">
+                <span class="inline-flex items-center px-2 py-1 bg-purple-500/20 text-purple-300 rounded-md text-xs capitalize">
+                  {{ document?.visibility }}
                 </span>
-                <div v-else class="inline-flex items-center gap-1">
-                  <select v-model="editValues.visibility"
-                          class="text-xs px-2 py-1 bg-purple-500/20 text-purple-300 rounded-md border border-purple-400/30 focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 capitalize">
-                    <option value="private">Private</option>
-                    <option value="team">Team</option>
-                    <option value="public">Public</option>
-                  </select>
-                  <button @click="saveField('visibility')" class="text-green-400 hover:text-green-300 p-0.5">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                  </button>
-                  <button @click="cancelEditing('visibility')" class="text-red-400 hover:text-red-300 p-0.5">
-                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                  </button>
-                </div>
               </div>
 
               <span v-if="document?.user" class="inline-flex items-center px-2 py-1 bg-green-500/20 text-green-300 rounded-md text-xs">
@@ -82,14 +37,27 @@
               </span>
             </div>
           </div>
-          <button
-            @click="$emit('close')"
-            class="ml-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center"
-          >
-            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
+          <div class="flex items-center space-x-2">
+            <button
+              v-if="canEdit"
+              @click="$emit('edit', document)"
+              class="w-10 h-10 rounded-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 transition-colors flex items-center justify-center"
+              title="Edit Document"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </button>
+            <button
+              @click="$emit('close')"
+              class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center"
+              title="Close"
+            >
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
