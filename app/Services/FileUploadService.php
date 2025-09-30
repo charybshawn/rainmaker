@@ -73,7 +73,7 @@ class FileUploadService
     /**
      * Handle file uploads for a model with comprehensive error tracking.
      */
-    public function handleUploads(HasMedia $model, Request $request, string $collection = 'attachments'): array
+    public function handleUploads($model, Request $request, string $collection = 'attachments'): array
     {
         $results = [
             'files' => ['expected' => 0, 'successful' => 0, 'failed' => []],
@@ -103,14 +103,25 @@ class FileUploadService
     /**
      * Handle direct file uploads from request.
      */
-    protected function handleDirectFileUploads(HasMedia $model, Request $request, string $collection, array &$results): void
+    protected function handleDirectFileUploads($model, Request $request, string $collection, array &$results): void
     {
         $files = $this->extractFilesFromRequest($request);
         $results['files']['expected'] = count($files);
 
         foreach ($files as $file) {
             try {
-                $model->addMedia($file)->toMediaCollection($collection);
+                // Handle ResearchItem with direct asset creation
+                if ($model instanceof \App\Models\ResearchItem) {
+                    $this->createDirectAssetForResearchItem($model, $file);
+                }
+                // Handle other models with MediaLibrary
+                elseif (method_exists($model, 'addMedia')) {
+                    $model->addMedia($file)->toMediaCollection($collection);
+                }
+                else {
+                    throw new Exception('Model does not support file uploads');
+                }
+
                 $results['files']['successful']++;
 
                 Log::info('File uploaded successfully', [
@@ -139,8 +150,13 @@ class FileUploadService
     /**
      * Handle URL-based file downloads.
      */
-    protected function handleUrlDownloads(HasMedia $model, Request $request, string $collection, array &$results): void
+    protected function handleUrlDownloads($model, Request $request, string $collection, array &$results): void
     {
+        // Only proceed if model supports MediaLibrary
+        if (!method_exists($model, 'addMedia')) {
+            return;
+        }
+
         // Support multiple parameter names for backward compatibility
         $urls = [];
         if ($request->has('document_urls') && is_array($request->document_urls)) {
@@ -207,7 +223,7 @@ class FileUploadService
     /**
      * Handle existing file attachments (for research item cloning/updates).
      */
-    protected function handleExistingFileAttachments(HasMedia $model, Request $request, string $collection, array &$results): void
+    protected function handleExistingFileAttachments($model, Request $request, string $collection, array &$results): void
     {
         // Support multiple parameter names for backward compatibility
         $existingIds = [];
@@ -226,11 +242,43 @@ class FileUploadService
 
         foreach ($existingIds as $assetId) {
             try {
-                // First try to find as an asset (new system)
                 $asset = \App\Models\Asset::find($assetId);
 
-                if ($asset && $asset->file_path) {
-                    // Get the full file path
+                if (!$asset) {
+                    throw new Exception("Asset with ID {$assetId} not found");
+                }
+
+                // Handle ResearchItem with symbolic links (new paradigm)
+                if ($model instanceof \App\Models\ResearchItem) {
+                    // Check if relationship already exists
+                    $exists = $model->assets()->where('asset_id', $assetId)->exists();
+
+                    if (!$exists) {
+                        // Create symbolic link via pivot table
+                        $model->assets()->attach($assetId);
+
+                        $results['existing']['successful']++;
+
+                        Log::info('Asset symbolic link created for ResearchItem', [
+                            'model' => get_class($model),
+                            'model_id' => $model->id,
+                            'asset_id' => $assetId,
+                            'filename' => $asset->file_name,
+                            'link_type' => 'symbolic'
+                        ]);
+                    } else {
+                        // Already linked, count as successful
+                        $results['existing']['successful']++;
+
+                        Log::info('Asset already linked to ResearchItem', [
+                            'model_id' => $model->id,
+                            'asset_id' => $assetId
+                        ]);
+                    }
+                }
+                // Handle other models with MediaLibrary (legacy approach)
+                else if (method_exists($model, 'addMedia')) {
+                    // Get the full file path for MediaLibrary
                     $filePath = null;
 
                     if ($asset->media_id) {
@@ -255,17 +303,19 @@ class FileUploadService
 
                         $results['existing']['successful']++;
 
-                        Log::info('Existing asset attached successfully', [
+                        Log::info('Existing asset attached via MediaLibrary', [
                             'model' => get_class($model),
                             'model_id' => $model->id,
                             'asset_id' => $assetId,
                             'filename' => $asset->file_name,
                             'collection' => $collection
                         ]);
+                    } else {
+                        throw new Exception('Original file not found or inaccessible');
+                    }
                 } else {
-                    throw new Exception('Original file not found or inaccessible');
+                    throw new Exception('Model does not support file attachments');
                 }
-            }
 
             } catch (Exception $e) {
                 $results['existing']['failed'][] = [
@@ -286,8 +336,13 @@ class FileUploadService
     /**
      * Handle temporary uploads from background upload system.
      */
-    protected function handleTemporaryUploads(HasMedia $model, Request $request, string $collection, array &$results): void
+    protected function handleTemporaryUploads($model, Request $request, string $collection, array &$results): void
     {
+        // Only proceed if model supports MediaLibrary
+        if (!method_exists($model, 'addMedia')) {
+            return;
+        }
+
         $tempTokens = [];
         if ($request->has('temp_upload_tokens') && is_array($request->temp_upload_tokens)) {
             $tempTokens = array_filter($request->temp_upload_tokens);
@@ -385,12 +440,44 @@ class FileUploadService
     /**
      * Remove media files from a model and sync assets.
      */
-    public function removeMediaFromModel(HasMedia $model): void
+    public function removeMediaFromModel($model): void
     {
         // Remove from assets table first
         $this->assetSyncService->removeAssetsForModel($model);
 
-        // Then remove media files
-        $model->clearMediaCollection('attachments');
+        // Then remove media files if model supports MediaLibrary
+        if (method_exists($model, 'clearMediaCollection')) {
+            $model->clearMediaCollection('attachments');
+        }
+    }
+
+    /**
+     * Create a direct asset for ResearchItem from uploaded file.
+     */
+    protected function createDirectAssetForResearchItem(\App\Models\ResearchItem $researchItem, \Illuminate\Http\UploadedFile $file): \App\Models\Asset
+    {
+        // Store the file in public storage
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $path = $file->storeAs('assets', $filename, 'public');
+
+        // Create asset record
+        $asset = \App\Models\Asset::create([
+            'title' => pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME),
+            'description' => 'Uploaded to research item: ' . $researchItem->title,
+            'file_name' => $file->getClientOriginalName(),
+            'file_path' => $path,
+            'mime_type' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'source_type' => 'research_item',
+            'source_id' => $researchItem->id,
+            'media_id' => null,
+            'company_id' => $researchItem->company_id,
+            'user_id' => $researchItem->user_id,
+            'visibility' => $researchItem->visibility ?? 'private',
+            'is_orphaned' => false,
+            'created_via' => 'research_item_upload',
+        ]);
+
+        return $asset;
     }
 }

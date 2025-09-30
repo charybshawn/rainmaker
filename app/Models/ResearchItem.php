@@ -9,14 +9,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\MediaLibrary\HasMedia;
-use Spatie\MediaLibrary\InteractsWithMedia;
-use Xslain\OfflineSync\Traits\Syncable;
-use Xslain\OfflineSync\Contracts\SyncableModelInterface;
+// use Xslain\OfflineSync\Traits\Syncable;
+// use Xslain\OfflineSync\Contracts\SyncableModelInterface;
 
-class ResearchItem extends Model implements HasMedia, SyncableModelInterface
+class ResearchItem extends Model // implements SyncableModelInterface
 {
-    use HasFactory, InteractsWithMedia, TracksActivity, HasFileUploads, Syncable, SoftDeletes;
+    use HasFactory, TracksActivity, HasFileUploads, SoftDeletes; // Syncable
     protected $fillable = [
         'title',
         'content',
@@ -61,24 +59,39 @@ class ResearchItem extends Model implements HasMedia, SyncableModelInterface
     }
 
     /**
-     * Register media collections for file uploads.
+     * Assets relationship - symbolic links to assets via pivot table
      */
-    public function registerMediaCollections(): void
+    public function assets(): BelongsToMany
     {
-        $this->addMediaCollection('attachments')
-            ->acceptsMimeTypes($this->getSupportedMimeTypes());
+        return $this->belongsToMany(Asset::class, 'research_item_assets');
     }
 
     /**
-     * Register media conversions for uploaded files.
+     * Direct assets relationship - assets created specifically for this research item
      */
-    public function registerMediaConversions(?\Spatie\MediaLibrary\MediaCollections\Models\Media $media = null): void
+    public function directAssets()
     {
-        $this->addMediaConversion('thumb')
-            ->width(300)
-            ->height(200)
-            ->sharpen(10)
-            ->performOnCollections('attachments')
-            ->nonQueued();
+        return $this->hasMany(Asset::class, 'source_id')
+            ->where('source_type', 'research_item');
+    }
+
+    /**
+     * Handle calls to undefined relationships.
+     * This prevents errors when legacy code tries to access the old 'media' relationship.
+     */
+    public function __call($method, $parameters)
+    {
+        // Handle legacy media relationship access
+        if ($method === 'media') {
+            \Log::warning('Legacy media relationship accessed on ResearchItem', [
+                'research_item_id' => $this->id,
+                'backtrace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 5)
+            ]);
+
+            // Return empty collection to maintain compatibility
+            return collect();
+        }
+
+        return parent::__call($method, $parameters);
     }
 }

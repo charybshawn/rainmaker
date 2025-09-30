@@ -133,6 +133,7 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue'
+import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 
 const props = defineProps({
@@ -163,6 +164,11 @@ const filters = reactive({
   days: '7'
 })
 
+// Authentication check
+const isAuthenticated = computed(() => {
+  return !!usePage().props.auth?.user
+})
+
 // Icon path mapping
 const iconPaths = {
   'plus-circle': 'M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z',
@@ -186,6 +192,11 @@ const iconPaths = {
 
 // Methods
 const fetchActivities = async (page = 1) => {
+  if (!isAuthenticated.value) {
+    console.warn('User not authenticated - skipping activities fetch')
+    return
+  }
+
   if (page === 1) {
     loading.value = true
     activities.value = []
@@ -268,7 +279,10 @@ const formatValue = (value) => {
 
 // Lifecycle
 onMounted(() => {
-  fetchActivities()
+  // Only fetch if authenticated
+  if (isAuthenticated.value) {
+    fetchActivities()
+  }
 })
 </script>
 

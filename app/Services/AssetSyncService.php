@@ -14,8 +14,13 @@ class AssetSyncService
      */
     public function syncAssetsForModel($model)
     {
-        // Only sync ResearchItem media files now - Documents use direct asset references
-        if (!($model instanceof ResearchItem)) {
+        // ResearchItem now uses direct asset system - skip MediaLibrary sync
+        if ($model instanceof ResearchItem) {
+            return;
+        }
+
+        // Only sync models that still use MediaLibrary
+        if (!method_exists($model, 'getMedia')) {
             return;
         }
 
@@ -56,12 +61,18 @@ class AssetSyncService
      */
     public function removeAssetsForModel($model)
     {
-        if (!($model instanceof ResearchItem)) {
+        // ResearchItem now handles assets directly - skip legacy asset removal
+        if ($model instanceof ResearchItem) {
             return;
         }
 
-        // Mark research note assets as orphaned instead of deleting
-        Asset::where('source_type', 'research_note')
+        // Only handle models that still use the legacy MediaLibrary approach
+        if (!method_exists($model, 'getMedia')) {
+            return;
+        }
+
+        // Mark legacy model assets as orphaned instead of deleting
+        Asset::where('source_type', get_class($model))
               ->where('source_id', $model->id)
               ->update(['is_orphaned' => true]);
     }

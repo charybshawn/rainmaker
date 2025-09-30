@@ -7,23 +7,86 @@ use App\Models\Company;
 use App\Models\Tag;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 
 class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // Create permissions
+        $permissions = [
+            // Company permissions
+            'create companies',
+            'view companies',
+            'update companies',
+            'delete companies',
+
+            // Research Items permissions
+            'create research items',
+            'view research items',
+            'update research items',
+            'delete research items',
+
+            // Category permissions
+            'create categories',
+            'view categories',
+            'update categories',
+            'delete categories',
+
+            // Tag permissions
+            'create tags',
+            'view tags',
+            'update tags',
+            'delete tags',
+
+            // Asset permissions
+            'create assets',
+            'view assets',
+            'update assets',
+            'delete assets',
+
+            // Admin permissions
+            'admin access',
+            'manage users',
+            'manage roles',
+        ];
+
+        foreach ($permissions as $permission) {
+            Permission::firstOrCreate(['name' => $permission]);
+        }
+
+        // Create roles
+        $adminRole = Role::firstOrCreate(['name' => 'admin']);
+        $userRole = Role::firstOrCreate(['name' => 'user']);
+
+        // Assign all permissions to admin
+        $adminRole->syncPermissions($permissions);
+
+        // Assign basic permissions to user role
+        $userRole->syncPermissions([
+            'view companies',
+            'view research items',
+            'view categories',
+            'view tags',
+            'view assets',
+        ]);
+
         // Create test user
         $user = User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
+        $user->assignRole('user');
 
-        // Create shawn user
-        User::factory()->create([
+        // Create shawn admin user
+        $adminUser = User::factory()->create([
             'name' => 'Shawn',
-            'email' => 'shawn@roguespy',
+            'email' => 'shawn@roguespy.co',
             'password' => bcrypt('kngfqp57'),
+            'email_verified_at' => now(),
         ]);
+        $adminUser->assignRole('admin');
 
         // Create categories
         $categories = [
@@ -34,7 +97,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($categories as $categoryData) {
-            Category::create(array_merge($categoryData, ['created_by' => $user->id]));
+            Category::create(array_merge($categoryData, ['created_by' => $adminUser->id]));
         }
 
         // Create tags
@@ -47,7 +110,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($tags as $tagData) {
-            Tag::create(array_merge($tagData, ['created_by' => $user->id]));
+            Tag::create(array_merge($tagData, ['created_by' => $adminUser->id]));
         }
 
         // Create companies
@@ -121,7 +184,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($companies as $companyData) {
-            Company::create(array_merge($companyData, ['created_by' => $user->id]));
+            Company::create(array_merge($companyData, ['created_by' => $adminUser->id]));
         }
     }
 }

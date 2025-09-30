@@ -88,6 +88,7 @@
                 <!-- Text Formatting -->
                 <div class="toolbar-group">
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleBold().run()"
                     :class="{ 'is-active': editor.isActive('bold') }"
                     class="toolbar-btn"
@@ -98,6 +99,7 @@
                     </svg>
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleItalic().run()"
                     :class="{ 'is-active': editor.isActive('italic') }"
                     class="toolbar-btn"
@@ -108,6 +110,7 @@
                     </svg>
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleStrike().run()"
                     :class="{ 'is-active': editor.isActive('strike') }"
                     class="toolbar-btn"
@@ -118,6 +121,7 @@
                     </svg>
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleHighlight().run()"
                     :class="{ 'is-active': editor.isActive('highlight') }"
                     class="toolbar-btn"
@@ -132,6 +136,7 @@
                 <!-- Headings -->
                 <div class="toolbar-group">
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleHeading({ level: 1 }).run()"
                     :class="{ 'is-active': editor.isActive('heading', { level: 1 }) }"
                     class="toolbar-btn"
@@ -140,6 +145,7 @@
                     H1
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleHeading({ level: 2 }).run()"
                     :class="{ 'is-active': editor.isActive('heading', { level: 2 }) }"
                     class="toolbar-btn"
@@ -148,6 +154,7 @@
                     H2
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleHeading({ level: 3 }).run()"
                     :class="{ 'is-active': editor.isActive('heading', { level: 3 }) }"
                     class="toolbar-btn"
@@ -160,6 +167,7 @@
                 <!-- Lists & Content -->
                 <div class="toolbar-group">
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleBulletList().run()"
                     :class="{ 'is-active': editor.isActive('bulletList') }"
                     class="toolbar-btn"
@@ -170,6 +178,7 @@
                     </svg>
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleOrderedList().run()"
                     :class="{ 'is-active': editor.isActive('orderedList') }"
                     class="toolbar-btn"
@@ -180,6 +189,7 @@
                     </svg>
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleBlockquote().run()"
                     :class="{ 'is-active': editor.isActive('blockquote') }"
                     class="toolbar-btn"
@@ -190,6 +200,7 @@
                     </svg>
                   </button>
                   <button
+                    type="button"
                     @click="editor.chain().focus().toggleCodeBlock().run()"
                     :class="{ 'is-active': editor.isActive('codeBlock') }"
                     class="toolbar-btn"
@@ -220,17 +231,73 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <label for="note_category" class="block text-sm font-medium text-white mb-2">Category</label>
-            <select
-              id="note_category"
-              v-model="form.category_id"
-              class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
-              style="backdrop-filter: blur(20px) saturate(180%);"
-            >
-              <option value="">Select category (optional)</option>
-              <option v-for="category in categories" :key="category.id" :value="category.id">
-                {{ category.name }}
-              </option>
-            </select>
+            <div v-if="!showNewCategoryInput" class="relative">
+              <select
+                id="note_category"
+                v-model="form.category_id"
+                class="w-full px-4 py-3 pr-12 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                style="backdrop-filter: blur(20px) saturate(180%);"
+              >
+                <option value="">Select category (optional)</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+              <!-- Plus Icon for Admin -->
+              <button
+                v-if="user && (user.roles?.some(role => role.name === 'admin') || user.permissions?.some(perm => perm.name === 'manage categories'))"
+                @click="toggleNewCategoryInput"
+                type="button"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded-full bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 hover:text-blue-300 transition-all duration-200 flex items-center justify-center border border-blue-400/30 hover:border-blue-400/50"
+                title="Create new category"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+              </button>
+            </div>
+
+            <!-- New Category Creation Form -->
+            <div v-else class="space-y-3">
+              <div class="flex gap-2">
+                <input
+                  id="new-category-name"
+                  v-model="newCategoryName"
+                  type="text"
+                  placeholder="Category name..."
+                  class="flex-1 px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+                  style="backdrop-filter: blur(20px) saturate(180%);"
+                  @keydown.enter="createNewCategory"
+                />
+                <input
+                  v-model="newCategoryColor"
+                  type="color"
+                  class="w-12 h-12 rounded-xl border border-white/20 bg-transparent cursor-pointer"
+                  title="Category color"
+                />
+              </div>
+              <div class="flex gap-2">
+                <button
+                  @click="createNewCategory"
+                  :disabled="!newCategoryName.trim() || creatingCategory"
+                  type="button"
+                  class="px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-lg border border-green-400/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  <svg v-if="creatingCategory" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>{{ creatingCategory ? 'Creating...' : 'Create' }}</span>
+                </button>
+                <button
+                  @click="toggleNewCategoryInput"
+                  type="button"
+                  class="px-4 py-2 bg-gray-500/20 hover:bg-gray-500/30 text-gray-300 rounded-lg border border-gray-400/20 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
             <div v-if="errors.category_id" class="text-red-400 text-sm mt-1">{{ errors.category_id }}</div>
           </div>
 
@@ -699,7 +766,8 @@
 </template>
 
 <script setup>
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
+import axios from 'axios'
 import { useEditor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Highlight from '@tiptap/extension-highlight'
@@ -742,10 +810,18 @@ const props = defineProps({
   isEditing: {
     type: Boolean,
     default: false
+  },
+  user: {
+    type: Object,
+    default: null
+  },
+  tags: {
+    type: Array,
+    default: () => []
   }
 })
 
-defineEmits([
+const emit = defineEmits([
   'close',
   'save',
   'file-upload',
@@ -754,12 +830,19 @@ defineEmits([
   'remove-file',
   'search-existing-files',
   'load-existing-files',
-  'toggle-file-selection'
+  'toggle-file-selection',
+  'category-created'
 ])
 
 // Reactive data
 const existingFilesSearch = ref('')
 const extractingArticle = ref(false)
+
+// Category creation
+const showNewCategoryInput = ref(false)
+const newCategoryName = ref('')
+const newCategoryColor = ref('#3B82F6')
+const creatingCategory = ref(false)
 const extractedArticle = ref(null)
 const showImageGallery = ref(false)
 const selectedImage = ref(null)
@@ -866,6 +949,43 @@ const toggleAllFiles = (event) => {
   } else {
     // Deselect all files
     props.form.selectedExistingFiles = []
+  }
+}
+
+// Category creation functions
+const createNewCategory = async () => {
+  if (!newCategoryName.value.trim()) return
+
+  try {
+    creatingCategory.value = true
+    const response = await axios.post('/api/categories', {
+      name: newCategoryName.value.trim(),
+      color: newCategoryColor.value
+    })
+
+    // Emit the new category to parent component
+    emit('category-created', response.data)
+
+    // Reset form
+    newCategoryName.value = ''
+    newCategoryColor.value = '#3B82F6'
+    showNewCategoryInput.value = false
+  } catch (error) {
+    console.error('Error creating category:', error)
+    // You could add toast notification here
+  } finally {
+    creatingCategory.value = false
+  }
+}
+
+const toggleNewCategoryInput = () => {
+  showNewCategoryInput.value = !showNewCategoryInput.value
+  if (showNewCategoryInput.value) {
+    // Focus on input after next tick
+    nextTick(() => {
+      const input = document.querySelector('#new-category-name')
+      if (input) input.focus()
+    })
   }
 }
 

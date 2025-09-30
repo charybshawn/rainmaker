@@ -155,7 +155,7 @@ class CompanyController extends Controller
             return response()->json(['message' => 'You do not have permission to view companies.'], 403);
         }
 
-        $company->load(['researchItems.tags', 'researchItems.category', 'researchItems.media', 'researchItems.user', 'documents.tags', 'documents.user', 'documents.assets', 'creator']);
+        $company->load(['researchItems.tags', 'researchItems.category', 'researchItems.assets', 'researchItems.directAssets', 'researchItems.user', 'documents.tags', 'documents.user', 'documents.assets', 'creator']);
 
         return response()->json([
             'id' => $company->id,
@@ -172,7 +172,7 @@ class CompanyController extends Controller
             'foundedDate' => $company->founded_date?->format('Y-m-d'),
             'researchItemsCount' => $company->researchItems->count(),
             'documentsCount' => $company->documents->count(),
-            'researchItems' => $company->researchItems->map(function ($item) {
+            'research_items' => $company->researchItems->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'title' => $item->title,
@@ -182,16 +182,7 @@ class CompanyController extends Controller
                         'id' => $item->user->id,
                         'name' => $item->user->name,
                     ] : null,
-                    'attachments' => $item->getMedia('attachments')->map(function ($media) {
-                        return [
-                            'id' => $media->id,
-                            'name' => $media->name,
-                            'file_name' => $media->file_name,
-                            'mime_type' => $media->mime_type,
-                            'size' => $media->size,
-                            'url' => $media->getUrl(),
-                        ];
-                    }),
+                    'attachments' => $item->getFormattedAttachments(),
                     'category' => $item->category ? [
                         'id' => $item->category->id,
                         'name' => $item->category->name,
@@ -433,6 +424,22 @@ class CompanyController extends Controller
      */
     public function bulkDestroy(Request $request): JsonResponse
     {
+        \Log::info('Bulk delete request started', [
+            'user_id' => auth()->id(),
+            'request_data' => $request->all(),
+        ]);
+
+        // Check permissions: admin can delete all, users can only delete their own companies
+        $user = auth()->user();
+        if (!$user->hasRole('admin') && !$user->can('delete companies')) {
+            \Log::warning('Bulk delete permission denied', [
+                'user_id' => $user->id,
+                'roles' => $user->roles->pluck('name'),
+                'permissions' => $user->permissions->pluck('name'),
+            ]);
+            return response()->json(['message' => 'You do not have permission to delete companies.'], 403);
+        }
+
         $validated = $request->validate([
             'company_ids' => 'required|array',
             'company_ids.*' => 'exists:companies,id',
@@ -440,6 +447,25 @@ class CompanyController extends Controller
 
         $companyIds = $validated['company_ids'];
         $companies = Company::whereIn('id', $companyIds)->get();
+
+        \Log::info('Companies found for bulk delete', [
+            'requested_ids' => $companyIds,
+            'found_companies' => $companies->pluck('id')->toArray(),
+        ]);
+
+        // For non-admin users, check if they can delete each company
+        if (!$user->hasRole('admin')) {
+            foreach ($companies as $company) {
+                if ($company->created_by !== $user->id) {
+                    \Log::warning('User attempted to delete company they did not create', [
+                        'user_id' => $user->id,
+                        'company_id' => $company->id,
+                        'company_creator' => $company->created_by,
+                    ]);
+                    return response()->json(['message' => 'You can only delete companies that you created.'], 403);
+                }
+            }
+        }
 
         $deletedCount = 0;
         $errors = [];

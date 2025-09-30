@@ -191,6 +191,39 @@ Based on [FILAMENT_SPA_PLAN.md](./FILAMENT_SPA_PLAN.md):
 - Implement real-time updates with Livewire properties
 - Consider Alpine.js for enhanced client-side interactions
 
+## 🎨 **UI/UX Standards**
+
+### **Data Table Styling**
+**IMPORTANT**: All data tables across the application should use this standardized styling:
+
+```vue
+<!-- Container -->
+<div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+
+  <!-- Table Header -->
+  <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+    <!-- Header content -->
+  </div>
+
+  <!-- Table Body -->
+  <div class="divide-y divide-gray-700/30">
+    <!-- Row hover state -->
+    <div class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer">
+      <!-- Row content -->
+    </div>
+  </div>
+</div>
+```
+
+**Key Principles:**
+- **Subtle gray backgrounds** instead of white (gray-900/20, gray-800/30)
+- **Horizontal-only borders** using `border-t border-b` and `divide-y` (no side borders)
+- **Gray border colors** using `border-gray-700/30` and `divide-gray-700/30`
+- **Subtle hover effects** with `hover:bg-gray-800/20`
+- **Consistent opacity levels** for layered transparency effects
+
+This creates clean, professional tables that blend naturally with the dark glassmorphism design while maintaining clear visual hierarchy.
+
 ---
 
 *Last Updated: 2025-09-07*  

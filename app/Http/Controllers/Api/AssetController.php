@@ -13,6 +13,54 @@ use Illuminate\Support\Facades\Storage;
 class AssetController extends Controller
 {
     /**
+     * Get paginated list of assets
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $query = Asset::query();
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('file_type')) {
+            $query->where('mime_type', 'like', $request->file_type . '%');
+        }
+
+        if ($request->filled('source_type')) {
+            $query->where('source_type', $request->source_type);
+        }
+
+        if ($request->filled('size_filter')) {
+            switch ($request->size_filter) {
+                case 'small':
+                    $query->where('file_size', '<', 1048576); // < 1MB
+                    break;
+                case 'medium':
+                    $query->whereBetween('file_size', [1048576, 10485760]); // 1-10MB
+                    break;
+                case 'large':
+                    $query->where('file_size', '>', 10485760); // > 10MB
+                    break;
+            }
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDirection = $request->get('sort_direction', 'desc');
+
+        $query->orderBy($sortBy, $sortDirection);
+
+        // Paginate
+        $limit = min($request->get('limit', 16), 50);
+        $assets = $query->paginate($limit);
+
+        return response()->json($assets);
+    }
+
+    /**
      * Get available assets that can be linked to documents
      */
     public function getAvailable(): JsonResponse

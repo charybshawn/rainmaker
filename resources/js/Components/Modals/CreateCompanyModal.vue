@@ -264,7 +264,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'save', 'market-cap-input', 'update:form'])
+const emit = defineEmits(['close', 'save', 'market-cap-input', 'update:form', 'created'])
 
 const handleTickerInput = (event) => {
   emit('update:form', { ...props.form, ticker: event.target.value.toUpperCase() })

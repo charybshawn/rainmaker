@@ -173,9 +173,21 @@ trait TracksActivity
         if (str_ends_with($field, '_id') && $value) {
             $relationName = str_replace('_id', '', $field);
             if (method_exists($this, $relationName)) {
-                $related = $this->$relationName;
-                if ($related) {
-                    return $related->getActivityTitle();
+                try {
+                    $related = $this->$relationName;
+                    if ($related) {
+                        return $related->getActivityTitle();
+                    }
+                } catch (\Exception $e) {
+                    // If relationship access fails (e.g., undefined relationship),
+                    // just return the ID value
+                    \Log::warning('Failed to access relationship for activity tracking', [
+                        'model' => get_class($this),
+                        'field' => $field,
+                        'relation' => $relationName,
+                        'error' => $e->getMessage(),
+                    ]);
+                    return $value;
                 }
             }
         }

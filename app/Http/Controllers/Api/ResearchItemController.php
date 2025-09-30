@@ -166,7 +166,7 @@ class ResearchItemController extends Controller
         // Handle file uploads using centralized service
         $attachmentResults = $this->fileUploadService->handleUploads($researchItem, $request);
 
-        $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
+        $researchItem->load(['company', 'category', 'tags', 'user', 'assets', 'directAssets']);
 
         return response()->json([
             'id' => $researchItem->id,
@@ -216,7 +216,7 @@ class ResearchItemController extends Controller
             }
         }
 
-        $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
+        $researchItem->load(['company', 'category', 'tags', 'user', 'assets', 'directAssets']);
 
         return response()->json([
             'id' => $researchItem->id,
@@ -309,7 +309,7 @@ class ResearchItemController extends Controller
             // Handle file uploads using centralized service
             $attachmentResults = $this->fileUploadService->handleUploads($researchItem, $request);
 
-            $researchItem->load(['company', 'category', 'tags', 'user', 'media']);
+            $researchItem->load(['company', 'category', 'tags', 'user', 'assets', 'directAssets']);
 
             return response()->json([
                 'id' => $researchItem->id,
@@ -438,22 +438,41 @@ class ResearchItemController extends Controller
         // Get files from user's own research items
         if (auth()->check()) {
             $userResearchItems = ResearchItem::where('user_id', auth()->id())
-                ->with('media')
+                ->with(['assets', 'directAssets'])
                 ->get();
 
             foreach ($userResearchItems as $item) {
-                foreach ($item->getMedia('attachments') as $media) {
+                // Add direct assets (created specifically for this research item)
+                foreach ($item->directAssets as $asset) {
                     $userFiles->push([
-                        'id' => $media->id,
-                        'name' => $media->name,
-                        'file_name' => $media->file_name,
-                        'mime_type' => $media->mime_type,
-                        'size' => $media->size,
-                        'url' => $media->getUrl(),
+                        'id' => $asset->id,
+                        'name' => $asset->title,
+                        'file_name' => $asset->file_name,
+                        'mime_type' => $asset->mime_type,
+                        'size' => $asset->size,
+                        'url' => $asset->url,
                         'source_type' => 'research_item',
                         'source_id' => $item->id,
                         'source_title' => $item->title,
-                        'created_at' => $media->created_at,
+                        'created_at' => $asset->created_at,
+                        'attachment_type' => 'direct'
+                    ]);
+                }
+
+                // Add symbolic link assets (referenced assets)
+                foreach ($item->assets as $asset) {
+                    $userFiles->push([
+                        'id' => $asset->id,
+                        'name' => $asset->title,
+                        'file_name' => $asset->file_name,
+                        'mime_type' => $asset->mime_type,
+                        'size' => $asset->size,
+                        'url' => $asset->url,
+                        'source_type' => 'research_item',
+                        'source_id' => $item->id,
+                        'source_title' => $item->title,
+                        'created_at' => $asset->created_at,
+                        'attachment_type' => 'reference'
                     ]);
                 }
             }
@@ -519,57 +538,75 @@ class ResearchItemController extends Controller
     }
 
     /**
-     * Link existing files to a research item
+     * Link existing assets to a research item (symbolic links)
      */
     public function linkExistingFiles(Request $request, ResearchItem $researchItem): JsonResponse
     {
         $validated = $request->validate([
-            'media_ids' => 'required|array',
-            'media_ids.*' => 'integer|exists:media,id',
+            'asset_ids' => 'required|array',
+            'asset_ids.*' => 'integer|exists:assets,id',
         ]);
 
         try {
-            foreach ($validated['media_ids'] as $mediaId) {
-                $originalMedia = \Spatie\MediaLibrary\MediaCollections\Models\Media::findOrFail($mediaId);
+            $linkedCount = 0;
+            $alreadyLinkedCount = 0;
 
-                // Check if user has access to this file
+            foreach ($validated['asset_ids'] as $assetId) {
+                $asset = \App\Models\Asset::findOrFail($assetId);
+
+                // Check if user has access to this asset
                 $hasAccess = false;
 
-                if ($originalMedia->model_type === 'App\Models\ResearchItem') {
-                    $sourceItem = ResearchItem::find($originalMedia->model_id);
-                    $hasAccess = $sourceItem && $sourceItem->user_id === auth()->id();
-                } elseif ($originalMedia->model_type === 'App\Models\Document') {
-                    $sourceDocument = \App\Models\Document::find($originalMedia->model_id);
-                    $hasAccess = $sourceDocument && $sourceDocument->user_id === auth()->id();
+                // Check if user owns the asset directly
+                if ($asset->user_id === auth()->id()) {
+                    $hasAccess = true;
                 }
 
-                if (! $hasAccess) {
+                // Check if user owns the source model that created this asset
+                if (!$hasAccess && $asset->source_type && $asset->source_id) {
+                    if ($asset->source_type === 'research_item') {
+                        $sourceItem = ResearchItem::find($asset->source_id);
+                        $hasAccess = $sourceItem && $sourceItem->user_id === auth()->id();
+                    } elseif ($asset->source_type === 'document') {
+                        $sourceDocument = \App\Models\Document::find($asset->source_id);
+                        $hasAccess = $sourceDocument && $sourceDocument->user_id === auth()->id();
+                    }
+                }
+
+                if (!$hasAccess) {
                     return response()->json([
-                        'message' => 'You do not have access to one or more selected files.',
+                        'message' => 'You do not have access to one or more selected assets.',
                     ], 403);
                 }
 
-                // Copy the file to this research item
-                $researchItem->addMediaFromUrl($originalMedia->getUrl())
-                    ->usingName($originalMedia->name)
-                    ->usingFileName($originalMedia->file_name)
-                    ->toMediaCollection('attachments');
+                // Check if already linked to avoid duplicates
+                $exists = $researchItem->assets()->where('asset_id', $assetId)->exists();
+
+                if (!$exists) {
+                    // Create symbolic link via pivot table
+                    $researchItem->assets()->attach($assetId);
+                    $linkedCount++;
+                } else {
+                    $alreadyLinkedCount++;
+                }
             }
 
             return response()->json([
-                'message' => 'Files linked successfully',
-                'linked_count' => count($validated['media_ids']),
+                'message' => 'Assets linked successfully',
+                'linked_count' => $linkedCount,
+                'already_linked_count' => $alreadyLinkedCount,
+                'total_requested' => count($validated['asset_ids']),
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('Error linking existing files to research item', [
+            \Log::error('Error linking existing assets to research item', [
                 'research_item_id' => $researchItem->id,
-                'media_ids' => $validated['media_ids'],
+                'asset_ids' => $validated['asset_ids'],
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to link files: '.$e->getMessage(),
+                'message' => 'Failed to link assets: '.$e->getMessage(),
             ], 500);
         }
     }

@@ -178,10 +178,6 @@ const fetchActivities = async () => {
 
   } catch (error) {
     console.error('Error fetching activities:', error)
-    // If it's a 401 error, emit event to show login modal
-    if (error.response && error.response.status === 401) {
-      emit('auth-required')
-    }
   } finally {
     loading.value = false
   }
@@ -212,7 +208,10 @@ const getIconClasses = (activity) => {
 
 // Lifecycle
 onMounted(() => {
-  fetchActivities()
+  // Only fetch if authenticated
+  if (isAuthenticated.value) {
+    fetchActivities()
+  }
 })
 
 // Expose refresh method for parent components

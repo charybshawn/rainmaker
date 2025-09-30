@@ -119,7 +119,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close'])
+const emit = defineEmits(['close', 'created'])
 
 // Generate unique ID for accessibility
 const titleId = ref(`modal-title-${Math.random().toString(36).substr(2, 9)}`)

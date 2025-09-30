@@ -93,24 +93,36 @@
   </div>
 
   <!-- Main Modal -->
-  <div v-if="show" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-start sm:items-center justify-center p-0 sm:p-4 z-[60]" @click.self="$emit('close')">
-    <div class="bg-gradient-to-br from-white/5 via-white/8 to-white/5 backdrop-blur-2xl rounded-none sm:rounded-3xl w-full h-full sm:h-auto sm:w-[70%] sm:max-w-5xl overflow-hidden shadow-[0_20px_60px_-12px_rgba(0,0,0,0.5)] flex flex-col">
-      <!-- Vertical Layout with Header -->
-      <div class="h-full flex flex-col">
-        <!-- Top Header Section -->
-        <div class="bg-white/2 backdrop-blur-sm">
-          <!-- Close button -->
-          <button
-            @click="$emit('close')"
-            class="absolute top-4 right-4 z-20 p-2 hover:bg-white/10 rounded-full transition-all group"
-            aria-label="Close modal"
-          >
-            <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
+  <Teleport to="body">
+    <div v-if="show" class="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 z-[9999] overflow-y-auto" @click.self="$emit('close')">
+      <div class="bg-gradient-to-br from-slate-800/95 via-slate-700/95 to-slate-800/95 backdrop-blur-2xl rounded-3xl w-full h-auto max-h-[90vh] sm:w-[85%] sm:max-w-6xl overflow-hidden shadow-[0_20px_60px_-12px_rgba(0,0,0,0.8)] border border-white/20 flex flex-col">
+        <!-- Vertical Layout with Header -->
+        <div class="flex flex-col h-full max-h-full">
+          <!-- Top Header Section -->
+          <div class="bg-slate-800/50 backdrop-blur-sm border-b border-white/10">
+            <!-- Edit button -->
+            <button
+              @click="$emit('edit', researchNote)"
+              class="absolute top-4 right-16 z-30 p-2 hover:bg-blue-500/20 bg-slate-800/60 rounded-full transition-all group border border-white/20"
+              aria-label="Edit research note"
+            >
+              <svg class="w-5 h-5 text-white/70 group-hover:text-blue-300 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+              </svg>
+            </button>
 
-          <div class="p-6 pb-0">
+            <!-- Close button -->
+            <button
+              @click="$emit('close')"
+              class="absolute top-4 right-4 z-30 p-2 hover:bg-white/20 bg-slate-800/60 rounded-full transition-all group border border-white/20"
+              aria-label="Close modal"
+            >
+              <svg class="w-5 h-5 text-white/70 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+
+            <div class="p-4 pb-0">
             <!-- Hamburger Menu Button (Mobile Only) -->
             <div class="md:hidden mb-4">
               <button
@@ -128,12 +140,12 @@
             </div>
 
             <!-- Title Row -->
-            <div class="mb-4">
-              <h1 class="text-2xl font-bold text-white mb-2 leading-tight">{{ researchNote?.title || 'Research Note' }}</h1>
+            <div class="mb-3">
+              <h1 class="text-xl font-bold text-white mb-1 leading-tight">{{ researchNote?.title || 'Research Note' }}</h1>
             </div>
 
             <!-- Meta Row -->
-            <div class="mb-4">
+            <div class="mb-3">
               <div class="flex-1 min-w-0">
 
                 <!-- Meta info row -->
@@ -265,8 +277,8 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="flex-1 overflow-auto">
-          <div class="p-8">
+        <div class="flex-1 overflow-y-auto bg-slate-900/30 min-h-0">
+          <div class="p-6">
             <!-- Content Section -->
             <div v-if="activeSection === 'content'">
               <div v-if="researchNote.content" class="prose prose-invert max-w-none">
@@ -329,10 +341,11 @@
               />
             </div>
           </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </Teleport>
 </template>
 
 <script setup>
@@ -352,7 +365,7 @@ const props = defineProps({
 })
 
 // Emits
-defineEmits(['close'])
+defineEmits(['close', 'viewCompany', 'edit'])
 
 // Active section management for split layout
 const activeSection = ref('content')

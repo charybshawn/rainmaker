@@ -31,8 +31,8 @@ class BlogPostController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'category' => 'nullable|string|in:analysis,strategy,insights,quotes,news',
-            'author_name' => 'required_if:category,quotes|nullable|string|max:255',
+            'category' => 'nullable|string|in:analysis,strategy,insights,news',
+            'author_name' => 'nullable|string|max:255',
             'status' => 'required|in:draft,published',
             'company_ids' => 'array',
             'company_ids.*' => 'exists:companies,id',
@@ -86,8 +86,8 @@ class BlogPostController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'category' => 'nullable|string|in:analysis,strategy,insights,quotes,news',
-            'author_name' => 'required_if:category,quotes|nullable|string|max:255',
+            'category' => 'nullable|string|in:analysis,strategy,insights,news',
+            'author_name' => 'nullable|string|max:255',
             'status' => 'required|in:draft,published',
             'company_ids' => 'array',
             'company_ids.*' => 'exists:companies,id',
