@@ -11,18 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('document_assets', function (Blueprint $table) {
-            // Add foreign key constraints with CASCADE DELETE
-            $table->foreign('document_id')
-                  ->references('id')
-                  ->on('documents')
-                  ->onDelete('cascade');
-
-            $table->foreign('asset_id')
-                  ->references('id')
-                  ->on('assets')
-                  ->onDelete('cascade');
-        });
+        // Check if document_assets table exists and if foreign keys already exist
+        if (Schema::hasTable('document_assets')) {
+            // The foreign keys were already added in the unify_asset_system migration
+            // This migration is redundant, so we'll skip it
+            return;
+        }
     }
 
     /**
