@@ -267,6 +267,17 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                 </svg>
               </button>
+
+              <button
+                v-if="$page.props.auth.user"
+                @click.stop="addToWatchlist(company)"
+                class="w-10 h-10 rounded-lg bg-orange-500/30 hover:bg-orange-500/50 flex items-center justify-center transition-colors"
+                title="Add to Watchlist"
+              >
+                <svg class="w-5 h-5 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -382,6 +393,17 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                       </svg>
                     </button>
+
+                    <button
+                      v-if="$page.props.auth.user"
+                      @click.stop="addToWatchlist(company)"
+                      class="w-8 h-8 rounded bg-orange-500/30 hover:bg-orange-500/50 flex items-center justify-center transition-colors"
+                      title="Add to Watchlist"
+                    >
+                      <svg class="w-4 h-4 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -457,6 +479,17 @@
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                     </svg>
                   </button>
+
+                  <button
+                    v-if="$page.props.auth.user"
+                    @click.stop="addToWatchlist(company)"
+                    class="w-8 h-8 rounded bg-orange-500/30 hover:bg-orange-500/50 flex items-center justify-center transition-colors"
+                    title="Add to Watchlist"
+                  >
+                    <svg class="w-4 h-4 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -505,6 +538,14 @@
       @confirm="handleConfirmation"
       @cancel="cancelConfirmation"
     />
+
+    <!-- Add to Watchlist Modal -->
+    <AddToWatchlistModal
+      :show="showAddToWatchlistModal"
+      :company="selectedCompanyForWatchlist"
+      @close="closeAddToWatchlistModal"
+      @added="handleAddedToWatchlist"
+    />
   </DashboardLayout>
 </template>
 
@@ -514,6 +555,7 @@ import { router } from '@inertiajs/vue3'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import CreateCompanyModal from '@/Components/Modals/CreateCompanyModal.vue'
 import QuickBlogModal from '@/Components/Modals/QuickBlogModal.vue'
+import AddToWatchlistModal from '@/Components/Modals/AddToWatchlistModal.vue'
 import ConfirmationModal from '@/Components/Modals/ConfirmationModal.vue'
 import axios from 'axios'
 
@@ -537,6 +579,8 @@ const viewMode = ref(localStorage.getItem('companies-view-mode') || 'cards')
 const showCreateCompanyModal = ref(false)
 const showQuickBlogModal = ref(false)
 const quickBlogCompany = ref(null)
+const showAddToWatchlistModal = ref(false)
+const selectedCompanyForWatchlist = ref(null)
 
 // Company form data
 const companyForm = ref({
@@ -909,6 +953,23 @@ const bulkDelete = () => {
     'warning',
     'Delete Companies'
   )
+}
+
+// Watchlist methods
+const addToWatchlist = (company) => {
+  selectedCompanyForWatchlist.value = company
+  showAddToWatchlistModal.value = true
+}
+
+const closeAddToWatchlistModal = () => {
+  showAddToWatchlistModal.value = false
+  selectedCompanyForWatchlist.value = null
+}
+
+const handleAddedToWatchlist = (data) => {
+  // Optional: Show a toast notification or update UI to indicate success
+  console.log('Company added to watchlist(s):', data)
+  // You could add a toast notification here if you have a toast system
 }
 
 // Watch for view mode changes to persist

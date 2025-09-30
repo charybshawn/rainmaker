@@ -48,6 +48,18 @@
       >
         Analytics
       </Link>
+
+      <Link
+        :href="route('dashboard.watchlists')"
+        :class="[
+          'inline-block pb-3 sm:pb-4 lg:pb-6 px-1 sm:px-2 text-sm sm:text-base font-semibold tracking-wide transition-all duration-200 whitespace-nowrap',
+          activeTab === 'watchlists'
+            ? 'text-white border-b-2 sm:border-b-4 border-orange-400'
+            : 'text-gray-400 hover:text-gray-200'
+        ]"
+      >
+        Watchlists
+      </Link>
     </div>
   </nav>
 </template>

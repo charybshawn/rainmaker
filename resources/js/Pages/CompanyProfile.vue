@@ -114,6 +114,16 @@
             >
               Upload Document
             </button>
+            <button
+              v-if="$page.props.auth.user"
+              @click="addToWatchlist"
+              class="w-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 font-medium py-2 px-4 rounded-lg transition-all duration-200 border border-purple-400/20 flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+              </svg>
+              Add to Watchlist
+            </button>
           </div>
         </div>
       </div>
@@ -194,6 +204,13 @@
       @edit="handleEditResearchNote"
     />
 
+    <AddToWatchlistModal
+      :show="showAddToWatchlistModal"
+      :company="company"
+      @close="closeAddToWatchlistModal"
+      @added="handleAddedToWatchlist"
+    />
+
     <ToastNotification />
 
   </DashboardLayout>
@@ -208,6 +225,7 @@ import NoteCreationModal from '@/Components/Modals/NoteCreationModal.vue'
 import EditCompanyModal from '@/Components/Modals/EditCompanyModal.vue'
 import DocumentUploadModal from '@/Components/Modals/DocumentUploadModal.vue'
 import ResearchNoteModal from '@/Components/Modals/ResearchNoteModal.vue'
+import AddToWatchlistModal from '@/Components/Modals/AddToWatchlistModal.vue'
 import ToastNotification from '@/Components/ToastNotification.vue'
 
 const props = defineProps({
@@ -225,6 +243,7 @@ const showNoteCreationModal = ref(false)
 const showEditCompanyModal = ref(false)
 const showDocumentUploadModal = ref(false)
 const showResearchNoteModal = ref(false)
+const showAddToWatchlistModal = ref(false)
 const selectedResearchItem = ref(null)
 const editingResearchItem = ref(null)
 const isEditingResearchItem = computed(() => !!editingResearchItem.value)
@@ -482,6 +501,20 @@ const handleDocumentSave = async () => {
   }
 }
 
+// Watchlist methods
+const addToWatchlist = () => {
+  showAddToWatchlistModal.value = true
+}
+
+const closeAddToWatchlistModal = () => {
+  showAddToWatchlistModal.value = false
+}
+
+const handleAddedToWatchlist = (data) => {
+  // Optional: Show a toast notification or update UI to indicate success
+  console.log('Company added to watchlist(s):', data)
+  // You could add a toast notification here if you have a toast system
+}
 
 // Utilities
 const formatDate = (dateString) => {

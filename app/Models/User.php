@@ -53,6 +53,11 @@ class User extends Authenticatable
         return $this->hasMany(BlogPost::class);
     }
 
+    public function watchlists(): HasMany
+    {
+        return $this->hasMany(Watchlist::class);
+    }
+
     /**
      * Get the title/name of this model for activity descriptions.
      */

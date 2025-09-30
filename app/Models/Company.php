@@ -45,6 +45,11 @@ class Company extends Model
         return $this->hasMany(Document::class);
     }
 
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
+    }
+
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
@@ -53,6 +58,14 @@ class Company extends Model
     public function blogPosts(): BelongsToMany
     {
         return $this->belongsToMany(BlogPost::class);
+    }
+
+    public function watchlists(): BelongsToMany
+    {
+        return $this->belongsToMany(Watchlist::class, 'watchlist_companies')
+                    ->withPivot('added_at')
+                    ->withTimestamps()
+                    ->orderByPivot('added_at', 'desc');
     }
 
     public function getMarketCapFormattedAttribute(): string

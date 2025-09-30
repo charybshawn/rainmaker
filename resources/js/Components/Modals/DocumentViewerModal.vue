@@ -1,4 +1,5 @@
 <template>
+  <Teleport to="body">
   <div
     v-if="show"
     class="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 lg:p-6 z-[9999]"
@@ -265,6 +266,7 @@
 
     </div>
   </div>
+  </Teleport>
 </template>
 
 <script setup>

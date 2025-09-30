@@ -57,6 +57,26 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
             ]
         ]);
     })->name('analytics');
+
+    // Watchlists Tab with optional slug parameter
+    Route::get('/watchlists/{slug?}', function ($slug = null) {
+        $data = [
+            'auth' => [
+                'user' => auth()->user()->load('roles', 'permissions')
+            ]
+        ];
+
+        // If a slug is provided, load the specific watchlist
+        if ($slug) {
+            $watchlist = \App\Models\Watchlist::findBySlugForUser($slug, auth()->id());
+
+            if ($watchlist) {
+                $data['selectedWatchlistSlug'] = $slug;
+            }
+        }
+
+        return Inertia::render('Dashboard/Watchlists', $data);
+    })->name('watchlists');
 });
 
 // Authenticated Dashboard - redirects to main dashboard
@@ -143,6 +163,16 @@ Route::prefix('api')->middleware(['auth', 'verified'])->group(function () {
     Route::get('tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'show']);
     Route::put('tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'update']);
     Route::delete('tags/{tag}', [\App\Http\Controllers\Api\TagController::class, 'destroy']);
+
+    // Watchlist management
+    Route::get('watchlists', [\App\Http\Controllers\Api\WatchlistController::class, 'index']);
+    Route::post('watchlists', [\App\Http\Controllers\Api\WatchlistController::class, 'store']);
+    Route::get('watchlists/{watchlist}', [\App\Http\Controllers\Api\WatchlistController::class, 'show']);
+    Route::put('watchlists/{watchlist}', [\App\Http\Controllers\Api\WatchlistController::class, 'update']);
+    Route::delete('watchlists/{watchlist}', [\App\Http\Controllers\Api\WatchlistController::class, 'destroy']);
+    Route::post('watchlists/{watchlist}/companies', [\App\Http\Controllers\Api\WatchlistController::class, 'addCompany']);
+    Route::delete('watchlists/{watchlist}/companies/{company}', [\App\Http\Controllers\Api\WatchlistController::class, 'removeCompany']);
+    Route::post('watchlists/add-company', [\App\Http\Controllers\Api\WatchlistController::class, 'addCompanyToWatchlists']);
 
     // Search endpoints
     Route::get('search', [\App\Http\Controllers\Api\SearchController::class, 'search']);
