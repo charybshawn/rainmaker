@@ -811,8 +811,9 @@ const handleCreateCompany = async () => {
 
     const response = await axios.post('/api/companies', companyForm.value)
 
-    if (response.data.success || response.data.data) {
-      const newCompany = response.data.data || response.data
+    // Check if response is successful (status 200-299) and has company data
+    if (response.status >= 200 && response.status < 300 && response.data && response.data.id) {
+      const newCompany = response.data
       handleCompanyCreated(newCompany)
     }
   } catch (error) {
