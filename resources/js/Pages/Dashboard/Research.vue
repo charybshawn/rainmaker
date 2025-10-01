@@ -10,16 +10,29 @@
             Research
           </h2>
         </div>
-        <button
-          @click="openCreateModal"
-          class="px-3 py-2 sm:px-6 sm:py-3 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-xl border border-green-400/20 transition-all duration-200 flex items-center gap-2 backdrop-blur-xl text-sm sm:text-base"
-        >
-          <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          <span class="hidden sm:inline">New Research</span>
-          <span class="sm:hidden">New</span>
-        </button>
+        <div class="flex items-center gap-3">
+          <button
+            @click="openUploadModal"
+            class="px-3 py-2 sm:px-4 sm:py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl border border-blue-400/20 transition-all duration-200 flex items-center gap-2 backdrop-blur-xl text-sm sm:text-base"
+          >
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <span class="hidden sm:inline">Upload File</span>
+            <span class="sm:hidden">Upload</span>
+          </button>
+
+          <button
+            @click="openCreateModal"
+            class="px-3 py-2 sm:px-6 sm:py-3 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-xl border border-green-400/20 transition-all duration-200 flex items-center gap-2 backdrop-blur-xl text-sm sm:text-base"
+          >
+            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            <span class="hidden sm:inline">New Research</span>
+            <span class="sm:hidden">New</span>
+          </button>
+        </div>
       </div>
     </template>
 
