@@ -348,12 +348,15 @@ class AssetController extends Controller
 
         try {
             $validated = $request->validate([
-                'source_type' => 'required|in:direct_upload,research_item,document',
+                'titles' => 'nullable|array',
+                'titles.*' => 'nullable|string|max:255',
                 'research_item_id' => 'nullable|exists:research_items,id',
-                'description' => 'nullable|string',
                 'files' => 'required|array',
                 'files.*' => 'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,csv,jpg,jpeg,png,gif,webp,svg',
             ]);
+
+            // Set default source_type since it's no longer sent from frontend
+            $validated['source_type'] = (isset($validated['research_item_id']) && $validated['research_item_id']) ? 'research_item' : 'direct_upload';
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Log::error('Asset upload validation failed', [
                 'errors' => $e->errors(),
@@ -370,29 +373,37 @@ class AssetController extends Controller
         // Determine default values based on source type
         $companyId = null; // Allow null for direct uploads
         $sourceId = 0;
-        $title = $validated['description'] ?: 'Uploaded Asset';
+
+        // Get titles array (if provided)
+        $titles = $validated['titles'] ?? [];
 
         // If linked to research item, get the company from that
-        if ($validated['source_type'] === 'research_item' && $validated['research_item_id']) {
+        if ($validated['source_type'] === 'research_item' && isset($validated['research_item_id']) && $validated['research_item_id']) {
             $researchItem = \App\Models\ResearchItem::find($validated['research_item_id']);
             if ($researchItem) {
                 $companyId = $researchItem->company_id;
                 $sourceId = $researchItem->id;
-                $title = $validated['description'] ?: "Asset for: {$researchItem->title}";
             }
         }
 
         // For direct uploads, company_id can remain null since documents
         // don't need to be tied to a specific company
 
-        foreach ($request->file('files') ?? [] as $file) {
+        foreach ($request->file('files') ?? [] as $index => $file) {
             try {
                 // Store file in the public location
                 $path = $file->store('assets', 'public');
 
+                // Get individual title for this file
+                $individualTitle = $titles[$index] ?? null;
+                if (!$individualTitle) {
+                    // Fallback to filename without extension
+                    $individualTitle = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                }
+
                 $asset = Asset::create([
-                    'title' => $title,
-                    'description' => $validated['description'],
+                    'title' => $individualTitle,
+                    'description' => null,
                     'file_name' => $file->getClientOriginalName(),
                     'file_path' => $path,
                     'mime_type' => $file->getMimeType(),

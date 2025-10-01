@@ -263,7 +263,12 @@
                   <!-- Title -->
                   <div class="flex-1 min-w-0 cursor-pointer" @click="handleItemClick(item)">
                     <div class="flex flex-col">
-                      <div class="text-sm font-medium text-white line-clamp-1 group-hover:text-green-200 transition-colors">{{ item.title }}</div>
+                      <div class="text-sm font-medium text-white line-clamp-1 group-hover:text-green-200 transition-colors">
+                        {{ item.title }}
+                        <span v-if="item.type === 'document' && item.size" class="text-xs text-gray-400 font-normal">
+                          ({{ formatFileSize(item.size) }})
+                        </span>
+                      </div>
                       <div v-if="item.content" class="text-sm text-gray-400 line-clamp-2 mt-1">{{ getContentPreview(item.content) }}</div>
                       <div v-else-if="item.file_name" class="text-sm text-gray-400 mt-1">{{ item.file_name }}</div>
                     </div>
@@ -283,9 +288,6 @@
                     <span v-if="item.category" class="px-2 py-1 text-xs rounded" :style="{ backgroundColor: item.category.color + '20', color: item.category.color }">
                       {{ item.category.name }}
                     </span>
-                    <span v-else-if="item.type === 'document'" class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-400">
-                      {{ getFileExtension(item.file_name) }}
-                    </span>
                     <span v-else class="text-sm text-gray-400">—</span>
                   </div>
 
@@ -304,8 +306,10 @@
                         +{{ item.tags.length - 2 }}
                       </span>
                     </div>
-                    <div v-else-if="item.type === 'document' && item.size" class="text-xs text-gray-400">
-                      {{ formatFileSize(item.size) }}
+                    <div v-else-if="item.type === 'document'" class="flex items-center gap-2">
+                      <span class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-400">
+                        {{ getFileExtension(item.file_name) }}
+                      </span>
                     </div>
                     <span v-else class="text-sm text-gray-400">—</span>
                   </div>

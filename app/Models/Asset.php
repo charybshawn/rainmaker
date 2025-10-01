@@ -95,7 +95,8 @@ class Asset extends Model
         }
 
         // If source_type and source_id are set, validate the reference exists
-        if ($this->source_type && $this->source_id) {
+        // Skip validation for direct uploads (source_id = 0)
+        if ($this->source_type && $this->source_id && $this->source_id > 0) {
             $this->validateSourceReference();
         }
 
@@ -118,6 +119,10 @@ class Asset extends Model
         $exists = false;
 
         switch ($this->source_type) {
+            case 'direct_upload':
+                // Direct uploads don't need source reference validation
+                $exists = true;
+                break;
             case 'document':
                 $exists = Document::where('id', $this->source_id)->exists();
                 break;
