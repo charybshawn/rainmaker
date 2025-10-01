@@ -1,31 +1,49 @@
 <template>
-  <BaseInfoModal
-    :show="show"
-    @close="$emit('close')"
-    :title="isEditMode ? 'Edit Company' : 'Add New Company'"
-    subtitle="Manage company information for investment tracking"
-  >
-    <template #headerActions>
-      <!-- Save Button -->
-      <button
-        @click="$emit('save')"
-        :disabled="creating"
-        class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
-        style="backdrop-filter: blur(20px) saturate(150%);"
-        :title="isEditMode ? 'Update Company' : 'Save Company'"
-      >
-        <svg v-if="!creating" class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-        </svg>
-        <svg v-else class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        {{ creating ? 'Saving...' : (isEditMode ? 'Update Company' : 'Save Company') }}
-      </button>
-    </template>
+  <Teleport to="body">
+    <div v-show="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="$emit('close')">
+      <!-- Backdrop with Dark Mode Context -->
+      <div class="fixed inset-0 bg-black/70 backdrop-blur-md dark:bg-black/80"></div>
+      <!-- Modal Container with Dark Mode Context -->
+      <div class="relative dark bg-gradient-to-br from-white/5 via-white/10 to-white/5 backdrop-blur-xl rounded-2xl border border-white/10 w-[66%] max-h-[80vh] overflow-y-auto shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] transition-all duration-500" style="backdrop-filter: blur(20px) saturate(180%);">
+      <!-- Modal Header -->
+      <div class="sticky top-0 bg-gray-900/95 border-b border-white/20 px-8 py-6 rounded-t-2xl">
+        <div class="flex items-center justify-between">
+          <h2 class="text-3xl font-semibold text-white">{{ isEditMode ? 'Edit Company' : 'Add New Company' }}</h2>
+          <div class="flex items-center space-x-3">
+          <!-- Save Button -->
+          <button
+            @click="$emit('save')"
+            :disabled="creating"
+            class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            style="backdrop-filter: blur(20px) saturate(150%);"
+            title="Save Company"
+          >
+            <svg v-if="!creating" class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <svg v-else class="animate-spin w-5 h-5 mr-2 inline" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ creating ? 'Saving...' : (isEditMode ? 'Update Company' : 'Save Company') }}
+          </button>
+          <!-- Close Button -->
+          <button
+            @click="$emit('close')"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 flex items-center justify-center transition-all duration-300 hover:scale-105 backdrop-blur-xl"
+            style="backdrop-filter: blur(20px) saturate(150%);"
+            title="Close"
+          >
+            <svg class="w-5 h-5 text-white/70 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+          </div>
+        </div>
+      </div>
 
-    <!-- Modal Content -->
+      <!-- Modal Content -->
+      <div class="px-8 py-6">
       
       <form class="space-y-6">
         <!-- General Error Message -->
@@ -55,10 +73,10 @@
 
             <!-- Ticker Symbol -->
             <div>
-              <label for="ticker" class="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
+              <label for="ticker="block text-sm font-medium text-white mb-2">Ticker Symbol</label>
               <input
-                id="ticker"
-                :value="form.ticker"
+                id="ticker
+                :value="form.ticker
                 @input="handleTickerInput"
                 type="text"
                 required
@@ -67,7 +85,7 @@
                 placeholder="e.g., AAPL"
                 maxlength="10"
               />
-              <div v-if="errors.ticker" class="text-red-400 text-sm mt-1">{{ errors.ticker }}</div>
+              <div v-if="errors.ticker="text-red-400 text-sm mt-1">{{ errors.ticker ticker
             </div>
 
             <!-- Sector -->
@@ -218,12 +236,14 @@
         </div>
 
       </form>
-  </BaseInfoModal>
+      </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup>
 import { watch } from 'vue'
-import BaseInfoModal from './BaseInfoModal.vue'
 
 const props = defineProps({
   show: {
@@ -264,7 +284,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['close', 'save', 'market-cap-input', 'update:form', 'created'])
+const emit = defineEmits(['close', 'save', 'market-cap-input', 'update:form'])
 
 const handleTickerInput = (event) => {
   emit('update:form', { ...props.form, ticker: event.target.value.toUpperCase() })
