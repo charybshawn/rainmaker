@@ -443,8 +443,8 @@
                 @change="(event) => {
                   const files = Array.from(event.target.files);
                   if (files.length > 0) {
-                    if (!props.form.files) props.form.files = [];
-                    props.form.files = [...props.form.files, ...files];
+                    const currentFiles = props.form.files || [];
+                    updateForm('files', [...currentFiles, ...files]);
                   }
                   $emit('file-upload', event);
                 }"

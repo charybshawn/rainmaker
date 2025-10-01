@@ -133,7 +133,7 @@ class ResearchItemController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'company_id' => 'required|exists:companies,id',
+            'company_id' => 'nullable|exists:companies,id',
             'category_id' => 'nullable|exists:categories,id',
             'tag_ids' => 'nullable|array',
             'tag_ids.*' => 'exists:tags,id',
@@ -150,6 +150,11 @@ class ResearchItemController extends Controller
         ]);
 
         $validated['user_id'] = auth()->id();
+
+        // Convert empty string company_id to null
+        if (isset($validated['company_id']) && $validated['company_id'] === '') {
+            $validated['company_id'] = null;
+        }
 
         // Convert empty string category_id to null
         if (isset($validated['category_id']) && $validated['category_id'] === '') {
@@ -273,7 +278,7 @@ class ResearchItemController extends Controller
             $validated = $request->validate([
                 'title' => 'required|string|max:255',
                 'content' => 'required|string',
-                'company_id' => 'required|exists:companies,id',
+                'company_id' => 'nullable|exists:companies,id',
                 'category_id' => 'nullable|exists:categories,id',
                 'tag_ids' => 'nullable|array',
                 'tag_ids.*' => 'exists:tags,id',
@@ -288,6 +293,11 @@ class ResearchItemController extends Controller
                 'existing_attachment_ids' => 'nullable|array',
                 'existing_attachment_ids.*' => 'integer|exists:assets,id',
             ]);
+
+            // Convert empty string company_id to null
+            if (isset($validated['company_id']) && $validated['company_id'] === '') {
+                $validated['company_id'] = null;
+            }
 
             // Convert empty string category_id to null
             if (isset($validated['category_id']) && $validated['category_id'] === '') {
