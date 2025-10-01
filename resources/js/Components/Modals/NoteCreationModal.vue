@@ -21,10 +21,10 @@
           <!-- Save Button -->
           <button
             @click="$emit('save')"
-            :disabled="creatingNote"
+            :disabled="isSaveDisabled"
             class="group relative px-6 py-3 transition-all duration-500 hover:scale-105 bg-gradient-to-br from-green-500/20 via-green-400/10 to-transparent text-green-200 hover:text-white rounded-full shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] hover:shadow-[0_4px_16px_0_rgba(34,197,94,0.2)] border border-white/10 backdrop-blur-xl font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             style="backdrop-filter: blur(20px) saturate(150%);"
-            :title="props.isEditing ? 'Update Research' : 'Save Research'"
+            :title="isSaveDisabled ? 'Please fill in all required fields (Company, Title, Content)' : (props.isEditing ? 'Update Research' : 'Save Research')"
           >
             <svg v-if="!creatingNote" class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
@@ -59,9 +59,35 @@
           {{ errors.general }}
         </div>
 
+        <!-- Company Selection -->
+        <div>
+          <label for="note_company" class="block text-sm font-medium text-white mb-2">Company <span class="text-red-400">*</span></label>
+          <select
+            id="note_company"
+            v-model="props.form.company_id"
+            class="w-full px-4 py-4 text-lg rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
+            style="backdrop-filter: blur(20px) saturate(180%);"
+            required
+          >
+            <option value="" class="bg-gray-900 text-gray-400">Select a company...</option>
+            <option
+              v-for="company in companies"
+              :key="company.id"
+              :value="company.id"
+              class="bg-gray-900 text-white"
+            >
+              {{ company.name }} ({{ company.ticker }})
+            </option>
+          </select>
+          <div v-if="errors.company_id" class="text-red-400 text-sm mt-1">{{ errors.company_id }}</div>
+          <div class="mt-1 text-xs text-gray-400">
+            🏢 Select the company this research relates to
+          </div>
+        </div>
+
         <!-- Title -->
         <div>
-          <label for="note_title" class="block text-sm font-medium text-white mb-2">Research Title</label>
+          <label for="note_title" class="block text-sm font-medium text-white mb-2">Research Title <span class="text-red-400">*</span></label>
           <input
             id="note_title"
             v-model="props.form.title"
@@ -79,7 +105,7 @@
 
         <!-- Content -->
         <div>
-          <label for="note_content" class="block text-sm font-medium text-white mb-2">Research Content</label>
+          <label for="note_content" class="block text-sm font-medium text-white mb-2">Research Content <span class="text-red-400">*</span></label>
           <div class="relative">
             <!-- Tiptap Rich Text Editor with Clean Toolbar -->
             <div class="tiptap-editor-container">
@@ -826,6 +852,10 @@ const props = defineProps({
   tags: {
     type: Array,
     default: () => []
+  },
+  companies: {
+    type: Array,
+    default: () => []
   }
 })
 
@@ -873,6 +903,20 @@ const form = computed(() => {
     newUrl: '',
     selectedExistingFiles: []
   }
+})
+
+// Form validation
+const isFormValid = computed(() => {
+  return !!(
+    props.form?.title?.trim() &&
+    props.form?.company_id &&
+    props.form?.content?.trim()
+  )
+})
+
+// Determine if save button should be disabled
+const isSaveDisabled = computed(() => {
+  return props.creatingNote || !isFormValid.value
 })
 
 // Tiptap Editor Setup

@@ -14,66 +14,79 @@ trait HasFileUploads
         // Handle ResearchItem with new unified asset system
         if ($this instanceof \App\Models\ResearchItem) {
             $attachments = [];
+            $seenAssetIds = []; // Track asset IDs to prevent duplicates
 
             // Get direct assets (created specifically for this research item)
             if (method_exists($this, 'directAssets') && $this->relationLoaded('directAssets')) {
                 foreach ($this->directAssets as $asset) {
-                    $attachments[] = [
-                        'id' => $asset->id,
-                        'name' => $asset->title,
-                        'file_name' => $asset->file_name,
-                        'mime_type' => $asset->mime_type,
-                        'size' => $asset->size,
-                        'url' => $asset->url,
-                        'source_type' => 'direct',
-                        'created_at' => $asset->created_at,
-                    ];
+                    if (!in_array($asset->id, $seenAssetIds)) {
+                        $attachments[] = [
+                            'id' => $asset->id,
+                            'name' => $asset->title,
+                            'file_name' => $asset->file_name,
+                            'mime_type' => $asset->mime_type,
+                            'size' => $asset->size,
+                            'url' => $asset->url,
+                            'source_type' => 'direct',
+                            'created_at' => $asset->created_at,
+                        ];
+                        $seenAssetIds[] = $asset->id;
+                    }
                 }
             } elseif (method_exists($this, 'directAssets')) {
                 // Load the relationship if it's not loaded
                 $this->load('directAssets');
                 foreach ($this->directAssets as $asset) {
-                    $attachments[] = [
-                        'id' => $asset->id,
-                        'name' => $asset->title,
-                        'file_name' => $asset->file_name,
-                        'mime_type' => $asset->mime_type,
-                        'size' => $asset->size,
-                        'url' => $asset->url,
-                        'source_type' => 'direct',
-                        'created_at' => $asset->created_at,
-                    ];
+                    if (!in_array($asset->id, $seenAssetIds)) {
+                        $attachments[] = [
+                            'id' => $asset->id,
+                            'name' => $asset->title,
+                            'file_name' => $asset->file_name,
+                            'mime_type' => $asset->mime_type,
+                            'size' => $asset->size,
+                            'url' => $asset->url,
+                            'source_type' => 'direct',
+                            'created_at' => $asset->created_at,
+                        ];
+                        $seenAssetIds[] = $asset->id;
+                    }
                 }
             }
 
             // Get symbolic link assets (references to existing assets)
             if (method_exists($this, 'assets') && $this->relationLoaded('assets')) {
                 foreach ($this->assets as $asset) {
-                    $attachments[] = [
-                        'id' => $asset->id,
-                        'name' => $asset->title,
-                        'file_name' => $asset->file_name,
-                        'mime_type' => $asset->mime_type,
-                        'size' => $asset->size,
-                        'url' => $asset->url,
-                        'source_type' => 'reference',
-                        'created_at' => $asset->created_at,
-                    ];
+                    if (!in_array($asset->id, $seenAssetIds)) {
+                        $attachments[] = [
+                            'id' => $asset->id,
+                            'name' => $asset->title,
+                            'file_name' => $asset->file_name,
+                            'mime_type' => $asset->mime_type,
+                            'size' => $asset->size,
+                            'url' => $asset->url,
+                            'source_type' => 'reference',
+                            'created_at' => $asset->created_at,
+                        ];
+                        $seenAssetIds[] = $asset->id;
+                    }
                 }
             } elseif (method_exists($this, 'assets')) {
                 // Load the relationship if it's not loaded
                 $this->load('assets');
                 foreach ($this->assets as $asset) {
-                    $attachments[] = [
-                        'id' => $asset->id,
-                        'name' => $asset->title,
-                        'file_name' => $asset->file_name,
-                        'mime_type' => $asset->mime_type,
-                        'size' => $asset->size,
-                        'url' => $asset->url,
-                        'source_type' => 'reference',
-                        'created_at' => $asset->created_at,
-                    ];
+                    if (!in_array($asset->id, $seenAssetIds)) {
+                        $attachments[] = [
+                            'id' => $asset->id,
+                            'name' => $asset->title,
+                            'file_name' => $asset->file_name,
+                            'mime_type' => $asset->mime_type,
+                            'size' => $asset->size,
+                            'url' => $asset->url,
+                            'source_type' => 'reference',
+                            'created_at' => $asset->created_at,
+                        ];
+                        $seenAssetIds[] = $asset->id;
+                    }
                 }
             }
 

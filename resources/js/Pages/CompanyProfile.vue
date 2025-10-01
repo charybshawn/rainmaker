@@ -424,6 +424,7 @@
       :creating-note="creatingNote"
       :categories="categories"
       :tags="tags"
+      :companies="companies"
       :user="$page.props.auth.user"
       :is-editing="isEditingResearchItem"
       @close="handleNoteModalClose"
@@ -651,6 +652,7 @@ const openNoteCreationModal = () => {
   noteForm.value = {
     title: '',
     content: '',
+    company_id: company.value?.id || '', // Pre-populate with current company
     category_id: '',
     source_date: '',
     selectedTags: [],
@@ -761,6 +763,7 @@ const handleNoteModalClose = () => {
   noteForm.value = {
     title: '',
     content: '',
+    company_id: '',
     category_id: '',
     source_date: '',
     visibility: 'private',

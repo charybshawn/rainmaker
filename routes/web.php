@@ -213,6 +213,7 @@ Route::prefix('api')->middleware(['auth', 'verified'])->group(function () {
     Route::get('media/available', [\App\Http\Controllers\Api\AssetController::class, 'getAvailable']);
     Route::get('assets', [\App\Http\Controllers\Api\AssetController::class, 'index']);
     Route::post('assets', [\App\Http\Controllers\Api\AssetController::class, 'store']);
+    Route::post('assets/upload', [\App\Http\Controllers\Api\AssetController::class, 'upload']);
     Route::delete('assets/{asset}', [\App\Http\Controllers\Api\AssetController::class, 'destroy']);
 
     // Background Upload System
