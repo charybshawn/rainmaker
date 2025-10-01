@@ -12,8 +12,9 @@ class CompanyController extends Controller
 {
     public function index(Request $request): JsonResponse
     {
-        // Check if user has permission to view companies
-        if (!auth()->user()->can('view companies')) {
+        // Check if user has permission to view companies or create research items
+        // Users who can create research items should be able to see companies for dropdown selection
+        if (!auth()->user()->can('view companies') && !auth()->user()->can('create research items')) {
             return response()->json(['message' => 'You do not have permission to view companies.'], 403);
         }
 

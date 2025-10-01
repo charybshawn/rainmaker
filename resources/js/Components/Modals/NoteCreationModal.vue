@@ -61,15 +61,15 @@
 
         <!-- Company Selection -->
         <div>
-          <label for="note_company" class="block text-sm font-medium text-white mb-2">Company <span class="text-red-400">*</span></label>
+          <label for="note_company" class="block text-sm font-medium text-white mb-2">Company</label>
           <select
             id="note_company"
-            v-model="props.form.company_id"
+            :value="props.form.company_id"
+            @change="updateForm('company_id', $event.target.value)"
             class="w-full px-4 py-4 text-lg rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
             style="backdrop-filter: blur(20px) saturate(180%);"
-            required
           >
-            <option value="" class="bg-gray-900 text-gray-400">Select a company...</option>
+            <option value="" class="bg-gray-900 text-gray-400">None</option>
             <option
               v-for="company in companies"
               :key="company.id"
@@ -81,7 +81,7 @@
           </select>
           <div v-if="errors.company_id" class="text-red-400 text-sm mt-1">{{ errors.company_id }}</div>
           <div class="mt-1 text-xs text-gray-400">
-            🏢 Select the company this research relates to
+            🏢 Select the company this research relates to (optional)
           </div>
         </div>
 
@@ -90,7 +90,8 @@
           <label for="note_title" class="block text-sm font-medium text-white mb-2">Research Title <span class="text-red-400">*</span></label>
           <input
             id="note_title"
-            v-model="props.form.title"
+            :value="props.form.title"
+            @input="updateForm('title', $event.target.value)"
             type="text"
             required
             class="w-full px-4 py-4 text-xl rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500 font-semibold"
@@ -260,7 +261,8 @@
             <div v-if="!showNewCategoryInput" class="relative">
               <select
                 id="note_category"
-                v-model="props.form.category_id"
+                :value="props.form.category_id"
+                @change="updateForm('category_id', $event.target.value)"
                 class="w-full px-4 py-3 pr-12 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
                 style="backdrop-filter: blur(20px) saturate(180%);"
               >
@@ -331,7 +333,8 @@
             <label for="note_visibility" class="block text-sm font-medium text-white mb-2">Visibility</label>
             <select
               id="note_visibility"
-              v-model="props.form.visibility"
+              :value="props.form.visibility"
+              @change="updateForm('visibility', $event.target.value)"
               class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
               style="backdrop-filter: blur(20px) saturate(180%);"
             >
@@ -346,7 +349,8 @@
             <label for="note_source_date" class="block text-sm font-medium text-white mb-2">Source Date</label>
             <input
               id="note_source_date"
-              v-model="props.form.source_date"
+              :value="props.form.source_date"
+              @input="updateForm('source_date', $event.target.value)"
               type="date"
               class="w-full px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
               style="backdrop-filter: blur(20px) saturate(180%);"
@@ -363,7 +367,8 @@
         <div>
           <label class="block text-sm font-medium text-white mb-2">Tags</label>
           <TagSelector
-            v-model="props.form.selectedTags"
+            :modelValue="props.form.selectedTags"
+            @update:modelValue="updateForm('selectedTags', $event)"
             placeholder="Search or create tags..."
             help-text="Add tags to categorize and organize your research"
           />
@@ -452,7 +457,8 @@
           <div v-if="props.form.uploadType === 'url'" class="space-y-4">
             <div class="flex items-center space-x-2">
               <input
-                v-model="props.form.newUrl"
+                :value="props.form.newUrl"
+                @input="updateForm('newUrl', $event.target.value)"
                 type="url"
                 placeholder="https://example.com/article-to-extract.html"
                 class="flex-1 px-4 py-3 rounded-xl bg-black/10 backdrop-blur-xl border border-white/20 text-white placeholder-gray-400 shadow-[0_4px_12px_0_rgba(31,38,135,0.15)] focus:shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all duration-500"
@@ -869,7 +875,8 @@ const emit = defineEmits([
   'search-existing-files',
   'load-existing-files',
   'toggle-file-selection',
-  'category-created'
+  'category-created',
+  'update:form'
 ])
 
 // Reactive data
@@ -904,6 +911,11 @@ const form = computed(() => {
     selectedExistingFiles: []
   }
 })
+
+// Helper function to update form fields
+const updateForm = (field, value) => {
+  emit('update:form', { ...props.form, [field]: value })
+}
 
 // Form validation
 const isFormValid = computed(() => {

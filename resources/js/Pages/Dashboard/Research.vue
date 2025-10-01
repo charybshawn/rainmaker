@@ -23,750 +23,316 @@
       </div>
     </template>
 
-    <!-- Tabs -->
-    <div class="mb-6">
-      <div class="flex space-x-1 bg-white/5 rounded-xl p-1 border border-white/10">
-        <button
-          @click="activeTab = 'research'"
-          :class="[
-            'flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200',
-            activeTab === 'research'
-              ? 'bg-green-500/20 text-green-300 border border-green-400/20'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          ]"
-        >
-          <div class="flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            Research Items
-            <span v-if="researchItemsCount > 0" class="px-2 py-1 bg-green-400/20 text-green-300 text-xs rounded-full">
-              {{ researchItemsCount }}
-            </span>
-          </div>
-        </button>
-        <button
-          @click="activeTab = 'assets'"
-          :class="[
-            'flex-1 px-6 py-3 rounded-lg font-medium transition-all duration-200',
-            activeTab === 'assets'
-              ? 'bg-blue-500/20 text-blue-300 border border-blue-400/20'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          ]"
-        >
-          <div class="flex items-center justify-center gap-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-            </svg>
-            Assets & Documents
-            <span v-if="assetsCount > 0" class="px-2 py-1 bg-blue-400/20 text-blue-300 text-xs rounded-full">
-              {{ assetsCount }}
-            </span>
-          </div>
-        </button>
-      </div>
-    </div>
+    <!-- Main Content Layout: Left Sidebar + Right Data Table -->
+    <div class="flex gap-6 h-full">
+      <!-- Left Sidebar: Search & Filters -->
+      <div class="w-80 flex-shrink-0">
+        <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl border-t border-b border-gray-700/30 p-6 sticky top-6" style="backdrop-filter: blur(20px) saturate(180%);">
 
-    <!-- Research Items Tab -->
-    <div v-if="activeTab === 'research'">
-      <!-- Search and Filters -->
-      <div class="mb-6 space-y-4">
-      <!-- Search Bar -->
-      <div class="relative">
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="Search research items..."
-          class="w-full px-4 py-3 pl-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-green-400/50 focus:ring-2 focus:ring-green-400/20 transition-all"
-          @input="debouncedSearch"
-        >
-        <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-        </svg>
-      </div>
-
-      <!-- Filters -->
-      <div class="space-y-4">
-        <!-- First Row: Filters -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          <!-- Company Filter -->
-          <select
-            v-model="selectedCompany"
-            @change="loadResearchItems"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
-          >
-            <option value="">All Companies</option>
-            <option v-for="company in companies" :key="company.id" :value="company.id">
-              {{ company.name }} ({{ company.ticker }})
-            </option>
-          </select>
-
-          <!-- Category Filter -->
-          <select
-            v-model="selectedCategory"
-            @change="loadResearchItems"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
-          >
-            <option value="">All Categories</option>
-            <option v-for="category in categories" :key="category.id" :value="category.id">
-              {{ category.name }}
-            </option>
-          </select>
-
-          <!-- Visibility Filter -->
-          <select
-            v-model="selectedVisibility"
-            @change="loadResearchItems"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
-          >
-            <option value="">All Visibility</option>
-            <option value="public">Public</option>
-            <option value="team">Team</option>
-            <option value="private">Private</option>
-          </select>
-
-          <!-- Sort Options -->
-          <select
-            v-model="sortBy"
-            @change="loadResearchItems"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
-          >
-            <option value="created_at_desc">Newest First</option>
-            <option value="created_at_asc">Oldest First</option>
-            <option value="title_asc">Title A-Z</option>
-            <option value="title_desc">Title Z-A</option>
-          </select>
-        </div>
-
-        <!-- Second Row: View Toggle -->
-        <div class="flex justify-center sm:justify-end">
-          <div class="flex items-center gap-1">
-            <button
-              @click="viewMode = 'cards'"
-              :class="[
-                'p-2 rounded transition-all duration-200',
-                viewMode === 'cards'
-                  ? 'text-white bg-white/10'
-                  : 'text-gray-500 hover:text-gray-300'
-              ]"
-              title="Card View"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14-4H5m14 8H5m14 4H5"></path>
+          <!-- Search Section -->
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-            </button>
-            <button
-              @click="viewMode = 'table'"
-              :class="[
-                'p-2 rounded transition-all duration-200',
-                viewMode === 'table'
-                  ? 'text-white bg-white/10'
-                  : 'text-gray-500 hover:text-gray-300'
-              ]"
-              title="Table View"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Research Items Display -->
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-flex items-center gap-2 text-gray-400">
-        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Loading research items...
-      </div>
-    </div>
-
-    <div v-else-if="researchItems.length === 0" class="text-center py-12">
-      <div class="max-w-md mx-auto">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400/10 to-emerald-500/10 flex items-center justify-center">
-          <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-          </svg>
-        </div>
-        <h3 class="text-xl font-semibold text-white mb-2">No Research Items</h3>
-        <p class="text-gray-400 mb-6">{{ searchQuery ? 'No items match your search criteria.' : 'Start by creating your first research item.' }}</p>
-        <button
-          v-if="!searchQuery"
-          @click="openCreateModal"
-          class="px-6 py-3 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-xl border border-green-400/20 transition-all duration-200"
-        >
-          Create Research Item
-        </button>
-      </div>
-    </div>
-
-    <!-- Card View -->
-    <div v-else-if="viewMode === 'cards'" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      <div
-        v-for="item in researchItems"
-        :key="item.id"
-        class="bg-gradient-to-br from-white/5 via-white/8 to-white/5 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-white/10 hover:border-green-400/30 transition-all duration-300 cursor-pointer group"
-        @click="openViewModal(item)"
-      >
-        <!-- Header -->
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-semibold text-white mb-1 line-clamp-2 group-hover:text-green-300 transition-colors">
-              {{ item.title }}
+              Search & Filter
             </h3>
-            <div class="flex items-center gap-2 text-sm text-gray-400">
-              <span>{{ formatDate(item.created_at) }}</span>
-              <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
-              <span class="capitalize">{{ item.visibility }}</span>
-            </div>
-          </div>
-          <div class="flex gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              @click.stop="openEditModal(item)"
-              class="p-2 hover:bg-white/10 rounded-lg transition-colors"
-              title="Edit"
-            >
-              <svg class="w-4 h-4 text-gray-400 hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+
+            <!-- Search Bar -->
+            <div class="relative">
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Search research items and documents..."
+                class="w-full px-4 py-3 pl-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-green-400/50 focus:ring-2 focus:ring-green-400/20 transition-all"
+                @input="debouncedSearch"
+              >
+              <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-            </button>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="space-y-4">
+            <h4 class="text-md font-medium text-gray-300 border-b border-gray-700/30 pb-2">Filters</h4>
+
+            <!-- Type Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Type</label>
+              <select
+                v-model="selectedType"
+                @change="loadCombinedData"
+                class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
+              >
+                <option value="">All Types</option>
+                <option value="research">Research Items</option>
+                <option value="document">Documents</option>
+              </select>
+            </div>
+
+            <!-- Company Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Company</label>
+              <select
+                v-model="selectedCompany"
+                @change="loadCombinedData"
+                class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
+              >
+                <option value="">All Companies</option>
+                <option v-for="company in companies" :key="company.id" :value="company.id">
+                  {{ company.name }} ({{ company.ticker }})
+                </option>
+              </select>
+            </div>
+
+            <!-- Category Filter -->
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Category</label>
+              <select
+                v-model="selectedCategory"
+                @change="loadCombinedData"
+                class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
+              >
+                <option value="">All Categories</option>
+                <option v-for="category in categories" :key="category.id" :value="category.id">
+                  {{ category.name }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Sort Options -->
+            <div>
+              <label class="block text-sm font-medium text-gray-400 mb-2">Sort By</label>
+              <select
+                v-model="sortBy"
+                @change="loadCombinedData"
+                class="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-green-400/50 text-sm"
+              >
+                <option value="created_at_desc">Newest First</option>
+                <option value="created_at_asc">Oldest First</option>
+                <option value="title_asc">Title A-Z</option>
+                <option value="title_desc">Title Z-A</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Clear Filters -->
+          <div class="mt-6 pt-4 border-t border-gray-700/30">
             <button
-              @click.stop="deleteItem(item)"
-              class="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-              title="Delete"
+              @click="clearFilters"
+              class="w-full px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-300 hover:text-white rounded-lg transition-all duration-200 text-sm"
             >
-              <svg class="w-4 h-4 text-gray-400 hover:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-              </svg>
+              Clear All Filters
             </button>
-          </div>
-        </div>
-
-        <!-- Content Preview -->
-        <p class="text-gray-300 text-sm mb-4 line-clamp-3">
-          {{ getContentPreview(item.content) }}
-        </p>
-
-        <!-- Company Info -->
-        <div v-if="item.company" class="flex items-center gap-2 mb-3">
-          <div class="w-6 h-6 rounded bg-blue-500/20 flex items-center justify-center">
-            <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-4m-5 0H3m2 0h3M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 8h1m-1-4h1m4 4h1m-1-4h1"></path>
-            </svg>
-          </div>
-          <span class="text-sm text-gray-400">{{ item.company.name }}</span>
-          <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded">{{ item.company.ticker }}</span>
-        </div>
-
-        <!-- Category and Tags -->
-        <div class="flex flex-wrap gap-2 mb-4">
-          <span v-if="item.category" class="px-2 py-1 text-xs rounded" :style="{ backgroundColor: item.category.color + '20', color: item.category.color }">
-            {{ item.category.name }}
-          </span>
-          <span
-            v-for="tag in item.tags.slice(0, 3)"
-            :key="tag.id"
-            class="px-2 py-1 text-xs rounded"
-            :style="{ backgroundColor: tag.color + '20', color: tag.color }"
-          >
-            {{ tag.name }}
-          </span>
-          <span v-if="item.tags.length > 3" class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded">
-            +{{ item.tags.length - 3 }}
-          </span>
-        </div>
-
-        <!-- Attachments -->
-        <div v-if="item.attachments && item.attachments.length > 0" class="flex items-center gap-2 text-xs text-gray-400">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-          </svg>
-          <span>{{ item.attachments.length }} attachment{{ item.attachments.length !== 1 ? 's' : '' }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Table View -->
-    <div v-else-if="viewMode === 'table'">
-      <!-- Desktop Table -->
-      <div class="hidden lg:block">
-        <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
-          <!-- Table Header -->
-          <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
-            <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
-              <div class="col-span-3">Title</div>
-              <div class="col-span-2">Company</div>
-              <div class="col-span-1">Category</div>
-              <div class="col-span-2">Tags</div>
-              <div class="col-span-1">Visibility</div>
-              <div class="col-span-2">Created</div>
-              <div class="col-span-1 text-center">Actions</div>
-            </div>
-          </div>
-
-          <!-- Table Body -->
-          <div class="divide-y divide-gray-700/30">
-            <div
-              v-for="item in researchItems"
-              :key="item.id"
-              class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
-              @click="openViewModal(item)"
-            >
-              <div class="grid grid-cols-12 gap-4 items-center">
-                <!-- Title -->
-                <div class="col-span-3">
-                  <div class="flex flex-col">
-                    <div class="text-sm font-medium text-white line-clamp-1 group-hover:text-green-200 transition-colors">{{ item.title }}</div>
-                    <div class="text-sm text-gray-400 line-clamp-2 mt-1">{{ getContentPreview(item.content) }}</div>
-                  </div>
-                </div>
-
-                <!-- Company -->
-                <div class="col-span-2">
-                  <div v-if="item.company" class="flex items-center gap-2">
-                    <span class="text-sm text-white truncate">{{ item.company.name }}</span>
-                    <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded shrink-0">{{ item.company.ticker }}</span>
-                  </div>
-                  <span v-else class="text-sm text-gray-400">—</span>
-                </div>
-
-                <!-- Category -->
-                <div class="col-span-1">
-                  <span v-if="item.category" class="px-2 py-1 text-xs rounded" :style="{ backgroundColor: item.category.color + '20', color: item.category.color }">
-                    {{ item.category.name }}
-                  </span>
-                  <span v-else class="text-sm text-gray-400">—</span>
-                </div>
-
-                <!-- Tags -->
-                <div class="col-span-2">
-                  <div class="flex flex-wrap gap-1">
-                    <span
-                      v-for="tag in item.tags.slice(0, 2)"
-                      :key="tag.id"
-                      class="px-2 py-1 text-xs rounded"
-                      :style="{ backgroundColor: tag.color + '20', color: tag.color }"
-                    >
-                      {{ tag.name }}
-                    </span>
-                    <span v-if="item.tags.length > 2" class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded">
-                      +{{ item.tags.length - 2 }}
-                    </span>
-                  </div>
-                </div>
-
-                <!-- Visibility -->
-                <div class="col-span-1">
-                  <span class="px-2 py-1 text-xs rounded capitalize" :class="{
-                    'bg-green-500/20 text-green-400': item.visibility === 'public',
-                    'bg-yellow-500/20 text-yellow-400': item.visibility === 'team',
-                    'bg-red-500/20 text-red-400': item.visibility === 'private'
-                  }">
-                    {{ item.visibility }}
-                  </span>
-                </div>
-
-                <!-- Created -->
-                <div class="col-span-2">
-                  <div class="text-sm text-gray-400">{{ formatDate(item.created_at) }}</div>
-                </div>
-
-                <!-- Actions -->
-                <div class="col-span-1 text-center">
-                  <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      @click.stop="openEditModal(item)"
-                      class="w-8 h-8 rounded bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center transition-colors"
-                      title="Edit"
-                    >
-                      <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                      </svg>
-                    </button>
-                    <button
-                      @click.stop="deleteItem(item)"
-                      class="w-8 h-8 rounded bg-red-500/30 hover:bg-red-500/50 flex items-center justify-center transition-colors"
-                      title="Delete"
-                    >
-                      <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      <!-- Mobile List View -->
-      <div class="lg:hidden space-y-3">
-        <div
-          v-for="item in researchItems"
-          :key="item.id"
-          class="bg-gradient-to-br from-white/5 via-white/8 to-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10 hover:border-green-400/30 transition-all duration-300 cursor-pointer"
-          @click="openViewModal(item)"
-        >
-          <!-- Title and Actions -->
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex-1 min-w-0">
-              <h3 class="text-base font-semibold text-white line-clamp-2 mb-1">{{ item.title }}</h3>
-              <p class="text-sm text-gray-400 line-clamp-2">{{ getContentPreview(item.content) }}</p>
+      <!-- Right Panel: Unified Data Table -->
+      <div class="flex-1 min-w-0">
+        <!-- Unified Research & Documents Table -->
+        <div>
+          <!-- Data Table with CLAUDE.md Styling -->
+          <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+
+            <!-- Table Header -->
+            <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
+              <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <div class="col-span-1">Type</div>
+                <div class="col-span-3">Title</div>
+                <div class="col-span-2">Company</div>
+                <div class="col-span-1">Category</div>
+                <div class="col-span-2">Tags</div>
+                <div class="col-span-1">Created</div>
+                <div class="col-span-2 text-center">Actions</div>
+              </div>
             </div>
-            <div class="flex gap-1 ml-3">
-              <button
-                @click.stop="openEditModal(item)"
-                class="p-1.5 hover:bg-white/10 rounded transition-colors"
-                title="Edit"
+
+            <!-- Loading State -->
+            <div v-if="loading || loadingAssets" class="px-6 py-12">
+              <div class="text-center">
+                <div class="inline-flex items-center gap-2 text-gray-400">
+                  <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Loading data...
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div v-else-if="combinedItems.length === 0" class="px-6 py-12">
+              <div class="text-center">
+                <div class="max-w-md mx-auto">
+                  <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-green-400/10 to-emerald-500/10 flex items-center justify-center">
+                    <svg class="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
+                  <h3 class="text-xl font-semibold text-white mb-2">No Items Found</h3>
+                  <p class="text-gray-400 mb-6">{{ searchQuery || assetSearchQuery ? 'No items match your search criteria.' : 'Start by creating your first research item.' }}</p>
+                  <button
+                    v-if="!searchQuery && !assetSearchQuery"
+                    @click="openCreateModal"
+                    class="px-6 py-3 bg-green-500/20 hover:bg-green-500/30 text-green-300 rounded-xl border border-green-400/20 transition-all duration-200"
+                  >
+                    Create Research Item
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Table Body -->
+            <div v-else class="divide-y divide-gray-700/30">
+              <div
+                v-for="item in combinedItems"
+                :key="`${item.type}-${item.id}`"
+                class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
+                @click="handleItemClick(item)"
               >
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                </svg>
-              </button>
-              <button
-                @click.stop="deleteItem(item)"
-                class="p-1.5 hover:bg-red-500/20 rounded transition-colors"
-                title="Delete"
-              >
-                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                </svg>
-              </button>
+                <div class="grid grid-cols-12 gap-4 items-center">
+                  <!-- Type -->
+                  <div class="col-span-1">
+                    <span class="px-2 py-1 text-xs rounded" :class="{
+                      'bg-green-500/20 text-green-400': item.type === 'research',
+                      'bg-blue-500/20 text-blue-400': item.type === 'document'
+                    }">
+                      {{ item.type === 'research' ? 'Research' : 'Document' }}
+                    </span>
+                  </div>
+
+                  <!-- Title -->
+                  <div class="col-span-3">
+                    <div class="flex flex-col">
+                      <div class="text-sm font-medium text-white line-clamp-1 group-hover:text-green-200 transition-colors">{{ item.title }}</div>
+                      <div v-if="item.content" class="text-sm text-gray-400 line-clamp-2 mt-1">{{ getContentPreview(item.content) }}</div>
+                      <div v-else-if="item.file_name" class="text-sm text-gray-400 mt-1">{{ item.file_name }}</div>
+                    </div>
+                  </div>
+
+                  <!-- Company -->
+                  <div class="col-span-2">
+                    <div v-if="item.company" class="flex items-center gap-2">
+                      <span class="text-sm text-white truncate">{{ item.company.name }}</span>
+                      <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded shrink-0">{{ item.company.ticker }}</span>
+                    </div>
+                    <span v-else class="text-sm text-gray-400">—</span>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="col-span-1">
+                    <span v-if="item.category" class="px-2 py-1 text-xs rounded" :style="{ backgroundColor: item.category.color + '20', color: item.category.color }">
+                      {{ item.category.name }}
+                    </span>
+                    <span v-else-if="item.type === 'document'" class="px-2 py-1 text-xs rounded bg-gray-500/20 text-gray-400">
+                      {{ getFileExtension(item.file_name) }}
+                    </span>
+                    <span v-else class="text-sm text-gray-400">—</span>
+                  </div>
+
+                  <!-- Tags -->
+                  <div class="col-span-2">
+                    <div v-if="item.tags && item.tags.length > 0" class="flex flex-wrap gap-1">
+                      <span
+                        v-for="tag in item.tags.slice(0, 2)"
+                        :key="tag.id"
+                        class="px-2 py-1 text-xs rounded"
+                        :style="{ backgroundColor: tag.color + '20', color: tag.color }"
+                      >
+                        {{ tag.name }}
+                      </span>
+                      <span v-if="item.tags.length > 2" class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded">
+                        +{{ item.tags.length - 2 }}
+                      </span>
+                    </div>
+                    <div v-else-if="item.type === 'document' && item.size" class="text-xs text-gray-400">
+                      {{ formatFileSize(item.size) }}
+                    </div>
+                    <span v-else class="text-sm text-gray-400">—</span>
+                  </div>
+
+                  <!-- Created -->
+                  <div class="col-span-1">
+                    <div class="text-sm text-gray-400">{{ formatDate(item.created_at) }}</div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="col-span-2 text-center">
+                    <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        v-if="item.type === 'research'"
+                        @click.stop="openEditModal(item)"
+                        class="w-8 h-8 rounded bg-green-500/30 hover:bg-green-500/50 flex items-center justify-center transition-colors"
+                        title="Edit"
+                      >
+                        <svg class="w-4 h-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        v-if="item.type === 'document'"
+                        @click.stop="downloadAsset(item)"
+                        class="w-8 h-8 rounded bg-blue-500/30 hover:bg-blue-500/50 flex items-center justify-center transition-colors"
+                        title="Download"
+                      >
+                        <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                      </button>
+                      <button
+                        @click.stop="handleDeleteItem(item)"
+                        class="w-8 h-8 rounded bg-red-500/30 hover:bg-red-500/50 flex items-center justify-center transition-colors"
+                        title="Delete"
+                      >
+                        <svg class="w-4 h-4 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Meta Info -->
-          <div class="space-y-2">
-            <!-- Company -->
-            <div v-if="item.company" class="flex items-center gap-2">
-              <span class="text-xs text-gray-500">Company:</span>
-              <span class="text-sm text-white">{{ item.company.name }}</span>
-              <span class="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-xs rounded">{{ item.company.ticker }}</span>
-            </div>
+          <!-- Pagination -->
+          <div v-if="pagination && pagination.total_pages > 1" class="mt-8 flex justify-center">
+            <div class="flex items-center gap-2">
+              <button
+                @click="loadPage(pagination.current_page - 1)"
+                :disabled="pagination.current_page === 1"
+                class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+              >
+                Previous
+              </button>
 
-            <!-- Category and Visibility -->
-            <div class="flex items-center gap-4">
-              <div v-if="item.category" class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Category:</span>
-                <span class="px-2 py-1 text-xs rounded" :style="{ backgroundColor: item.category.color + '20', color: item.category.color }">
-                  {{ item.category.name }}
-                </span>
-              </div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-gray-500">Visibility:</span>
-                <span class="px-2 py-1 text-xs rounded capitalize" :class="{
-                  'bg-green-500/20 text-green-400': item.visibility === 'public',
-                  'bg-yellow-500/20 text-yellow-400': item.visibility === 'team',
-                  'bg-red-500/20 text-red-400': item.visibility === 'private'
-                }">
-                  {{ item.visibility }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Tags -->
-            <div v-if="item.tags.length > 0" class="flex items-center gap-2">
-              <span class="text-xs text-gray-500">Tags:</span>
-              <div class="flex flex-wrap gap-1">
-                <span
-                  v-for="tag in item.tags.slice(0, 3)"
-                  :key="tag.id"
-                  class="px-2 py-1 text-xs rounded"
-                  :style="{ backgroundColor: tag.color + '20', color: tag.color }"
+              <div class="flex gap-1">
+                <button
+                  v-for="page in visiblePages"
+                  :key="page"
+                  @click="loadPage(page)"
+                  :class="[
+                    'px-3 py-2 rounded-lg transition-colors',
+                    page === pagination.current_page
+                      ? 'bg-green-500/20 text-green-300 border border-green-400/20'
+                      : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
+                  ]"
                 >
-                  {{ tag.name }}
-                </span>
-                <span v-if="item.tags.length > 3" class="px-2 py-1 bg-gray-500/20 text-gray-400 text-xs rounded">
-                  +{{ item.tags.length - 3 }}
-                </span>
+                  {{ page }}
+                </button>
               </div>
-            </div>
 
-            <!-- Date -->
-            <div class="flex justify-between items-center text-xs text-gray-500 pt-1">
-              <span>{{ formatDate(item.created_at) }}</span>
-              <div v-if="item.attachments && item.attachments.length > 0" class="flex items-center gap-1">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                </svg>
-                <span>{{ item.attachments.length }}</span>
-              </div>
+              <button
+                @click="loadPage(pagination.current_page + 1)"
+                :disabled="pagination.current_page === pagination.total_pages"
+                class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Pagination -->
-    <div v-if="pagination && pagination.total_pages > 1" class="mt-8 flex justify-center">
-      <div class="flex items-center gap-2">
-        <button
-          @click="loadPage(pagination.current_page - 1)"
-          :disabled="pagination.current_page === 1"
-          class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
-        >
-          Previous
-        </button>
-
-        <div class="flex gap-1">
-          <button
-            v-for="page in visiblePages"
-            :key="page"
-            @click="loadPage(page)"
-            :class="[
-              'px-3 py-2 rounded-lg transition-colors',
-              page === pagination.current_page
-                ? 'bg-green-500/20 text-green-300 border border-green-400/20'
-                : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-            ]"
-          >
-            {{ page }}
-          </button>
-        </div>
-
-        <button
-          @click="loadPage(pagination.current_page + 1)"
-          :disabled="pagination.current_page === pagination.total_pages"
-          class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
-        >
-          Next
-        </button>
-      </div>
-    </div>
-    </div>
-
-    <!-- Assets & Documents Tab -->
-    <div v-if="activeTab === 'assets'">
-      <!-- Assets Header -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="flex items-center gap-4">
-          <h3 class="text-xl font-semibold text-white">Assets & Documents</h3>
-          <div class="flex gap-2 text-sm">
-            <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-lg">
-              {{ assets.length }} Total Assets
-            </span>
-            <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-lg">
-              {{ documents.length }} Documents
-            </span>
-          </div>
-        </div>
-        <button
-          @click="openUploadModal"
-          class="px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl border border-blue-400/20 transition-all duration-200 flex items-center gap-2 backdrop-blur-xl"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-          </svg>
-          Upload Asset
-        </button>
-      </div>
-
-      <!-- Assets Search and Filters -->
-      <div class="mb-6 space-y-4">
-        <!-- Search Bar -->
-        <div class="relative">
-          <input
-            v-model="assetSearchQuery"
-            type="text"
-            placeholder="Search assets and documents..."
-            class="w-full px-4 py-3 pl-12 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/20 transition-all"
-            @input="debouncedAssetSearch"
-          >
-          <svg class="absolute left-4 top-3.5 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-        </div>
-
-        <!-- Asset Filters -->
-        <div class="flex flex-wrap gap-4">
-          <!-- File Type Filter -->
-          <select
-            v-model="selectedFileType"
-            @change="loadAssets"
-            class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400/50"
-          >
-            <option value="">All File Types</option>
-            <option value="image">Images</option>
-            <option value="document">Documents</option>
-            <option value="spreadsheet">Spreadsheets</option>
-            <option value="pdf">PDFs</option>
-            <option value="other">Other</option>
-          </select>
-
-          <!-- Source Filter -->
-          <select
-            v-model="selectedAssetSource"
-            @change="loadAssets"
-            class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400/50"
-          >
-            <option value="">All Sources</option>
-            <option value="research_item">Research Items</option>
-            <option value="document">Documents</option>
-            <option value="direct_upload">Direct Upload</option>
-          </select>
-
-          <!-- Size Filter -->
-          <select
-            v-model="selectedSizeFilter"
-            @change="loadAssets"
-            class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400/50"
-          >
-            <option value="">All Sizes</option>
-            <option value="small">Small (< 1MB)</option>
-            <option value="medium">Medium (1-10MB)</option>
-            <option value="large">Large (> 10MB)</option>
-          </select>
-
-          <!-- Asset Sort -->
-          <select
-            v-model="assetSortBy"
-            @change="loadAssets"
-            class="px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:border-blue-400/50"
-          >
-            <option value="created_at_desc">Newest First</option>
-            <option value="created_at_asc">Oldest First</option>
-            <option value="size_desc">Largest First</option>
-            <option value="size_asc">Smallest First</option>
-            <option value="name_asc">Name A-Z</option>
-            <option value="name_desc">Name Z-A</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- Assets Grid -->
-      <div v-if="loadingAssets" class="text-center py-12">
-        <div class="inline-flex items-center gap-2 text-gray-400">
-          <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          Loading assets...
-        </div>
-      </div>
-
-      <div v-else-if="filteredAssets.length === 0" class="text-center py-12">
-        <div class="max-w-md mx-auto">
-          <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-blue-400/10 to-indigo-500/10 flex items-center justify-center">
-            <svg class="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-            </svg>
-          </div>
-          <h3 class="text-xl font-semibold text-white mb-2">No Assets Found</h3>
-          <p class="text-gray-400 mb-6">{{ assetSearchQuery ? 'No assets match your search criteria.' : 'Start by uploading your first asset.' }}</p>
-          <button
-            v-if="!assetSearchQuery"
-            @click="openUploadModal"
-            class="px-6 py-3 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded-xl border border-blue-400/20 transition-all duration-200"
-          >
-            Upload Asset
-          </button>
-        </div>
-      </div>
-
-      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        <div
-          v-for="asset in filteredAssets"
-          :key="asset.id"
-          class="bg-gradient-to-br from-white/5 via-white/8 to-white/5 backdrop-blur-xl rounded-xl p-4 border border-white/10 hover:border-blue-400/30 transition-all duration-300 cursor-pointer group"
-          @click="openAssetModal(asset)"
-        >
-          <!-- Asset Preview -->
-          <div class="aspect-square mb-4 rounded-lg overflow-hidden bg-white/5 flex items-center justify-center">
-            <img
-              v-if="isImage(asset.mime_type)"
-              :src="asset.url"
-              :alt="asset.title"
-              class="w-full h-full object-cover"
-              loading="lazy"
-            >
-            <div v-else class="w-16 h-16 rounded-lg flex items-center justify-center" :class="getFileTypeColor(asset.mime_type)">
-              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path v-if="isPdf(asset.mime_type)" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-              </svg>
-            </div>
-          </div>
-
-          <!-- Asset Info -->
-          <div class="space-y-2">
-            <h4 class="text-white font-medium text-sm line-clamp-2 group-hover:text-blue-300 transition-colors">
-              {{ asset.title || asset.file_name }}
-            </h4>
-
-            <div class="flex items-center justify-between text-xs text-gray-400">
-              <span class="uppercase">{{ getFileExtension(asset.file_name) }}</span>
-              <span>{{ formatFileSize(asset.size) }}</span>
-            </div>
-
-            <div class="flex items-center gap-2 text-xs text-gray-500">
-              <span>{{ formatDate(asset.created_at) }}</span>
-              <span class="w-1 h-1 bg-gray-500 rounded-full"></span>
-              <span class="capitalize">{{ asset.source_type || 'Direct' }}</span>
-            </div>
-
-            <!-- Source Info -->
-            <div v-if="asset.source_title" class="text-xs text-gray-400 line-clamp-1">
-              From: {{ asset.source_title }}
-            </div>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              @click.stop="downloadAsset(asset)"
-              class="flex-1 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg transition-colors text-xs text-gray-300 hover:text-white"
-            >
-              Download
-            </button>
-            <button
-              @click.stop="deleteAsset(asset)"
-              class="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-colors text-xs text-red-400"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Assets Pagination -->
-      <div v-if="assetPagination && assetPagination.total_pages > 1" class="mt-8 flex justify-center">
-        <div class="flex items-center gap-2">
-          <button
-            @click="loadAssetPage(assetPagination.current_page - 1)"
-            :disabled="assetPagination.current_page === 1"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
-          >
-            Previous
-          </button>
-
-          <div class="flex gap-1">
-            <button
-              v-for="page in visibleAssetPages"
-              :key="page"
-              @click="loadAssetPage(page)"
-              :class="[
-                'px-3 py-2 rounded-lg transition-colors',
-                page === assetPagination.current_page
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-400/20'
-                  : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
-              ]"
-            >
-              {{ page }}
-            </button>
-          </div>
-
-          <button
-            @click="loadAssetPage(assetPagination.current_page + 1)"
-            :disabled="assetPagination.current_page === assetPagination.total_pages"
-            class="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10 transition-colors"
-          >
-            Next
-          </button>
         </div>
       </div>
     </div>
@@ -780,6 +346,7 @@
       :creating-note="creating"
       :categories="categories"
       :tags="tags"
+      :companies="companies"
       :user="$page.props.auth.user"
       :is-editing="isEditing"
       :available-files="availableFiles"
@@ -794,6 +361,7 @@
       @search-existing-files="handleSearchExistingFiles"
       @load-existing-files="handleLoadExistingFiles"
       @toggle-file-selection="handleToggleFileSelection"
+      @update:form="handleFormUpdate"
     />
 
     <ResearchNoteModal
@@ -833,11 +401,7 @@ defineProps({
   auth: Object
 })
 
-// Tab state
-const activeTab = ref('research')
-
-// View mode for research items with persistence
-const viewMode = ref(localStorage.getItem('research-view-mode') || 'cards')
+// No longer needed - unified view
 
 // Reactive data - Research Items
 const loading = ref(true)
@@ -857,11 +421,11 @@ const assetPagination = ref(null)
 const researchItemsCount = computed(() => pagination.value?.total_items || researchItems.value.length)
 const assetsCount = computed(() => assets.value.length + documents.value.length)
 
-// Search and filters - Research Items
+// Search and filters - Unified
 const searchQuery = ref('')
+const selectedType = ref('')
 const selectedCompany = ref('')
 const selectedCategory = ref('')
-const selectedVisibility = ref('')
 const sortBy = ref('created_at_desc')
 
 // Search and filters - Assets
@@ -981,38 +545,104 @@ const filteredAssets = computed(() => {
   return filtered
 })
 
-const visibleAssetPages = computed(() => {
-  if (!assetPagination.value) return []
+const combinedItems = computed(() => {
+  let items = []
 
-  const current = assetPagination.value.current_page
-  const total = assetPagination.value.total_pages
-  const delta = 2
+  // Add research items with type identifier
+  const researchWithType = researchItems.value.map(item => ({
+    ...item,
+    type: 'research'
+  }))
 
-  const range = []
-  const rangeWithDots = []
+  // Add assets with type identifier
+  const assetsWithType = assets.value.map(asset => ({
+    ...asset,
+    type: 'document',
+    title: asset.title || asset.file_name
+  }))
 
-  for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) {
-    range.push(i)
+  items = [...researchWithType, ...assetsWithType]
+
+  // Apply filters
+  if (selectedType.value) {
+    items = items.filter(item => item.type === selectedType.value)
   }
 
-  if (current - delta > 2) {
-    rangeWithDots.push(1, '...')
-  } else {
-    rangeWithDots.push(1)
+  if (selectedCompany.value) {
+    items = items.filter(item => item.company?.id == selectedCompany.value)
   }
 
-  rangeWithDots.push(...range)
-
-  if (current + delta < total - 1) {
-    rangeWithDots.push('...', total)
-  } else {
-    rangeWithDots.push(total)
+  if (selectedCategory.value) {
+    items = items.filter(item => item.category?.id == selectedCategory.value)
   }
 
-  return rangeWithDots.filter((v, i, a) => a.indexOf(v) === i)
+  if (searchQuery.value) {
+    const search = searchQuery.value.toLowerCase()
+    items = items.filter(item => {
+      const title = (item.title || '').toLowerCase()
+      const content = (item.content || '').toLowerCase()
+      const fileName = (item.file_name || '').toLowerCase()
+      const companyName = (item.company?.name || '').toLowerCase()
+
+      return title.includes(search) ||
+             content.includes(search) ||
+             fileName.includes(search) ||
+             companyName.includes(search)
+    })
+  }
+
+  // Apply sorting
+  const [field, direction] = sortBy.value.split('_')
+  if (field && direction) {
+    items.sort((a, b) => {
+      let aValue, bValue
+
+      if (field === 'title') {
+        aValue = (a.title || a.file_name || '').toLowerCase()
+        bValue = (b.title || b.file_name || '').toLowerCase()
+      } else if (field === 'created_at') {
+        aValue = new Date(a.created_at)
+        bValue = new Date(b.created_at)
+      } else {
+        aValue = a[field] || ''
+        bValue = b[field] || ''
+      }
+
+      if (direction === 'desc') {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+      } else {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+      }
+    })
+  }
+
+  return items
 })
 
 // Methods
+const loadCombinedData = async () => {
+  await Promise.all([
+    loadResearchItems(),
+    loadAssets()
+  ])
+}
+
+const handleItemClick = (item) => {
+  if (item.type === 'research') {
+    openViewModal(item)
+  } else if (item.type === 'document') {
+    openAssetModal(item)
+  }
+}
+
+const handleDeleteItem = async (item) => {
+  if (item.type === 'research') {
+    await deleteItem(item)
+  } else if (item.type === 'document') {
+    await deleteAsset(item)
+  }
+}
+
 const loadResearchItems = async (page = 1) => {
   try {
     loading.value = true
@@ -1022,8 +652,7 @@ const loadResearchItems = async (page = 1) => {
       limit: 12,
       search: searchQuery.value,
       company_id: selectedCompany.value,
-      category_id: selectedCategory.value,
-      visibility: selectedVisibility.value
+      category_id: selectedCategory.value
     }
 
     // Handle sorting
@@ -1075,7 +704,7 @@ let searchTimeout = null
 const debouncedSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    loadResearchItems(1)
+    // No need to call loadCombinedData since combinedItems is computed and will update automatically
   }, 300)
 }
 
@@ -1304,6 +933,10 @@ const handleToggleFileSelection = (file) => {
   }
 }
 
+const handleFormUpdate = (updatedForm) => {
+  createForm.value = updatedForm
+}
+
 const deleteItem = async (item) => {
   if (!confirm(`Are you sure you want to delete "${item.title}"?`)) {
     return
@@ -1486,10 +1119,17 @@ const getContentPreview = (content) => {
   return decoded.substring(0, maxLength).trim() + '...'
 }
 
-// Watch view mode changes and persist to localStorage
-watch(viewMode, (newMode) => {
-  localStorage.setItem('research-view-mode', newMode)
-})
+// Clear all filters method
+const clearFilters = () => {
+  searchQuery.value = ''
+  selectedType.value = ''
+  selectedCompany.value = ''
+  selectedCategory.value = ''
+  sortBy.value = 'created_at_desc'
+  // No need to reload data since combinedItems will update automatically
+}
+
+// Note: viewMode removed since we now use unified table view
 
 // Initialize on mount
 onMounted(() => {
