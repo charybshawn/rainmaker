@@ -278,7 +278,7 @@ class AssetController extends Controller
         foreach ($request->file('files') ?? [] as $file) {
             try {
                 // Store file in the public location for documents
-                $path = $file->store('research-assets', 'public');
+                $path = $file->store('assets', 'public');
 
                 $asset = Asset::create([
                     'title' => $validated['title'],
@@ -388,7 +388,7 @@ class AssetController extends Controller
         foreach ($request->file('files') ?? [] as $file) {
             try {
                 // Store file in the public location
-                $path = $file->store('research-assets', 'public');
+                $path = $file->store('assets', 'public');
 
                 $asset = Asset::create([
                     'title' => $title,
