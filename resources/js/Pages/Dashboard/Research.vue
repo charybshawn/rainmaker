@@ -133,19 +133,53 @@
       <div class="flex-1 min-w-0">
         <!-- Unified Research & Documents Table -->
         <div>
+          <!-- Bulk Actions Bar -->
+          <div v-if="hasSelectedItems" class="mb-4 p-4 bg-gradient-to-br from-red-900/20 via-red-800/30 to-red-900/20 backdrop-blur-xl rounded-xl border-t border-b border-red-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <span class="text-sm font-medium text-white">
+                  {{ selectedCount }} item{{ selectedCount !== 1 ? 's' : '' }} selected
+                </span>
+                <button
+                  @click="clearSelection"
+                  class="text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  Clear selection
+                </button>
+              </div>
+              <button
+                @click="bulkDeleteItems"
+                class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded-lg border border-red-400/20 transition-all duration-200 flex items-center gap-2"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                </svg>
+                Delete Selected
+              </button>
+            </div>
+          </div>
+
           <!-- Data Table with CLAUDE.md Styling -->
           <div class="bg-gradient-to-br from-gray-900/20 via-gray-800/30 to-gray-900/20 backdrop-blur-xl rounded-2xl overflow-hidden border-t border-b border-gray-700/30" style="backdrop-filter: blur(20px) saturate(180%);">
 
             <!-- Table Header -->
             <div class="bg-gray-800/20 border-b border-gray-700/30 px-6 py-4">
-              <div class="grid grid-cols-12 gap-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
-                <div class="col-span-1">Type</div>
-                <div class="col-span-3">Title</div>
-                <div class="col-span-2">Company</div>
-                <div class="col-span-1">Category</div>
-                <div class="col-span-2">Tags</div>
-                <div class="col-span-1">Created</div>
-                <div class="col-span-2 text-center">Actions</div>
+              <div class="flex items-center gap-4 text-xs font-medium text-gray-300 uppercase tracking-wider">
+                <div class="w-8 flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    :checked="isAllSelected"
+                    @change="toggleSelectAll"
+                    class="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+                  >
+                </div>
+                <div class="w-16">Type</div>
+                <div class="flex-1 min-w-0">Title</div>
+                <div class="w-32">Company</div>
+                <div class="w-24">Category</div>
+                <div class="w-32">Tags</div>
+                <div class="w-24">Created</div>
+                <div class="w-24 text-center">Actions</div>
               </div>
             </div>
 
@@ -189,12 +223,22 @@
               <div
                 v-for="item in combinedItems"
                 :key="`${item.type}-${item.id}`"
-                class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200 cursor-pointer"
-                @click="handleItemClick(item)"
+                class="group px-6 py-4 hover:bg-gray-800/20 transition-all duration-200"
               >
-                <div class="grid grid-cols-12 gap-4 items-center">
+                <div class="flex items-center gap-4">
+                  <!-- Checkbox -->
+                  <div class="w-8 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      :checked="selectedItems.has(`${item.type}-${item.id}`)"
+                      @change="toggleItemSelection(item)"
+                      @click.stop
+                      class="w-4 h-4 text-green-600 bg-gray-700 border-gray-600 rounded focus:ring-green-500 focus:ring-2"
+                    >
+                  </div>
+
                   <!-- Type -->
-                  <div class="col-span-1">
+                  <div class="w-16">
                     <span class="px-2 py-1 text-xs rounded" :class="{
                       'bg-green-500/20 text-green-400': item.type === 'research',
                       'bg-blue-500/20 text-blue-400': item.type === 'document'
@@ -204,7 +248,7 @@
                   </div>
 
                   <!-- Title -->
-                  <div class="col-span-3">
+                  <div class="flex-1 min-w-0 cursor-pointer" @click="handleItemClick(item)">
                     <div class="flex flex-col">
                       <div class="text-sm font-medium text-white line-clamp-1 group-hover:text-green-200 transition-colors">{{ item.title }}</div>
                       <div v-if="item.content" class="text-sm text-gray-400 line-clamp-2 mt-1">{{ getContentPreview(item.content) }}</div>
@@ -213,7 +257,7 @@
                   </div>
 
                   <!-- Company -->
-                  <div class="col-span-2">
+                  <div class="w-32">
                     <div v-if="item.company" class="flex items-center gap-2">
                       <span class="text-sm text-white truncate">{{ item.company.name }}</span>
                       <span class="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded shrink-0">{{ item.company.ticker }}</span>
@@ -222,7 +266,7 @@
                   </div>
 
                   <!-- Category -->
-                  <div class="col-span-1">
+                  <div class="w-24">
                     <span v-if="item.category" class="px-2 py-1 text-xs rounded" :style="{ backgroundColor: item.category.color + '20', color: item.category.color }">
                       {{ item.category.name }}
                     </span>
@@ -233,7 +277,7 @@
                   </div>
 
                   <!-- Tags -->
-                  <div class="col-span-2">
+                  <div class="w-32">
                     <div v-if="item.tags && item.tags.length > 0" class="flex flex-wrap gap-1">
                       <span
                         v-for="tag in item.tags.slice(0, 2)"
@@ -254,12 +298,12 @@
                   </div>
 
                   <!-- Created -->
-                  <div class="col-span-1">
+                  <div class="w-24">
                     <div class="text-sm text-gray-400">{{ formatDate(item.created_at) }}</div>
                   </div>
 
                   <!-- Actions -->
-                  <div class="col-span-2 text-center">
+                  <div class="w-24 text-center">
                     <div class="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
                         v-if="item.type === 'research'"
@@ -448,6 +492,10 @@ const showUploadModal = ref(false)
 const showAssetModal = ref(false)
 const selectedAsset = ref(null)
 
+// Selection states for bulk actions
+const selectedItems = ref(new Set())
+const isAllSelected = ref(false)
+
 // Form data
 const createForm = ref({
   title: '',
@@ -618,6 +666,11 @@ const combinedItems = computed(() => {
 
   return items
 })
+
+// Selection computed properties
+const selectedCount = computed(() => selectedItems.value.size)
+const hasSelectedItems = computed(() => selectedCount.value > 0)
+const currentPageItems = computed(() => combinedItems.value.map(item => `${item.type}-${item.id}`))
 
 // Methods
 const loadCombinedData = async () => {
@@ -937,6 +990,37 @@ const handleFormUpdate = (updatedForm) => {
   createForm.value = updatedForm
 }
 
+// Selection methods
+const toggleItemSelection = (item) => {
+  const itemId = `${item.type}-${item.id}`
+  if (selectedItems.value.has(itemId)) {
+    selectedItems.value.delete(itemId)
+  } else {
+    selectedItems.value.add(itemId)
+  }
+
+  // Update select all state
+  isAllSelected.value = currentPageItems.value.length > 0 &&
+    currentPageItems.value.every(id => selectedItems.value.has(id))
+}
+
+const toggleSelectAll = () => {
+  if (isAllSelected.value) {
+    // Deselect all current page items
+    currentPageItems.value.forEach(id => selectedItems.value.delete(id))
+    isAllSelected.value = false
+  } else {
+    // Select all current page items
+    currentPageItems.value.forEach(id => selectedItems.value.add(id))
+    isAllSelected.value = true
+  }
+}
+
+const clearSelection = () => {
+  selectedItems.value.clear()
+  isAllSelected.value = false
+}
+
 const deleteItem = async (item) => {
   if (!confirm(`Are you sure you want to delete "${item.title}"?`)) {
     return
@@ -948,6 +1032,49 @@ const deleteItem = async (item) => {
     console.log('Research item deleted successfully')
   } catch (error) {
     console.error('Error deleting research item:', error)
+  }
+}
+
+const bulkDeleteItems = async () => {
+  if (!hasSelectedItems.value) return
+
+  const selectedItemsList = Array.from(selectedItems.value).map(id => {
+    const [type, itemId] = id.split('-')
+    return { type, id: parseInt(itemId) }
+  })
+
+  const message = `Are you sure you want to delete ${selectedCount.value} selected item${selectedCount.value !== 1 ? 's' : ''}?`
+  if (!confirm(message)) {
+    return
+  }
+
+  try {
+    // Group items by type for efficient deletion
+    const researchItems = selectedItemsList.filter(item => item.type === 'research')
+    const documentItems = selectedItemsList.filter(item => item.type === 'document')
+
+    // Delete research items
+    if (researchItems.length > 0) {
+      await Promise.all(researchItems.map(item =>
+        axios.delete(`/api/research-items/${item.id}`)
+      ))
+    }
+
+    // Delete document items
+    if (documentItems.length > 0) {
+      await Promise.all(documentItems.map(item =>
+        axios.delete(`/api/assets/${item.id}`)
+      ))
+    }
+
+    // Clear selection and refresh data
+    clearSelection()
+    await loadCombinedData()
+
+    console.log(`Successfully deleted ${selectedCount.value} items`)
+  } catch (error) {
+    console.error('Error deleting selected items:', error)
+    alert('Some items could not be deleted. Please try again.')
   }
 }
 
